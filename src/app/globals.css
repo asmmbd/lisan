@@ -1,0 +1,208 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-islamic-green: #0F9D58;
+  --color-islamic-green-light: #E8F5E9;
+  --color-islamic-gold: #D4A843;
+  --color-islamic-gold-light: #FFF8E1;
+}
+
+:root {
+  --radius: 0.75rem;
+  --background: #FAFDF7;
+  --foreground: #1A2E1A;
+  --card: #FFFFFF;
+  --card-foreground: #1A2E1A;
+  --popover: #FFFFFF;
+  --popover-foreground: #1A2E1A;
+  --primary: #0F9D58;
+  --primary-foreground: #FFFFFF;
+  --secondary: #E8F5E9;
+  --secondary-foreground: #1B5E20;
+  --muted: #F1F8E9;
+  --muted-foreground: #5D7A5D;
+  --accent: #FFF8E1;
+  --accent-foreground: #8B6914;
+  --destructive: #DC2626;
+  --border: #C8E6C9;
+  --input: #C8E6C9;
+  --ring: #0F9D58;
+  --chart-1: #0F9D58;
+  --chart-2: #43A047;
+  --chart-3: #D4A843;
+  --chart-4: #66BB6A;
+  --chart-5: #81C784;
+  --sidebar: #F1F8E9;
+  --sidebar-foreground: #1A2E1A;
+  --sidebar-primary: #0F9D58;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #E8F5E9;
+  --sidebar-accent-foreground: #1B5E20;
+  --sidebar-border: #C8E6C9;
+  --sidebar-ring: #0F9D58;
+}
+
+.dark {
+  --background: #0D1B0D;
+  --foreground: #E8F5E9;
+  --card: #1A2E1A;
+  --card-foreground: #E8F5E9;
+  --popover: #1A2E1A;
+  --popover-foreground: #E8F5E9;
+  --primary: #4CAF50;
+  --primary-foreground: #0D1B0D;
+  --secondary: #1B3A1B;
+  --secondary-foreground: #A5D6A7;
+  --muted: #1B3A1B;
+  --muted-foreground: #81C784;
+  --accent: #3D2E0A;
+  --accent-foreground: #D4A843;
+  --destructive: #EF4444;
+  --border: #2E5A2E;
+  --input: #2E5A2E;
+  --ring: #4CAF50;
+  --chart-1: #4CAF50;
+  --chart-2: #66BB6A;
+  --chart-3: #D4A843;
+  --chart-4: #81C784;
+  --chart-5: #A5D6A7;
+  --sidebar: #1A2E1A;
+  --sidebar-foreground: #E8F5E9;
+  --sidebar-primary: #4CAF50;
+  --sidebar-primary-foreground: #0D1B0D;
+  --sidebar-accent: #1B3A1B;
+  --sidebar-accent-foreground: #A5D6A7;
+  --sidebar-border: #2E5A2E;
+  --sidebar-ring: #4CAF50;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Arabic font styling */
+.arabic-text {
+  font-family: 'Traditional Arabic', 'Noto Naskh Arabic', 'Amiri', serif;
+  direction: rtl;
+  line-height: 1.8;
+  letter-spacing: 0.02em;
+}
+
+/* Bengali font styling */
+.bengali-text {
+  font-family: var(--font-geist-sans), 'Noto Sans Bengali', sans-serif;
+  line-height: 1.6;
+}
+
+/* Custom scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 9999px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--muted-foreground);
+}
+
+/* Hide scrollbar for horizontal scroll */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Soft gradient backgrounds */
+.gradient-green {
+  background: linear-gradient(135deg, #0F9D58 0%, #43A047 100%);
+}
+
+.gradient-gold {
+  background: linear-gradient(135deg, #D4A843 0%, #E8C84A 100%);
+}
+
+.gradient-islamic {
+  background: linear-gradient(135deg, #0F9D58 0%, #1B5E20 100%);
+}
+
+/* Pulse animation for matching state */
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.8);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+.pulse-ring::before {
+  content: '';
+  position: absolute;
+  inset: -8px;
+  border-radius: 9999px;
+  border: 2px solid var(--primary);
+  animation: pulse-ring 1.5s ease-out infinite;
+}
+
+/* Safe area padding for mobile */
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
