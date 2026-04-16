@@ -1,7 +1,7 @@
 'use client'
 
 import { motion, AnimatePresence } from 'framer-motion'
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { Search, Mic, X, Volume2, Bookmark, BookmarkCheck, ArrowLeft, ChevronRight } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -15,6 +15,15 @@ export function DictionaryScreen() {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedWord, setSelectedWord] = useState<VocabularyWord | null>(null)
   const [isSearching, setIsSearching] = useState(false)
+  const searchInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    // Auto-focus the search input when screen mounts
+    const timer = setTimeout(() => {
+      searchInputRef.current?.focus()
+    }, 100)
+    return () => clearTimeout(timer)
+  }, [])
 
   const filteredWords = useMemo(() => {
     if (!searchQuery.trim()) return []
@@ -51,9 +60,11 @@ export function DictionaryScreen() {
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
+            ref={searchInputRef}
             placeholder="আরবি বা বাংলা লিখে খুঁজুন"
             value={searchQuery}
             onChange={(e) => handleSearch(e.target.value)}
+            autoFocus
             className="pl-10 pr-10 h-11 rounded-xl bg-secondary/50 border-border bengali-text"
           />
           {searchQuery && (
