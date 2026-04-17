@@ -2,14 +2,35 @@
 
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useEffect, useCallback } from 'react'
-import { Phone, PhoneOff, Mic, MicOff, Video, VideoOff, Clock, Users } from 'lucide-react'
+import { Phone, PhoneOff, Mic, MicOff, Video, VideoOff, Clock, Users, Volume2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAppStore } from '@/lib/store'
+import { useSocket } from '@/hooks/useSocket'
+import { useWebRTC } from '@/hooks/useWebRTC'
+import { VideoCall } from './video-call'
 
 export function PracticeScreen() {
   const { practiceState, setPracticeState, callTimer, setCallTimer } = useAppStore()
   const [isMuted, setIsMuted] = useState(false)
   const [isCameraOff, setIsCameraOff] = useState(false)
+  const [incomingCall, setIncomingCall] = useState<{ offer: RTCSessionDescriptionInit; callerId: string } | null>(null)
+  
+  // Socket connection for signaling
+  const { socket, isConnected, onlineUsers, currentUserId } = useSocket()
+  
+  // WebRTC for video call
+  const {
+    localStream,
+    remoteStream,
+    isConnected: isRTCConnected,
+    isConnecting: isRTCConnecting,
+    error: rtcError,
+    startCall,
+    acceptCall: acceptWebRTCCall,
+    endCall: endWebRTCCall,
+    toggleMute,
+    toggleVideo,
+  } = useWebRTC(socket, currentUserId)
 
   // Countdown timer during call
   useEffect(() => {
@@ -20,14 +41,41 @@ export function PracticeScreen() {
     return () => clearInterval(interval)
   }, [practiceState, callTimer, setCallTimer])
 
-  // Auto transition: matching → incoming after 3s
+  // Listen for incoming calls
   useEffect(() => {
-    if (practiceState !== 'matching') return
-    const timeout = setTimeout(() => {
+    if (!socket) {
+      console.log('Socket not available yet')
+      return
+    }
+
+    console.log('Setting up socket listeners, socket id:', socket.id)
+
+    const handleCallOffer = ({ offer, callerId }: { offer: RTCSessionDescriptionInit; callerId: string }) => {
+      console.log('Received call offer from:', callerId)
+      setIncomingCall({ offer, callerId })
       setPracticeState('incoming')
-    }, 3000)
-    return () => clearTimeout(timeout)
-  }, [practiceState, setPracticeState])
+    }
+
+    const handleCallEnded = () => {
+      console.log('Call ended received')
+      handleEndCall()
+    }
+
+    const handleCallRejected = ({ by }: { by: string }) => {
+      console.log('Call rejected by:', by)
+      setPracticeState('idle')
+    }
+
+    socket.on('call-offer', handleCallOffer)
+    socket.on('call-ended', handleCallEnded)
+    socket.on('call-rejected', handleCallRejected)
+
+    return () => {
+      socket.off('call-offer', handleCallOffer)
+      socket.off('call-ended', handleCallEnded)
+      socket.off('call-rejected', handleCallRejected)
+    }
+  }, [socket, setPracticeState])
 
   const formatTime = useCallback((seconds: number) => {
     const m = Math.floor(seconds / 60)
@@ -35,24 +83,73 @@ export function PracticeScreen() {
     return `${m}:${s.toString().padStart(2, '0')}`
   }, [])
 
+  // Start looking for a partner (Video mode)
   const startPractice = () => {
+    console.log('Starting practice, socket:', socket?.id, 'onlineUsers:', onlineUsers)
     setPracticeState('matching')
+    
+    // Try to find an online partner
+    if (socket && onlineUsers.length > 0) {
+      const randomPartner = onlineUsers[Math.floor(Math.random() * onlineUsers.length)]
+      console.log('Calling partner:', randomPartner)
+      startCall(randomPartner)
+    } else {
+      console.log('No online users found, waiting for someone to join...')
+      // Keep in matching state, wait for someone to join
+      // The online-users event will update the list
+    }
   }
 
-  const acceptCall = () => {
-    setCallTimer(240)
-    setPracticeState('incall')
+  // Start audio-only practice (for users without camera)
+  const startPracticeAudioOnly = () => {
+    console.log('Starting audio-only practice')
+    setPracticeState('matching')
+    setIsCameraOff(true)
+    
+    // Initialize media with audio only, then call
+    if (socket && onlineUsers.length > 0) {
+      const randomPartner = onlineUsers[Math.floor(Math.random() * onlineUsers.length)]
+      console.log('Calling partner (audio-only):', randomPartner)
+      startCall(randomPartner)
+    }
   }
 
+  // Auto-call when online users become available
+  useEffect(() => {
+    if (practiceState === 'matching' && onlineUsers.length > 0 && socket) {
+      console.log('Online users now available, initiating call to:', onlineUsers[0])
+      const randomPartner = onlineUsers[Math.floor(Math.random() * onlineUsers.length)]
+      startCall(randomPartner)
+    }
+  }, [onlineUsers, practiceState, socket, startCall])
+
+  // Accept incoming call
+  const acceptCall = async () => {
+    if (incomingCall) {
+      await acceptWebRTCCall(incomingCall.offer, incomingCall.callerId)
+      setCallTimer(240)
+      setPracticeState('incall')
+      setIncomingCall(null)
+    }
+  }
+
+  // Reject incoming call
   const rejectCall = () => {
+    setIncomingCall(null)
     setPracticeState('idle')
+    if (socket && incomingCall) {
+      socket.emit('call-rejected', { callerId: incomingCall.callerId })
+    }
   }
 
-  const endCall = () => {
+  // End call
+  const handleEndCall = () => {
+    endWebRTCCall()
     setPracticeState('idle')
     setCallTimer(240)
     setIsMuted(false)
     setIsCameraOff(false)
+    setIncomingCall(null)
   }
 
   return (
@@ -60,6 +157,22 @@ export function PracticeScreen() {
       <div className="px-4 pt-4 pb-2">
         <h1 className="text-xl font-bold bengali-text">প্র্যাকটিস</h1>
         <p className="text-sm text-muted-foreground bengali-text">আরবি কথোপকথন অনুশীলন</p>
+        
+        {/* Error Message */}
+        {rtcError && (
+          <div className="mt-3 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+            <p className="text-sm text-destructive bengali-text flex items-center gap-2">
+              <span>⚠️</span>
+              {rtcError}
+            </p>
+            <button 
+              onClick={() => window.location.reload()}
+              className="mt-2 text-xs text-destructive underline hover:no-underline bengali-text"
+            >
+              পেজ রিলোড করুন
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="flex-1 px-4">
@@ -88,13 +201,24 @@ export function PracticeScreen() {
                 ভিডিও কলের মাধ্যমে আরবি ভাষায় কথোপকথন অনুশীলন করুন এবং আপনার দক্ষতা বাড়ান
               </p>
 
-              <Button
-                onClick={startPractice}
-                className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-2xl h-14 px-8 text-lg font-semibold shadow-lg"
-              >
-                <Phone className="w-5 h-5" />
-                <span className="bengali-text">প্র্যাকটিস শুরু করুন</span>
-              </Button>
+              <div className="flex flex-col gap-3">
+                <Button
+                  onClick={startPractice}
+                  className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-2xl h-14 px-8 text-lg font-semibold shadow-lg"
+                >
+                  <Video className="w-5 h-5" />
+                  <span className="bengali-text">ভিডিও প্র্যাকটিস</span>
+                </Button>
+                
+                <Button
+                  onClick={() => startPracticeAudioOnly()}
+                  variant="outline"
+                  className="gap-2 rounded-2xl h-12 px-6 text-base font-medium"
+                >
+                  <Volume2 className="w-5 h-5" />
+                  <span className="bengali-text">অডিও শুধু (ক্যামেরা নেই)</span>
+                </Button>
+              </div>
 
               {/* Quick tips */}
               <div className="mt-8 w-full max-w-xs">
@@ -143,10 +267,12 @@ export function PracticeScreen() {
                 transition={{ repeat: Infinity, duration: 2 }}
                 className="text-lg font-semibold bengali-text mb-2"
               >
-                পার্টনার খোঁজা হচ্ছে...
+                {onlineUsers.length === 0 ? 'পার্টনারের অপেক্ষায়...' : 'পার্টনার খোঁজা হচ্ছে...'}
               </motion.h2>
-              <p className="text-sm text-muted-foreground bengali-text">
-                আপনার জন্য একজন পার্টনার খোঁজা হচ্ছে
+              <p className="text-sm text-muted-foreground bengali-text text-center max-w-xs">
+                {onlineUsers.length === 0 
+                  ? 'আরেকজন user join করার অপেক্ষায় আছি। দুই নম্বর ব্রাউজারে অ্যাপ খুলুন।' 
+                  : `${onlineUsers.length} জন online আছেন। কল পাঠানো হচ্ছে...`}
               </p>
 
               <Button
@@ -210,79 +336,19 @@ export function PracticeScreen() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="flex flex-col h-full pb-20"
+              className="flex flex-col h-full"
             >
-              {/* Partner video area */}
-              <div className="relative flex-1 bg-gradient-to-b from-card to-secondary/30 rounded-2xl overflow-hidden mb-3 min-h-[280px]">
-                {/* Placeholder for partner video */}
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="text-center">
-                    <div className="w-24 h-24 rounded-full gradient-islamic flex items-center justify-center mx-auto mb-3 shadow-lg">
-                      <span className="text-4xl text-white font-bold">ع</span>
-                    </div>
-                    <p className="text-sm font-medium bengali-text">আব্দুল্লাহ</p>
-                    <p className="text-xs text-muted-foreground">পার্টনার</p>
-                  </div>
-                </div>
-
-                {/* Self video (small) */}
-                <div className="absolute top-3 right-3 w-24 h-32 rounded-xl bg-gradient-to-b from-primary/20 to-primary/10 border border-border flex items-center justify-center overflow-hidden">
-                  {isCameraOff ? (
-                    <VideoOff className="w-6 h-6 text-muted-foreground" />
-                  ) : (
-                    <div className="w-12 h-12 rounded-full bg-primary/30 flex items-center justify-center">
-                      <span className="text-lg text-primary font-bold">আ</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Timer */}
-                <div className="absolute top-3 left-3 bg-black/50 backdrop-blur-sm rounded-full px-3 py-1.5 flex items-center gap-1.5">
-                  <Clock className="w-3 h-3 text-white" />
-                  <span className="text-white text-xs font-mono">{formatTime(callTimer)}</span>
-                </div>
-
-                {/* Conversation hint */}
-                <div className="absolute bottom-3 left-3 right-3 bg-black/50 backdrop-blur-sm rounded-xl p-3">
-                  <p className="text-xs text-white/80 bengali-text">💡 বিষয়: দৈনন্দিন জীবন - সকালের রুটিন সম্পর্কে কথা বলুন</p>
-                </div>
-              </div>
-
-              {/* Call controls */}
-              <div className="flex items-center justify-center gap-4 py-2">
-                <button
-                  onClick={() => setIsMuted(!isMuted)}
-                  className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${
-                    isMuted ? 'bg-destructive' : 'bg-card border border-border'
-                  }`}
-                >
-                  {isMuted ? (
-                    <MicOff className="w-5 h-5 text-white" />
-                  ) : (
-                    <Mic className="w-5 h-5 text-card-foreground" />
-                  )}
-                </button>
-
-                <button
-                  onClick={() => setIsCameraOff(!isCameraOff)}
-                  className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${
-                    isCameraOff ? 'bg-destructive' : 'bg-card border border-border'
-                  }`}
-                >
-                  {isCameraOff ? (
-                    <VideoOff className="w-5 h-5 text-white" />
-                  ) : (
-                    <Video className="w-5 h-5 text-card-foreground" />
-                  )}
-                </button>
-
-                <button
-                  onClick={endCall}
-                  className="w-14 h-14 rounded-full bg-destructive flex items-center justify-center shadow-lg hover:bg-destructive/90 transition-colors"
-                >
-                  <PhoneOff className="w-6 h-6 text-white" />
-                </button>
-              </div>
+              <VideoCall
+                localStream={localStream}
+                remoteStream={remoteStream}
+                isConnected={isRTCConnected}
+                isConnecting={isRTCConnecting}
+                callTimer={callTimer}
+                partnerName={incomingCall?.callerId || 'পার্টনার'}
+                onEndCall={handleEndCall}
+                onToggleMute={toggleMute}
+                onToggleVideo={toggleVideo}
+              />
             </motion.div>
           )}
         </AnimatePresence>
