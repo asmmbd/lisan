@@ -7,7 +7,7 @@ import { BottomNav } from '@/components/lisan/bottom-nav'
 import { Onboarding } from '@/components/lisan/onboarding'
 import { HomeScreen } from '@/components/lisan/home-screen'
 import { DictionaryScreen } from '@/components/lisan/dictionary-screen'
-import { PracticeScreenDaily as PracticeScreen } from '@/components/lisan'
+import { PracticeScreen } from '@/components/lisan/practice-screen-agora'
 import { SavedScreen } from '@/components/lisan/saved-screen'
 import { ProfileScreen } from '@/components/lisan/profile-screen'
 
