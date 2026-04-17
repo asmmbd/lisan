@@ -30,3 +30,28 @@ model Post {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+// Video Call Matching Queue
+model MatchingQueue {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  socketId  String
+  userName  String   @default("Guest")
+  status    String   @default("waiting") // waiting, matched
+  joinedAt  DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Active Video Call Matches
+model ActiveMatch {
+  id          String    @id @default(cuid())
+  matchId     String    @unique
+  user1Id     String
+  user2Id     String
+  channelName String
+  roomName    String
+  status      String    @default("waiting") // waiting, connected, ended
+  createdAt   DateTime  @default(now())
+  endedAt     DateTime?
+  endedBy     String?
+}

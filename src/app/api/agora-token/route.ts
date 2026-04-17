@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { RtcTokenBuilder, RtcRole } from 'agora-token'
 
-const APP_ID = process.env.AGORA_APP_ID || ''
+const APP_ID = process.env.AGORA_APP_ID || process.env.NEXT_PUBLIC_AGORA_APP_ID || ''
 const APP_CERTIFICATE = process.env.AGORA_APP_CERTIFICATE || ''
 
 export async function POST(req: NextRequest) {
@@ -30,14 +30,15 @@ export async function POST(req: NextRequest) {
     // Determine role
     const userRole = role === 'publisher' ? RtcRole.PUBLISHER : RtcRole.SUBSCRIBER
 
-    // Generate token
-    const token = RtcTokenBuilder.buildTokenWithUid(
+    // Generate token with all required parameters
+    const token = (RtcTokenBuilder as any).buildTokenWithUid(
       APP_ID,
       APP_CERTIFICATE,
       channel,
       parseInt(uid) || 0,
       userRole,
-      privilegeExpiredTs
+      privilegeExpiredTs,
+      privilegeExpiredTs // joinChannelPrivilegeExpireTime
     )
 
     return NextResponse.json({
