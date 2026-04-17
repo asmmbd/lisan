@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useEffect, useCallback } from 'react'
-import { Phone, PhoneOff, Video, Clock, Users, Loader2 } from 'lucide-react'
+import { Phone, PhoneOff, Video, Clock, Users, Loader2, Copy, Check, ArrowRight, LogIn } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAppStore } from '@/lib/store'
 import { AgoraVideoCall } from './agora-video-call'
@@ -17,6 +17,10 @@ export function PracticeScreen() {
   } | null>(null)
   const [isCreatingRoom, setIsCreatingRoom] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [copied, setCopied] = useState(false)
+  const [joinChannelInput, setJoinChannelInput] = useState('')
+  const [isJoining, setIsJoining] = useState(false)
+  const [showJoinInput, setShowJoinInput] = useState(false)
 
   // Countdown timer during call
   useEffect(() => {
@@ -83,10 +87,69 @@ export function PracticeScreen() {
     createRoom()
   }
 
+  const copyChannelName = () => {
+    if (agoraConfig?.channel) {
+      navigator.clipboard.writeText(agoraConfig.channel)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }
+  }
+
+  const joinRoom = async () => {
+    if (!joinChannelInput.trim()) {
+      setError('Channel name দিন')
+      return
+    }
+    
+    try {
+      setIsJoining(true)
+      setError(null)
+      
+      const uid = Math.floor(Math.random() * 100000).toString()
+      
+      // Get token for existing channel
+      const response = await fetch('/api/agora-token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          channel: joinChannelInput.trim(),
+          uid: uid,
+          role: 'publisher',
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to join room')
+      }
+
+      console.log('✅ Joining Agora room:', joinChannelInput)
+      
+      setAgoraConfig({
+        appId: data.appId,
+        channel: joinChannelInput.trim(),
+        token: data.token,
+        uid: uid,
+      })
+      
+      setPracticeState('incall')
+      setCallTimer(240)
+      
+    } catch (err: any) {
+      console.error('Error joining Agora room:', err)
+      setError('রুমে join করতে ব্যর্থ: ' + (err.message || 'Unknown error'))
+    } finally {
+      setIsJoining(false)
+    }
+  }
+
   const handleLeaveCall = () => {
     setPracticeState('idle')
     setAgoraConfig(null)
     setCallTimer(240)
+    setJoinChannelInput('')
+    setShowJoinInput(false)
   }
 
   const formatTime = useCallback((seconds: number) => {
@@ -144,11 +207,12 @@ export function PracticeScreen() {
                 ভিডিও কলের মাধ্যমে আরবি ভাষায় কথোপকথন অনুশীলন করুন
               </p>
 
-              <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-3 w-full max-w-xs">
+                {/* Create Room Button */}
                 <Button
                   onClick={startPractice}
                   disabled={isCreatingRoom}
-                  className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-2xl h-14 px-8 text-lg font-semibold shadow-lg"
+                  className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-2xl h-14 px-8 text-lg font-semibold shadow-lg w-full"
                 >
                   {isCreatingRoom ? (
                     <Loader2 className="w-5 h-5 animate-spin" />
@@ -156,11 +220,60 @@ export function PracticeScreen() {
                     <Video className="w-5 h-5" />
                   )}
                   <span className="bengali-text">
-                    {isCreatingRoom ? 'রুম তৈরি হচ্ছে...' : 'ভিডিও প্র্যাকটিস'}
+                    {isCreatingRoom ? 'রুম তৈরি হচ্ছে...' : 'নতুন রুম তৈরি করুন'}
                   </span>
                 </Button>
+
+                {/* OR Divider */}
+                <div className="flex items-center gap-3 my-2">
+                  <div className="flex-1 h-px bg-border" />
+                  <span className="text-xs text-muted-foreground">অথবা</span>
+                  <div className="flex-1 h-px bg-border" />
+                </div>
+
+                {/* Join Room Input */}
+                {!showJoinInput ? (
+                  <Button
+                    onClick={() => setShowJoinInput(true)}
+                    variant="outline"
+                    className="gap-2 rounded-2xl h-12 w-full border-2 border-dashed"
+                  >
+                    <LogIn className="w-5 h-5" />
+                    <span className="bengali-text">আগের রুমে যোগ দিন</span>
+                  </Button>
+                ) : (
+                  <div className="flex flex-col gap-2">
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={joinChannelInput}
+                        onChange={(e) => setJoinChannelInput(e.target.value)}
+                        placeholder="Channel name লিখুন"
+                        className="flex-1 px-4 py-2 rounded-xl border border-input bg-background text-sm"
+                        onKeyDown={(e) => e.key === 'Enter' && joinRoom()}
+                      />
+                      <Button
+                        onClick={joinRoom}
+                        disabled={isJoining || !joinChannelInput.trim()}
+                        className="px-4"
+                      >
+                        {isJoining ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <ArrowRight className="w-4 h-4" />
+                        )}
+                      </Button>
+                    </div>
+                    <button
+                      onClick={() => setShowJoinInput(false)}
+                      className="text-xs text-muted-foreground hover:text-foreground bengali-text"
+                    >
+                      বাতিল করুন
+                    </button>
+                  </div>
+                )}
                 
-                <p className="text-xs text-muted-foreground text-center bengali-text">
+                <p className="text-xs text-muted-foreground text-center bengali-text mt-2">
                   Powered by Agora.io (10,000 min free/month)
                 </p>
               </div>
@@ -186,48 +299,84 @@ export function PracticeScreen() {
             </motion.div>
           )}
 
-          {/* MATCHING STATE */}
+          {/* MATCHING STATE - Room Created */}
           {practiceState === 'matching' && (
             <motion.div
               key="matching"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="flex flex-col items-center justify-center h-full pb-20"
+              className="flex flex-col items-center justify-center h-full pb-20 px-4"
             >
-              <div className="relative mb-8">
-                <div className="relative w-32 h-32">
-                  <div className="absolute inset-0 rounded-full bg-primary/20 animate-ping" style={{ animationDuration: '2s' }} />
-                  <div className="absolute inset-3 rounded-full bg-primary/30 animate-ping" style={{ animationDuration: '2s', animationDelay: '0.5s' }} />
-                  <div className="absolute inset-6 rounded-full bg-primary/40 animate-ping" style={{ animationDuration: '2s', animationDelay: '1s' }} />
-                  <div className="relative w-32 h-32 rounded-full gradient-islamic flex items-center justify-center z-10">
-                    <Users className="w-12 h-12 text-white" />
+              <div className="relative mb-6">
+                <div className="relative w-28 h-28">
+                  <div className="absolute inset-0 rounded-full bg-emerald-500/20 animate-ping" style={{ animationDuration: '2s' }} />
+                  <div className="relative w-28 h-28 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center z-10 shadow-lg">
+                    <Check className="w-12 h-12 text-white" />
                   </div>
                 </div>
               </div>
 
-              <motion.h2
-                animate={{ opacity: [1, 0.5, 1] }}
-                transition={{ repeat: Infinity, duration: 2 }}
-                className="text-lg font-semibold bengali-text mb-2"
-              >
-                রুম তৈরি হচ্ছে...
-              </motion.h2>
-              <p className="text-sm text-muted-foreground bengali-text text-center max-w-xs">
-                Agora ভিডিও কল রুম প্রস্তুত করা হচ্ছে
+              <h2 className="text-xl font-bold bengali-text mb-2 text-center">রুম তৈরি হয়েছে!</h2>
+              <p className="text-sm text-muted-foreground bengali-text text-center max-w-xs mb-6">
+                নিচের Channel name কপি করে অন্যজনকে দিন
               </p>
 
               {agoraConfig && (
-                <div className="mt-4 p-3 bg-secondary/50 rounded-lg max-w-xs">
-                  <p className="text-xs text-muted-foreground mb-1">Channel: {agoraConfig.channel}</p>
-                  <p className="text-xs text-muted-foreground">শেয়ার করুন: আরেকজন একই Channel name ব্যবহার করলে join করতে পারবে</p>
+                <div className="w-full max-w-xs space-y-4">
+                  {/* Channel Name Box */}
+                  <div className="bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border-2 border-emerald-500/30 rounded-2xl p-4">
+                    <p className="text-xs text-muted-foreground mb-2 bengali-text">Channel Name:</p>
+                    <div className="flex items-center gap-2">
+                      <code className="flex-1 bg-black/50 text-emerald-400 px-3 py-2 rounded-lg text-sm font-mono break-all">
+                        {agoraConfig.channel}
+                      </code>
+                      <button
+                        onClick={copyChannelName}
+                        className={`p-2 rounded-lg transition-colors ${
+                          copied ? 'bg-emerald-500 text-white' : 'bg-secondary hover:bg-secondary/80'
+                        }`}
+                      >
+                        {copied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Instructions */}
+                  <div className="bg-secondary/50 rounded-xl p-4 space-y-2">
+                    <p className="text-sm font-medium bengali-text">কিভাবে যোগ দিবেন:</p>
+                    <ol className="text-xs text-muted-foreground space-y-1 bengali-text list-decimal list-inside">
+                      <li>উপরের Channel name কপি করুন</li>
+                      <li>অন্য ফোনে "আগের রুমে যোগ দিন" চাপুন</li>
+                      <li>Channel name পেস্ট করে Join করুন</li>
+                    </ol>
+                  </div>
+
+                  {/* Auto join after delay */}
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 3 }}
+                    className="text-center"
+                  >
+                    <Button
+                      onClick={() => {
+                        setPracticeState('incall')
+                        setCallTimer(240)
+                      }}
+                      className="gap-2 bg-primary"
+                    >
+                      <ArrowRight className="w-4 h-4" />
+                      <span className="bengali-text">কল শুরু করুন</span>
+                    </Button>
+                  </motion.div>
                 </div>
               )}
 
               <Button
                 variant="ghost"
                 onClick={() => setPracticeState('idle')}
-                className="mt-8 text-muted-foreground bengali-text"
+                className="mt-6 text-muted-foreground bengali-text"
               >
                 বাতিল করুন
               </Button>
