@@ -20,17 +20,19 @@ export async function POST(req: NextRequest) {
       },
       body: JSON.stringify({
         name: `lisan-practice-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        privacy: 'public', // Anyone with the link can join
+        privacy: 'public',
         properties: {
-          max_participants: 2, // Only 2 people for 1-on-1 practice
+          max_participants: 2,
           enable_screenshare: false,
           enable_chat: false,
           enable_knocking: false,
-          enable_network_ui: false,
+          enable_network_ui: true,
           enable_hand_raising: false,
           start_audio_off: false,
           start_video_off: false,
           lang: 'bn',
+          // Expire room after 1 hour (3600 seconds)
+          exp: Math.floor(Date.now() / 1000) + 3600,
         },
       }),
     })
