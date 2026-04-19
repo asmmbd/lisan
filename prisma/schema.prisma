@@ -22,6 +22,9 @@ model User {
   savedWords    SavedWord[]
   notes         Note[]
   searchHistory SearchHistory[]
+  callerRooms   Room[]         @relation("CallerRooms")
+  receiverRooms Room[]         @relation("ReceiverRooms")
+  callInvites   CallInvite[]
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 }
@@ -89,4 +92,31 @@ model ActiveMatch {
   createdAt   DateTime  @default(now())
   endedAt     DateTime?
   endedBy     String?
+}
+
+// WhatsApp-style Call Rooms
+model Room {
+  id          String       @id @default(cuid())
+  roomId      String       @unique // Short unique ID for URL
+  callerId    String
+  caller      User         @relation("CallerRooms", fields: [callerId], references: [id])
+  receiverId  String?
+  receiver    User?        @relation("ReceiverRooms", fields: [receiverId], references: [id])
+  status      String       @default("waiting") // waiting, active, ended
+  channelName String
+  createdAt   DateTime     @default(now())
+  endedAt     DateTime?
+  callInvites CallInvite[]
+}
+
+// Call Invitations for notifications
+model CallInvite {
+  id        String   @id @default(cuid())
+  roomId    String
+  room      Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  callerId  String
+  caller    User     @relation(fields: [callerId], references: [id])
+  status    String   @default("pending") // pending, accepted, rejected, expired
+  createdAt DateTime @default(now())
+  expiresAt DateTime
 }

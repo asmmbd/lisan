@@ -3,6 +3,7 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { useEffect, useCallback, useState } from 'react'
 import { useSession } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
 import { Video, Users, Loader2, User, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAppStore } from '@/lib/store'
@@ -84,6 +85,41 @@ export function PracticeScreen() {
     }
   }, [partnerLeft, setPracticeState, setCallTimer])
 
+  const [creatingCall, setCreatingCall] = useState(false)
+  const router = useRouter()
+
+  // Create a new call room (WhatsApp style)
+  const handleCreateCall = async () => {
+    if (!session?.user) {
+      alert('Please login to make a call')
+      return
+    }
+
+    setCreatingCall(true)
+    try {
+      const channelName = `call_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+      
+      const res = await fetch('/api/calls/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ channelName }),
+      })
+
+      const data = await res.json()
+
+      if (data.success) {
+        // Navigate to the room
+        router.push(`/room/${data.room.roomId}`)
+      } else {
+        console.error('Failed to create call:', data.error)
+      }
+    } catch (err) {
+      console.error('Error creating call:', err)
+    } finally {
+      setCreatingCall(false)
+    }
+  }
+
   const startMatching = () => {
     setPracticeState('matching')
     findPartner(userId, 'Guest')
@@ -155,13 +191,17 @@ export function PracticeScreen() {
               <div className="flex flex-col gap-3 w-full max-w-xs">
                 {session?.user ? (
                   <Button
-                    onClick={startMatching}
-                    disabled={!isPusherConnected}
+                    onClick={handleCreateCall}
+                    disabled={creatingCall}
                     className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-2xl h-14 px-8 text-lg font-semibold shadow-lg w-full"
                   >
-                    <Search className="w-5 h-5" />
+                    {creatingCall ? (
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                    ) : (
+                      <Video className="w-5 h-5" />
+                    )}
                     <span className="bengali-text">
-                      {!isPusherConnected ? 'কানেক্ট হচ্ছে...' : 'পার্টনার খুঁজুন'}
+                      {creatingCall ? 'কল তৈরি হচ্ছে...' : 'কল করুন'}
                     </span>
                   </Button>
                 ) : (
