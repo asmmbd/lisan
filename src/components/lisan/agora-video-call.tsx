@@ -77,8 +77,9 @@ export function AgoraVideoCall({ appId, channel, token, uid, onLeave, callTimer 
           setRemoteUsers(prev => Math.max(0, prev - 1))
         })
 
-        // Join channel
-        await client.join(appId, channel, token, uid)
+        // Join channel (token can be null for testing without authentication)
+        const agoraToken = token || null
+        await client.join(appId, channel, agoraToken, uid)
         console.log('✅ Joined channel:', channel)
 
         // Create local tracks
