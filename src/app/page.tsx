@@ -7,7 +7,7 @@ import { BottomNav } from '@/components/lisan/bottom-nav'
 import { Onboarding } from '@/components/lisan/onboarding'
 import { HomeScreen } from '@/components/lisan/home-screen'
 import { DictionaryScreen } from '@/components/lisan/dictionary-screen'
-import { PracticeScreen } from '@/components/lisan/practice-screen-pusher'
+import { PracticeScreen } from '@/components/lisan/practice-screen'
 import { SavedScreen } from '@/components/lisan/saved-screen'
 import { ProfileScreen } from '@/components/lisan/profile-screen'
 import { CallNotification } from '@/components/lisan/call-notification'
@@ -55,7 +55,7 @@ export default function Home() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="w-12 h-12 rounded-xl gradient-islamic flex items-center justify-center animate-pulse">
-          <span className="text-white text-xl font-bold">ل</span>
+          <span className="text-white text-xl font-bold">&#1604;</span>
         </div>
       </div>
     )
@@ -87,19 +87,8 @@ export default function Home() {
               </motion.div>
             </AnimatePresence>
           </main>
-            exit="exit"
-            transition={{ duration: 0.2 }}
-            className="min-h-[calc(100vh-4rem)]"
-          >
-            {activeTab === 'home' && <HomeScreen />}
-            {activeTab === 'dictionary' && <DictionaryScreen />}
-            {activeTab === 'practice' && <PracticeScreen />}
-            {activeTab === 'saved' && <SavedScreen />}
-            {activeTab === 'profile' && <ProfileScreen />}
-          </motion.div>
-        </AnimatePresence>
-      </main>
-
+        </>
+      )}
       {/* Bottom Navigation */}
       <BottomNav />
 
@@ -110,3 +99,4 @@ export default function Home() {
     </div>
   )
 }
+

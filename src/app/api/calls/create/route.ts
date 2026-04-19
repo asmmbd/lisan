@@ -2,8 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { pusherServer } from '@/lib/pusher'
-import { nanoid } from 'nanoid'
+import { pusherTrigger } from '@/lib/pusher'
+import { randomUUID } from 'crypto'
+
+export const dynamic = 'force-dynamic'
 
 export async function POST(req: NextRequest) {
   try {
@@ -15,7 +17,7 @@ export async function POST(req: NextRequest) {
     const { channelName } = await req.json()
     
     // Generate unique room ID (short for URL)
-    const roomId = nanoid(10)
+    const roomId = randomUUID();
     
     // Create room
     const room = await prisma.room.create({
@@ -33,7 +35,7 @@ export async function POST(req: NextRequest) {
     })
 
     // Notify all online users about the call via Pusher
-    await pusherServer.trigger('calls', 'incoming-call', {
+    await pusherTrigger('calls', 'incoming-call', {
       roomId: room.roomId,
       callerId: room.callerId,
       callerName: room.caller.name || 'Unknown',

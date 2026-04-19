@@ -31,13 +31,29 @@ model User {
 
 // User's saved Arabic words
 model SavedWord {
-  id        String   @id @default(cuid())
-  wordId    String   // Reference to vocabulary word ID
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
+  id           String     @id @default(cuid())
+  wordId       String     // Reference to vocabulary word ID
+  vocabularyId String?    // Optional link for migration
+  vocabulary   Vocabulary? @relation(fields: [vocabularyId], references: [id], onDelete: Cascade)
+  userId       String
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt    DateTime   @default(now())
 
-  @@unique([userId, wordId]) // Prevent duplicates
+  @@unique([userId, wordId]) // Keep original unique constraint for now
+}
+
+// Global vocabulary database
+model Vocabulary {
+  id                 String      @id @default(cuid())
+  arabic             String
+  bengali            String
+  pronunciation      String
+  example            String?
+  exampleTranslation String?
+  category           String      // 'quranic', 'hadith', 'daily', etc.
+  savedBy            SavedWord[]
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
 }
 
 // User's personal notes

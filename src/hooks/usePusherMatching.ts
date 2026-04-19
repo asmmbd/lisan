@@ -73,8 +73,9 @@ export function usePusherMatching(): UsePusherMatchingReturn {
       setError(null)
       setPartnerLeft(false)
 
-      // Subscribe to user-specific channel
-      const channelName = `user-${userId}`
+      // Subscribe to user-specific channel (Obfuscated)
+      const obfuscatedId = btoa(userId).replace(/=/g, '').slice(0, 12)
+      const channelName = `u-${obfuscatedId}`
       const channel = pusherRef.current?.subscribe(channelName)
       channelRef.current = channel
 

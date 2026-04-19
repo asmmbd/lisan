@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { useAppStore } from '@/lib/store'
-import { vocabularyWords } from '@/lib/vocabulary-data'
 import { ScrollArea } from '@/components/ui/scroll-area'
 
 export function SavedScreen() {
@@ -52,8 +51,8 @@ export function SavedScreen() {
 }
 
 function SavedWordsList() {
-  const { savedWordIds, toggleSaveWord } = useAppStore()
-  const savedWords = vocabularyWords.filter((w) => savedWordIds.includes(w.id))
+  const { savedWordIds, toggleSaveWord, vocabulary } = useAppStore()
+  const savedWords = (vocabulary as any[]).filter((w) => savedWordIds.includes(w.id))
 
   if (savedWords.length === 0) {
     return (

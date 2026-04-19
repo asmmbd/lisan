@@ -1,36 +1,33 @@
 'use client'
 
 import { motion, AnimatePresence } from 'framer-motion'
-import { useState, useEffect, useCallback } from 'react'
-import { Phone, PhoneOff, Mic, MicOff, Video, VideoOff, Clock, Users, Volume2 } from 'lucide-react'
+import { useEffect, useCallback, useState } from 'react'
+import { useSession } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
+import { Video, Users, Loader2, User, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAppStore } from '@/lib/store'
-import { useSocket } from '@/hooks/useSocket'
-import { useWebRTC } from '@/hooks/useWebRTC'
-import { VideoCall } from './video-call'
+import { AgoraVideoCall } from './agora-video-call'
+import { usePusherMatching } from '@/hooks/usePusherMatching'
 
 export function PracticeScreen() {
   const { practiceState, setPracticeState, callTimer, setCallTimer } = useAppStore()
-  const [isMuted, setIsMuted] = useState(false)
-  const [isCameraOff, setIsCameraOff] = useState(false)
-  const [incomingCall, setIncomingCall] = useState<{ offer: RTCSessionDescriptionInit; callerId: string } | null>(null)
+  const { data: session } = useSession()
+  const userId = session?.user?.id || 'guest'
+  const [agoraToken, setAgoraToken] = useState('')
   
-  // Socket connection for signaling
-  const { socket, isConnected, onlineUsers, currentUserId } = useSocket()
-  
-  // WebRTC for video call
   const {
-    localStream,
-    remoteStream,
-    isConnected: isRTCConnected,
-    isConnecting: isRTCConnecting,
-    error: rtcError,
-    startCall,
-    acceptCall: acceptWebRTCCall,
-    endCall: endWebRTCCall,
-    toggleMute,
-    toggleVideo,
-  } = useWebRTC(socket, currentUserId)
+    isConnected: isPusherConnected,
+    isWaiting,
+    isMatched,
+    matchData,
+    queuePosition,
+    error: matchingError,
+    findPartner,
+    cancelMatching,
+    endCall,
+    partnerLeft,
+  } = usePusherMatching()
 
   // Countdown timer during call
   useEffect(() => {
@@ -41,115 +38,104 @@ export function PracticeScreen() {
     return () => clearInterval(interval)
   }, [practiceState, callTimer, setCallTimer])
 
-  // Listen for incoming calls
+  // Handle match found - fetch token and start call
   useEffect(() => {
-    if (!socket) {
-      console.log('Socket not available yet')
+    if (isMatched && matchData && practiceState === 'matching') {
+      console.log('🎯 Match found! Fetching Agora token...', matchData)
+      
+      // Fetch Agora token for the channel
+      fetch('/api/agora-token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          channelName: matchData.channelName,
+          uid: userId,
+          role: 'publisher'
+        })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.token) {
+          setAgoraToken(data.token)
+          setPracticeState('incall')
+          setCallTimer(240)
+        } else {
+          console.error('Failed to get Agora token:', data.error)
+          // Try without token for testing
+          setAgoraToken('')
+          setPracticeState('incall')
+          setCallTimer(240)
+        }
+      })
+      .catch(err => {
+        console.error('Error fetching token:', err)
+        // Proceed without token for testing
+        setAgoraToken('')
+        setPracticeState('incall')
+        setCallTimer(240)
+      })
+    }
+  }, [isMatched, matchData, practiceState, setPracticeState, setCallTimer, userId])
+
+  // Handle partner leaving
+  useEffect(() => {
+    if (partnerLeft) {
+      setPracticeState('idle')
+      setCallTimer(240)
+    }
+  }, [partnerLeft, setPracticeState, setCallTimer])
+
+  const [creatingCall, setCreatingCall] = useState(false)
+  const router = useRouter()
+
+  // Create a new call room (WhatsApp style)
+  const handleCreateCall = async () => {
+    if (!session?.user) {
+      alert('Please login to make a call')
       return
     }
 
-    console.log('Setting up socket listeners, socket id:', socket.id)
+    setCreatingCall(true)
+    try {
+      const channelName = `call_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+      
+      const res = await fetch('/api/calls/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ channelName }),
+      })
 
-    const handleCallOffer = ({ offer, callerId }: { offer: RTCSessionDescriptionInit; callerId: string }) => {
-      console.log('Received call offer from:', callerId)
-      setIncomingCall({ offer, callerId })
-      setPracticeState('incoming')
+      const data = await res.json()
+
+      if (data.success) {
+        // Navigate to the room
+        router.push(`/room/${data.room.roomId}`)
+      } else {
+        console.error('Failed to create call:', data.error)
+      }
+    } catch (err) {
+      console.error('Error creating call:', err)
+    } finally {
+      setCreatingCall(false)
     }
+  }
 
-    const handleCallEnded = () => {
-      console.log('Call ended received')
-      handleEndCall()
-    }
-
-    const handleCallRejected = ({ by }: { by: string }) => {
-      console.log('Call rejected by:', by)
-      setPracticeState('idle')
-    }
-
-    socket.on('call-offer', handleCallOffer)
-    socket.on('call-ended', handleCallEnded)
-    socket.on('call-rejected', handleCallRejected)
-
-    return () => {
-      socket.off('call-offer', handleCallOffer)
-      socket.off('call-ended', handleCallEnded)
-      socket.off('call-rejected', handleCallRejected)
-    }
-  }, [socket, setPracticeState])
-
-  const formatTime = useCallback((seconds: number) => {
-    const m = Math.floor(seconds / 60)
-    const s = seconds % 60
-    return `${m}:${s.toString().padStart(2, '0')}`
-  }, [])
-
-  // Start looking for a partner (Video mode)
-  const startPractice = () => {
-    console.log('Starting practice, socket:', socket?.id, 'onlineUsers:', onlineUsers)
+  const startMatching = () => {
     setPracticeState('matching')
-    
-    // Try to find an online partner
-    if (socket && onlineUsers.length > 0) {
-      const randomPartner = onlineUsers[Math.floor(Math.random() * onlineUsers.length)]
-      console.log('Calling partner:', randomPartner)
-      startCall(randomPartner)
-    } else {
-      console.log('No online users found, waiting for someone to join...')
-      // Keep in matching state, wait for someone to join
-      // The online-users event will update the list
-    }
+    findPartner(userId, 'Guest')
   }
 
-  // Start audio-only practice (for users without camera)
-  const startPracticeAudioOnly = () => {
-    console.log('Starting audio-only practice')
-    setPracticeState('matching')
-    setIsCameraOff(true)
-    
-    // Initialize media with audio only, then call
-    if (socket && onlineUsers.length > 0) {
-      const randomPartner = onlineUsers[Math.floor(Math.random() * onlineUsers.length)]
-      console.log('Calling partner (audio-only):', randomPartner)
-      startCall(randomPartner)
-    }
-  }
-
-  // Auto-call when online users become available
-  useEffect(() => {
-    if (practiceState === 'matching' && onlineUsers.length > 0 && socket) {
-      console.log('Online users now available, initiating call to:', onlineUsers[0])
-      const randomPartner = onlineUsers[Math.floor(Math.random() * onlineUsers.length)]
-      startCall(randomPartner)
-    }
-  }, [onlineUsers, practiceState, socket, startCall])
-
-  // Accept incoming call
-  const acceptCall = async () => {
-    if (incomingCall) {
-      await acceptWebRTCCall(incomingCall.offer, incomingCall.callerId)
-      setCallTimer(240)
-      setPracticeState('incall')
-      setIncomingCall(null)
-    }
-  }
-
-  // Reject incoming call
-  const rejectCall = () => {
-    setIncomingCall(null)
+  const handleCancelMatching = () => {
+    cancelMatching(userId)
     setPracticeState('idle')
-    if (socket && incomingCall) {
-      socket.emit('call-rejected', { callerId: incomingCall.callerId })
-    }
   }
 
-  // End call
-  const handleEndCall = () => {
-    endWebRTCCall()
+  const handleLeaveCall = () => {
+    if (matchData) {
+      endCall(matchData.matchId, userId)
+    }
     setPracticeState('idle')
     setCallTimer(240)
-    setIsMuted(false)
-    setIsCameraOff(false)
-    setIncomingCall(null)
   }
 
   return (
@@ -159,20 +145,22 @@ export function PracticeScreen() {
         <p className="text-sm text-muted-foreground bengali-text">আরবি কথোপকথন অনুশীলন</p>
         
         {/* Error Message */}
-        {rtcError && (
+        {matchingError && (
           <div className="mt-3 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
             <p className="text-sm text-destructive bengali-text flex items-center gap-2">
               <span>⚠️</span>
-              {rtcError}
+              {matchingError}
             </p>
-            <button 
-              onClick={() => window.location.reload()}
-              className="mt-2 text-xs text-destructive underline hover:no-underline bengali-text"
-            >
-              পেজ রিলোড করুন
-            </button>
           </div>
         )}
+
+        {/* Connection Status */}
+        <div className="mt-2 flex items-center gap-2">
+          <div className={`w-2 h-2 rounded-full ${isPusherConnected ? 'bg-green-500' : 'bg-red-500'}`} />
+          <span className="text-xs text-muted-foreground">
+            {isPusherConnected ? 'Connected' : 'Connecting...'}
+          </span>
+        </div>
       </div>
 
       <div className="flex-1 px-4">
@@ -186,7 +174,6 @@ export function PracticeScreen() {
               exit={{ opacity: 0, scale: 0.95 }}
               className="flex flex-col items-center justify-center h-full pb-20"
             >
-              {/* Decorative circle */}
               <div className="relative mb-8">
                 <div className="w-40 h-40 rounded-full gradient-islamic flex items-center justify-center shadow-xl">
                   <Video className="w-16 h-16 text-white" />
@@ -198,43 +185,53 @@ export function PracticeScreen() {
 
               <h2 className="text-xl font-bold bengali-text mb-2">আরবি কথা বলুন</h2>
               <p className="text-sm text-muted-foreground text-center max-w-xs mb-8 bengali-text">
-                ভিডিও কলের মাধ্যমে আরবি ভাষায় কথোপকথন অনুশীলন করুন এবং আপনার দক্ষতা বাড়ান
+                NeonDB + Pusher দিয়ে রিয়েল-টাইম র‍্যান্ডম ম্যাচিং
               </p>
 
-              <div className="flex flex-col gap-3">
-                <Button
-                  onClick={startPractice}
-                  className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-2xl h-14 px-8 text-lg font-semibold shadow-lg"
-                >
-                  <Video className="w-5 h-5" />
-                  <span className="bengali-text">ভিডিও প্র্যাকটিস</span>
-                </Button>
+              <div className="flex flex-col gap-3 w-full max-w-xs">
+                {session?.user ? (
+                  <Button
+                    onClick={handleCreateCall}
+                    disabled={creatingCall}
+                    className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-2xl h-14 px-8 text-lg font-semibold shadow-lg w-full"
+                  >
+                    {creatingCall ? (
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                    ) : (
+                      <Video className="w-5 h-5" />
+                    )}
+                    <span className="bengali-text">
+                      {creatingCall ? 'কল তৈরি হচ্ছে...' : 'কল করুন'}
+                    </span>
+                  </Button>
+                ) : (
+                  <div className="text-center p-4 bg-secondary/50 rounded-xl">
+                    <p className="text-sm text-muted-foreground bengali-text mb-2">
+                      ভিডিও কল করতে লগইন করুন
+                    </p>
+                  </div>
+                )}
                 
-                <Button
-                  onClick={() => startPracticeAudioOnly()}
-                  variant="outline"
-                  className="gap-2 rounded-2xl h-12 px-6 text-base font-medium"
-                >
-                  <Volume2 className="w-5 h-5" />
-                  <span className="bengali-text">অডিও শুধু (ক্যামেরা নেই)</span>
-                </Button>
+                <p className="text-xs text-muted-foreground text-center bengali-text mt-2">
+                  Powered by Agora + Pusher + NeonDB
+                </p>
               </div>
 
-              {/* Quick tips */}
+              {/* How it works */}
               <div className="mt-8 w-full max-w-xs">
-                <p className="text-xs text-muted-foreground text-center mb-3 bengali-text">প্র্যাকটিস টিপস</p>
+                <p className="text-xs text-muted-foreground text-center mb-3 bengali-text">কিভাবে কাজ করে</p>
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 bg-secondary/50 rounded-xl p-3">
-                    <span className="text-base">🎯</span>
-                    <p className="text-xs text-card-foreground bengali-text">নির্দিষ্ট বিষয়ে কথা বলার চেষ্টা করুন</p>
+                    <span className="text-base">1️⃣</span>
+                    <p className="text-xs text-card-foreground bengali-text">"পার্টনার খুঁজুন" চাপুন</p>
                   </div>
                   <div className="flex items-center gap-2 bg-secondary/50 rounded-xl p-3">
-                    <span className="text-base">⏱️</span>
-                    <p className="text-xs text-card-foreground bengali-text">প্রতিটি সেশন ৪ মিনিটের হবে</p>
+                    <span className="text-base">2️⃣</span>
+                    <p className="text-xs text-card-foreground bengali-text">NeonDB Queue তে যোগ হবেন</p>
                   </div>
                   <div className="flex items-center gap-2 bg-secondary/50 rounded-xl p-3">
-                    <span className="text-base">💡</span>
-                    <p className="text-xs text-card-foreground bengali-text">ভুল করতে ভয় পাবেন না, শিখুন!</p>
+                    <span className="text-base">3️⃣</span>
+                    <p className="text-xs text-card-foreground bengali-text">Pusher রিয়েল-টাইম মিলিয়ে দেবে</p>
                   </div>
                 </div>
               </div>
@@ -242,21 +239,18 @@ export function PracticeScreen() {
           )}
 
           {/* MATCHING STATE */}
-          {practiceState === 'matching' && (
+          {practiceState === 'matching' && !isMatched && (
             <motion.div
               key="matching"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="flex flex-col items-center justify-center h-full pb-20"
+              className="flex flex-col items-center justify-center h-full pb-20 px-4"
             >
-              <div className="relative mb-8">
-                {/* Pulsing rings */}
-                <div className="relative w-32 h-32">
+              <div className="relative mb-6">
+                <div className="relative w-28 h-28">
                   <div className="absolute inset-0 rounded-full bg-primary/20 animate-ping" style={{ animationDuration: '2s' }} />
-                  <div className="absolute inset-3 rounded-full bg-primary/30 animate-ping" style={{ animationDuration: '2s', animationDelay: '0.5s' }} />
-                  <div className="absolute inset-6 rounded-full bg-primary/40 animate-ping" style={{ animationDuration: '2s', animationDelay: '1s' }} />
-                  <div className="relative w-32 h-32 rounded-full gradient-islamic flex items-center justify-center z-10">
+                  <div className="relative w-28 h-28 rounded-full gradient-islamic flex items-center justify-center z-10">
                     <Users className="w-12 h-12 text-white" />
                   </div>
                 </div>
@@ -267,17 +261,22 @@ export function PracticeScreen() {
                 transition={{ repeat: Infinity, duration: 2 }}
                 className="text-lg font-semibold bengali-text mb-2"
               >
-                {onlineUsers.length === 0 ? 'পার্টনারের অপেক্ষায়...' : 'পার্টনার খোঁজা হচ্ছে...'}
+                {isWaiting ? 'পার্টনারের জন্য অপেক্ষা...' : 'পার্টনার খোঁজা হচ্ছে...'}
               </motion.h2>
-              <p className="text-sm text-muted-foreground bengali-text text-center max-w-xs">
-                {onlineUsers.length === 0 
-                  ? 'আরেকজন user join করার অপেক্ষায় আছি। দুই নম্বর ব্রাউজারে অ্যাপ খুলুন।' 
-                  : `${onlineUsers.length} জন online আছেন। কল পাঠানো হচ্ছে...`}
+              
+              {isWaiting && (
+                <p className="text-sm text-muted-foreground bengali-text text-center">
+                  Queue Position: {queuePosition}
+                </p>
+              )}
+
+              <p className="text-xs text-muted-foreground text-center max-w-xs mt-4">
+                NeonDB তে আপনার রিকোয়েস্ট সেভ করা হয়েছে। অন্য কেউ খুঁজলে Pusher মিলিয়ে দেবে।
               </p>
 
               <Button
                 variant="ghost"
-                onClick={() => setPracticeState('idle')}
+                onClick={handleCancelMatching}
                 className="mt-8 text-muted-foreground bengali-text"
               >
                 বাতিল করুন
@@ -285,52 +284,34 @@ export function PracticeScreen() {
             </motion.div>
           )}
 
-          {/* INCOMING CALL STATE */}
-          {practiceState === 'incoming' && (
+          {/* MATCHED STATE */}
+          {practiceState === 'matching' && isMatched && matchData && (
             <motion.div
-              key="incoming"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="flex flex-col items-center justify-center h-full pb-20"
+              key="matched"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="flex flex-col items-center justify-center h-full pb-20 px-4"
             >
-              <div className="relative mb-6">
-                <div className="w-28 h-28 rounded-full bg-primary/10 flex items-center justify-center">
-                  <div className="w-20 h-20 rounded-full gradient-islamic flex items-center justify-center">
-                    <span className="text-3xl text-white font-bold">ع</span>
-                  </div>
-                </div>
-                {/* Ringing animation */}
-                <div className="absolute inset-0 rounded-full border-2 border-primary animate-ping" style={{ animationDuration: '1.5s' }} />
+              <div className="w-24 h-24 rounded-full bg-emerald-500 flex items-center justify-center mb-4">
+                <User className="w-12 h-12 text-white" />
               </div>
-
-              <h2 className="text-lg font-semibold bengali-text mb-1">আগত কল</h2>
-              <p className="text-sm text-muted-foreground bengali-text mb-8">একজন পার্টনার প্রস্তুত!</p>
-
-              <div className="flex items-center gap-6">
-                <button
-                  onClick={rejectCall}
-                  className="w-16 h-16 rounded-full bg-destructive flex items-center justify-center shadow-lg hover:bg-destructive/90 transition-colors"
-                >
-                  <PhoneOff className="w-7 h-7 text-white" />
-                </button>
-                <button
-                  onClick={acceptCall}
-                  className="w-16 h-16 rounded-full bg-primary flex items-center justify-center shadow-lg hover:bg-primary/90 transition-colors"
-                >
-                  <Phone className="w-7 h-7 text-white" />
-                </button>
-              </div>
-
-              <div className="flex items-center gap-6 mt-4">
-                <span className="text-xs text-destructive font-medium bengali-text">প্রত্যাখ্যান</span>
-                <span className="text-xs text-primary font-medium bengali-text">গ্রহণ</span>
-              </div>
+              
+              <h2 className="text-xl font-bold text-emerald-500 bengali-text mb-2">
+                পার্টনার পাওয়া গেছে!
+              </h2>
+              <p className="text-sm text-muted-foreground text-center mb-2">
+                Partner: {matchData.partnerName}
+              </p>
+              <p className="text-xs text-muted-foreground text-center mb-6">
+                Channel: {matchData.channelName}
+              </p>
+              
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
             </motion.div>
           )}
 
           {/* VIDEO CALL STATE */}
-          {practiceState === 'incall' && (
+          {practiceState === 'incall' && matchData && (
             <motion.div
               key="incall"
               initial={{ opacity: 0 }}
@@ -338,17 +319,23 @@ export function PracticeScreen() {
               exit={{ opacity: 0 }}
               className="flex flex-col h-full"
             >
-              <VideoCall
-                localStream={localStream}
-                remoteStream={remoteStream}
-                isConnected={isRTCConnected}
-                isConnecting={isRTCConnecting}
-                callTimer={callTimer}
-                partnerName={incomingCall?.callerId || 'পার্টনার'}
-                onEndCall={handleEndCall}
-                onToggleMute={toggleMute}
-                onToggleVideo={toggleVideo}
-              />
+              {!process.env.NEXT_PUBLIC_AGORA_APP_ID ? (
+                <div className="flex flex-col items-center justify-center h-full p-4">
+                  <div className="p-4 bg-destructive/10 rounded-xl text-center">
+                    <p className="text-destructive font-medium mb-2">⚠️ Agora App ID Missing</p>
+                    <p className="text-sm text-muted-foreground">.env file এ NEXT_PUBLIC_AGORA_APP_ID যোগ করুন</p>
+                  </div>
+                </div>
+              ) : (
+                <AgoraVideoCall
+                  appId={process.env.NEXT_PUBLIC_AGORA_APP_ID}
+                  channel={matchData.channelName}
+                  token={agoraToken}
+                  uid={userId}
+                  onLeave={handleLeaveCall}
+                  callTimer={callTimer}
+                />
+              )}
             </motion.div>
           )}
         </AnimatePresence>
@@ -356,3 +343,5 @@ export function PracticeScreen() {
     </div>
   )
 }
+
+export default PracticeScreen

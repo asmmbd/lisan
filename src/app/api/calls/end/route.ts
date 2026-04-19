@@ -2,7 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { pusherServer } from '@/lib/pusher'
+import { pusherTrigger } from '@/lib/pusher'
+
+// Force dynamic to avoid static generation issues
+export const dynamic = 'force-dynamic'
 
 export async function POST(req: NextRequest) {
   try {
@@ -36,7 +39,7 @@ export async function POST(req: NextRequest) {
     })
 
     // Notify other participant
-    await pusherServer.trigger(`room-${roomId}`, 'call-ended', {
+    await pusherTrigger(`room-${roomId}`, 'call-ended', {
       endedBy: session.user.id,
     })
 

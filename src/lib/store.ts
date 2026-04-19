@@ -32,6 +32,9 @@ interface AppState {
   setIsLoading: (loading: boolean) => void
   error: string | null
   setError: (error: string | null) => void
+  // Vocabulary (Dynamic)
+  vocabulary: any[]
+  setVocabulary: (vocabulary: any[]) => void
   // Fetch all user data
   fetchUserData: () => Promise<void>
 }
@@ -42,6 +45,10 @@ export const useAppStore = create<AppState>((set, get) => ({
   setActiveTab: (tab) => set({ activeTab: tab }),
   showOnboarding: false,
   setShowOnboarding: (show) => set({ showOnboarding: show }),
+  
+  // Vocabulary
+  vocabulary: [],
+  setVocabulary: (vocabulary) => set({ vocabulary }),
   
   // Loading & Error
   isLoading: false,
@@ -178,6 +185,13 @@ export const useAppStore = create<AppState>((set, get) => ({
       if (historyRes.ok) {
         const historyData = await historyRes.json()
         set({ searchHistory: historyData.history || [] })
+      }
+
+      // Fetch vocabulary
+      const vocabRes = await fetch('/api/vocabulary')
+      if (vocabRes.ok) {
+        const vocabData = await vocabRes.json()
+        set({ vocabulary: vocabData.vocabulary || [] })
       }
     } catch (err) {
       console.error('Error fetching user data:', err)

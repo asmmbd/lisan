@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion'
 import { Bell } from 'lucide-react'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { categoryInfo, vocabularySets, dailyWords } from '@/lib/vocabulary-data'
+import { categoryInfo, vocabularySets } from '@/lib/vocabulary-data'
 import { useAppStore } from '@/lib/store'
 import { Progress } from '@/components/ui/progress'
 import { Button } from '@/components/ui/button'
@@ -26,19 +26,22 @@ const item = {
 }
 
 export function HomeScreen() {
-  const { setActiveTab, savedWordIds, toggleSaveWord } = useAppStore()
+  const { setActiveTab, savedWordIds, toggleSaveWord, vocabulary } = useAppStore()
   const [dailyIndex, setDailyIndex] = useState(0)
   const scrollRef = useRef<HTMLDivElement>(null)
 
   const categories = ['quranic', 'hadith', 'daily'] as const
 
   const nextDaily = useCallback(() => {
-    setDailyIndex((prev) => (prev + 1) % dailyWords.length)
-  }, [])
+    if (vocabulary.length === 0) return
+    setDailyIndex((prev) => (prev + 1) % Math.min(vocabulary.length, 5))
+  }, [vocabulary.length])
 
   const prevDaily = useCallback(() => {
-    setDailyIndex((prev) => (prev - 1 + dailyWords.length) % dailyWords.length)
-  }, [])
+    if (vocabulary.length === 0) return
+    const count = Math.min(vocabulary.length, 5)
+    setDailyIndex((prev) => (prev - 1 + count) % count)
+  }, [vocabulary.length])
 
   // Auto-rotate daily word
   useEffect(() => {
@@ -46,6 +49,7 @@ export function HomeScreen() {
     return () => clearInterval(interval)
   }, [nextDaily])
 
+  const dailyWords = vocabulary.slice(0, 5)
   const currentDaily = dailyWords[dailyIndex]
   const isSaved = currentDaily ? savedWordIds.includes(currentDaily.id) : false
 

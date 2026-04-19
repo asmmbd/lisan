@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev -p 3000",
     "dev:server": "cd server && bun run dev",
-    "build": "next build && cp -r .next/static .next/standalone/.next/ && cp -r public .next/standalone/",
+    "build": "next build && bun run scripts/copy-assets.ts",
     "start": "NODE_ENV=production bun .next/standalone/server.js",
     "start:server": "cd server && bun run start",
     "lint": "eslint .",
@@ -67,8 +67,8 @@
     "framer-motion": "^12.23.2",
     "input-otp": "^1.4.2",
     "lucide-react": "^0.525.0",
-    "next": "^16.1.1",
-    "next-auth": "^4.24.14",
+    "next": "15.1.1",
+    "next-auth": "^4.24.11",
     "next-intl": "^4.3.4",
     "next-themes": "^0.4.6",
     "prisma": "^6.11.1",
@@ -99,9 +99,12 @@
     "@types/react-dom": "^19",
     "bun-types": "^1.3.4",
     "eslint": "^9",
-    "eslint-config-next": "^16.1.1",
+    "eslint-config-next": "15.1.1",
     "tailwindcss": "^4",
     "tw-animate-css": "^1.3.5",
     "typescript": "^5"
+  },
+  "prisma": {
+    "seed": "bun run prisma/seed.ts"
   }
 }

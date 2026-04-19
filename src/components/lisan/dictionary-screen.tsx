@@ -6,12 +6,12 @@ import { Search, Mic, X, Volume2, Bookmark, BookmarkCheck, ArrowLeft, ChevronRig
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { vocabularyWords, type VocabularyWord } from '@/lib/vocabulary-data'
+import { type VocabularyWord } from '@/lib/vocabulary-data'
 import { useAppStore } from '@/lib/store'
 import { ScrollArea } from '@/components/ui/scroll-area'
 
 export function DictionaryScreen() {
-  const { savedWordIds, toggleSaveWord, searchHistory, addToHistory } = useAppStore()
+  const { savedWordIds, toggleSaveWord, searchHistory, addToHistory, vocabulary } = useAppStore()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedWord, setSelectedWord] = useState<VocabularyWord | null>(null)
   const [isSearching, setIsSearching] = useState(false)
@@ -28,14 +28,14 @@ export function DictionaryScreen() {
   const filteredWords = useMemo(() => {
     if (!searchQuery.trim()) return []
     const q = searchQuery.toLowerCase()
-    return vocabularyWords.filter(
+    return (vocabulary as VocabularyWord[]).filter(
       (w) =>
         w.arabic.includes(q) ||
         w.bengali.includes(q) ||
         w.pronunciation.toLowerCase().includes(q) ||
         w.category.includes(q)
     )
-  }, [searchQuery])
+  }, [searchQuery, vocabulary])
 
   const handleSearch = (value: string) => {
     setSearchQuery(value)

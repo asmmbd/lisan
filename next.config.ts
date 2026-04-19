@@ -7,6 +7,15 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: true,
   },
   reactStrictMode: false,
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      config.externals = [
+        ...(Array.isArray(config.externals) ? config.externals : []),
+        { '@prisma/client': 'commonjs @prisma/client' },
+      ]
+    }
+    return config
+  },
 };
 
 export default nextConfig;

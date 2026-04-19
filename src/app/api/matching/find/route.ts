@@ -20,89 +20,112 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'User ID required' }, { status: 400 })
     }
 
-    // Remove user from queue if already exists
+    // 1. Cleanup stale entries (older than 3 minutes)
+    const threeMinutesAgo = new Date(Date.now() - 3 * 60 * 1000)
     await prisma.matchingQueue.deleteMany({
-      where: { userId }
-    })
-
-    // Find waiting partner
-    const partner = await prisma.matchingQueue.findFirst({
       where: {
-        userId: { not: userId },
-        status: 'waiting'
-      },
-      orderBy: { joinedAt: 'asc' }
+        OR: [
+          { updatedAt: { lt: threeMinutesAgo } },
+          { userId: userId } // Always cleanup self before starting fresh
+        ]
+      }
     })
 
-    if (partner) {
-      // Match found!
-      const channelName = `lisan-${Date.now()}-${Math.random().toString(36).substr(2, 8)}`
-      const matchId = `match-${Date.now()}`
+    // 2. Atomic Matching Logic
+    const result = await prisma.$transaction(async (tx) => {
+      // Find oldest waiting partner
+      const partner = await tx.matchingQueue.findFirst({
+        where: {
+          userId: { not: userId },
+          status: 'waiting'
+        },
+        orderBy: { joinedAt: 'asc' }
+      })
 
-      // Create match record
-      const match = await prisma.activeMatch.create({
+      if (partner) {
+        // Double check partner is still waiting (atomic check via update)
+        const updatedPartner = await tx.matchingQueue.updateMany({
+          where: {
+            id: partner.id,
+            status: 'waiting'
+          },
+          data: { status: 'matched' }
+        })
+
+        if (updatedPartner.count > 0) {
+          // Successfully claimed the partner!
+          const channelName = `lisan-${Date.now()}-${Math.random().toString(36).substr(2, 8)}`
+          const matchId = `match-${Date.now()}`
+
+          // Create match record
+          await tx.activeMatch.create({
+            data: {
+              matchId,
+              user1Id: userId,
+              user2Id: partner.userId,
+              channelName,
+              roomName: matchId,
+              status: 'waiting',
+            }
+          })
+
+          return { matched: true, partner, channelName, matchId }
+        }
+      }
+
+      // No partner or partner already claimed, join queue
+      const entry = await tx.matchingQueue.create({
         data: {
-          matchId,
-          user1Id: userId,
-          user2Id: partner.userId,
-          channelName,
-          roomName: matchId,
+          userId,
+          socketId: userId,
+          userName,
           status: 'waiting',
         }
       })
 
-      // Update both users in queue
-      await prisma.matchingQueue.updateMany({
-        where: { userId: { in: [userId, partner.userId] } },
-        data: { status: 'matched' }
+      // Count waiting users BEFORE this user
+      const waitingCount = await tx.matchingQueue.count({
+        where: { status: 'waiting' }
       })
 
-      // Notify partner via Pusher
-      await pusher.trigger(`user-${partner.userId}`, 'match-found', {
-        matchId,
+      return { matched: false, queuePosition: waitingCount }
+    })
+
+    if (result.matched && result.partner) {
+      // Notify partner via Pusher (Using obfuscated channel name)
+      const obfuscatedId = Buffer.from(result.partner.userId).toString('base64').replace(/=/g, '').slice(0, 12)
+      const partnerChannel = `u-${obfuscatedId}`
+      
+      await pusher.trigger(partnerChannel, 'match-found', {
+        matchId: result.matchId,
         partnerId: userId,
         partnerName: userName,
-        channelName,
-        roomName: matchId,
-        message: 'পার্টনার পাওয়া গেছে!'
+        channelName: result.channelName,
+        roomName: result.matchId,
+        message: 'পার্টনার পাওয়া গেছে!'
       })
 
-      console.log(`🎉 MATCHED: ${userId} <-> ${partner.userId}`)
+      console.log(`🎉 MATCHED: ${userId} <-> ${result.partner.userId}`)
 
       return NextResponse.json({
         success: true,
         matched: true,
-        matchId,
-        partnerId: partner.userId,
-        partnerName: partner.userName,
-        channelName,
-        roomName: matchId,
-        message: 'পার্টনার পাওয়া গেছে!'
+        matchId: result.matchId,
+        partnerId: result.partner.userId,
+        partnerName: result.partner.userName,
+        channelName: result.channelName,
+        roomName: result.matchId,
+        message: 'পার্টনার পাওয়া গেছে!'
       })
     }
 
-    // No partner found, add to queue
-    await prisma.matchingQueue.create({
-      data: {
-        userId,
-        socketId: userId, // Using userId as socketId for now
-        userName,
-        status: 'waiting',
-      }
-    })
-
-    // Count waiting users
-    const waitingCount = await prisma.matchingQueue.count({
-      where: { status: 'waiting' }
-    })
-
-    console.log(`⏳ User ${userId} waiting. Queue: ${waitingCount}`)
+    console.log(`⏳ User ${userId} waiting. Queue: ${result.queuePosition}`)
 
     return NextResponse.json({
       success: true,
       matched: false,
       waiting: true,
-      queuePosition: waitingCount,
+      queuePosition: result.queuePosition,
       message: 'পার্টনারের জন্য অপেক্ষা করা হচ্ছে...'
     })
 
