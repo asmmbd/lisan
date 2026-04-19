@@ -5,16 +5,16 @@ import { prisma } from '@/lib/prisma'
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { roomId: string } }
+  { params }: { params: Promise<{ roomId: string }> }
 ) {
   try {
+    const { roomId } = await params
     const session = await getServerSession(authOptions)
+    
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { roomId } = params
-    
     const room = await prisma.room.findUnique({
       where: { roomId },
       include: {
