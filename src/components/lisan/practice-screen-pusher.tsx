@@ -290,7 +290,7 @@ export function PracticeScreen() {
                 <AgoraVideoCall
                   appId={process.env.NEXT_PUBLIC_AGORA_APP_ID}
                   channel={matchData.channelName}
-                  token="" // Will be fetched from API
+                  token={agoraToken}
                   uid={userId}
                   onLeave={handleLeaveCall}
                   callTimer={callTimer}
