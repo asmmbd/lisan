@@ -248,14 +248,23 @@ export function PracticeScreen() {
               exit={{ opacity: 0 }}
               className="flex flex-col h-full"
             >
-              <AgoraVideoCall
-                appId={process.env.NEXT_PUBLIC_AGORA_APP_ID || ''}
-                channel={matchData.channelName}
-                token="" // Will be fetched from API
-                uid={userId}
-                onLeave={handleLeaveCall}
-                callTimer={callTimer}
-              />
+              {!process.env.NEXT_PUBLIC_AGORA_APP_ID ? (
+                <div className="flex flex-col items-center justify-center h-full p-4">
+                  <div className="p-4 bg-destructive/10 rounded-xl text-center">
+                    <p className="text-destructive font-medium mb-2">⚠️ Agora App ID Missing</p>
+                    <p className="text-sm text-muted-foreground">.env file এ NEXT_PUBLIC_AGORA_APP_ID যোগ করুন</p>
+                  </div>
+                </div>
+              ) : (
+                <AgoraVideoCall
+                  appId={process.env.NEXT_PUBLIC_AGORA_APP_ID}
+                  channel={matchData.channelName}
+                  token="" // Will be fetched from API
+                  uid={userId}
+                  onLeave={handleLeaveCall}
+                  callTimer={callTimer}
+                />
+              )}
             </motion.div>
           )}
         </AnimatePresence>
