@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion'
 import { Moon, Sun, Globe, Bell, LogOut, Trash2, ChevronRight, Shield } from 'lucide-react'
 import { useTheme } from 'next-themes'
+import { useSession, signOut } from 'next-auth/react'
 import { Switch } from '@/components/ui/switch'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -25,13 +26,19 @@ const item = {
 
 export function ProfileScreen() {
   const { theme, setTheme } = useTheme()
+  const { data: session } = useSession()
   const [notifications, setNotifications] = useState(true)
-  const { setActiveTab } = useAppStore()
+  const { setActiveTab, savedWordIds, notes } = useAppStore()
+  const user = session?.user
 
   const isDark = theme === 'dark'
 
   const toggleTheme = (checked: boolean) => {
     setTheme(checked ? 'dark' : 'light')
+  }
+
+  const handleLogout = async () => {
+    await signOut({ callbackUrl: '/login' })
   }
 
   return (
@@ -47,12 +54,12 @@ export function ProfileScreen() {
           <div className="flex items-center gap-4">
             <Avatar className="w-16 h-16 border-2 border-primary/20">
               <AvatarFallback className="bg-primary/10 text-primary text-xl font-bold">
-                আব্দ
+                {user?.name?.charAt(0) || user?.email?.charAt(0) || '?'}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1">
-              <h2 className="text-lg font-bold bengali-text">আব্দুল্লাহ আল-মামুন</h2>
-              <p className="text-sm text-muted-foreground">abdullah@email.com</p>
+              <h2 className="text-lg font-bold bengali-text">{user?.name || 'ব্যবহারকারী'}</h2>
+              <p className="text-sm text-muted-foreground">{user?.email || 'email@example.com'}</p>
               <div className="flex items-center gap-2 mt-1.5">
                 <div className="flex items-center gap-1 bg-primary/10 rounded-full px-2 py-0.5">
                   <Shield className="w-3 h-3 text-primary" />
@@ -65,15 +72,15 @@ export function ProfileScreen() {
           {/* Stats row */}
           <div className="grid grid-cols-3 gap-4 mt-4 pt-4 border-t border-border">
             <div className="text-center">
-              <p className="text-xl font-bold text-primary">২৮</p>
+              <p className="text-xl font-bold text-primary">{savedWordIds.length}</p>
               <p className="text-[10px] text-muted-foreground bengali-text">শব্দ শিখেছেন</p>
             </div>
             <div className="text-center">
-              <p className="text-xl font-bold text-islamic-gold">১২</p>
-              <p className="text-[10px] text-muted-foreground bengali-text">প্র্যাকটিস</p>
+              <p className="text-xl font-bold text-islamic-gold">{notes.length}</p>
+              <p className="text-[10px] text-muted-foreground bengali-text">নোট</p>
             </div>
             <div className="text-center">
-              <p className="text-xl font-bold text-secondary-foreground">৩</p>
+              <p className="text-xl font-bold text-secondary-foreground">{savedWordIds.length > 0 ? Math.ceil(savedWordIds.length / 5) : 0}</p>
               <p className="text-[10px] text-muted-foreground bengali-text">দিন স্ট্রিক</p>
             </div>
           </div>
@@ -170,7 +177,10 @@ export function ProfileScreen() {
       <motion.div variants={item} className="px-4 mt-5">
         <h3 className="text-sm font-semibold text-muted-foreground mb-3 bengali-text">অ্যাকাউন্ট</h3>
         <div className="bg-card rounded-2xl border border-border overflow-hidden shadow-sm">
-          <button className="flex items-center gap-3 p-4 w-full hover:bg-secondary/30 transition-colors">
+          <button 
+            onClick={handleLogout}
+            className="flex items-center gap-3 p-4 w-full hover:bg-secondary/30 transition-colors"
+          >
             <div className="w-9 h-9 rounded-xl bg-destructive/10 flex items-center justify-center">
               <LogOut className="w-4 h-4 text-destructive" />
             </div>

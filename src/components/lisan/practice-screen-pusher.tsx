@@ -1,7 +1,8 @@
 'use client'
 
 import { motion, AnimatePresence } from 'framer-motion'
-import { useEffect, useCallback, useState } from 'react'
+import { useEffect, useCallback } from 'react'
+import { useSession } from 'next-auth/react'
 import { Video, Users, Loader2, User, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAppStore } from '@/lib/store'
@@ -10,7 +11,8 @@ import { usePusherMatching } from '@/hooks/usePusherMatching'
 
 export function PracticeScreen() {
   const { practiceState, setPracticeState, callTimer, setCallTimer } = useAppStore()
-  const [userId] = useState(() => `user_${Math.random().toString(36).substr(2, 9)}`)
+  const { data: session } = useSession()
+  const userId = session?.user?.id || 'guest'
   
   const {
     isConnected: isPusherConnected,
@@ -120,16 +122,24 @@ export function PracticeScreen() {
               </p>
 
               <div className="flex flex-col gap-3 w-full max-w-xs">
-                <Button
-                  onClick={startMatching}
-                  disabled={!isPusherConnected}
-                  className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-2xl h-14 px-8 text-lg font-semibold shadow-lg w-full"
-                >
-                  <Search className="w-5 h-5" />
-                  <span className="bengali-text">
-                    {!isPusherConnected ? 'কানেক্ট হচ্ছে...' : 'পার্টনার খুঁজুন'}
-                  </span>
-                </Button>
+                {session?.user ? (
+                  <Button
+                    onClick={startMatching}
+                    disabled={!isPusherConnected}
+                    className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-2xl h-14 px-8 text-lg font-semibold shadow-lg w-full"
+                  >
+                    <Search className="w-5 h-5" />
+                    <span className="bengali-text">
+                      {!isPusherConnected ? 'কানেক্ট হচ্ছে...' : 'পার্টনার খুঁজুন'}
+                    </span>
+                  </Button>
+                ) : (
+                  <div className="text-center p-4 bg-secondary/50 rounded-xl">
+                    <p className="text-sm text-muted-foreground bengali-text mb-2">
+                      ভিডিও কল করতে লগইন করুন
+                    </p>
+                  </div>
+                )}
                 
                 <p className="text-xs text-muted-foreground text-center bengali-text mt-2">
                   Powered by Agora + Pusher + NeonDB

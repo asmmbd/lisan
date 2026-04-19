@@ -14,11 +14,46 @@ datasource db {
 }
 
 model User {
+  id            String         @id @default(cuid())
+  email         String         @unique
+  name          String?
+  password      String?        // Hashed password for credentials auth
+  image         String?
+  savedWords    SavedWord[]
+  notes         Note[]
+  searchHistory SearchHistory[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+// User's saved Arabic words
+model SavedWord {
   id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
+  wordId    String   // Reference to vocabulary word ID
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, wordId]) // Prevent duplicates
+}
+
+// User's personal notes
+model Note {
+  id        String   @id @default(cuid())
+  text      String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// User's search history
+model SearchHistory {
+  id        String   @id @default(cuid())
+  term      String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
 }
 
 model Post {

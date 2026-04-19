@@ -29,7 +29,7 @@ function useMounted() {
 }
 
 export default function Home() {
-  const { activeTab, showOnboarding, setShowOnboarding } = useAppStore()
+  const { activeTab, showOnboarding, setShowOnboarding, fetchUserData } = useAppStore()
   const mounted = useMounted()
 
   const handleOnboardingCheck = useCallback(() => {
@@ -41,7 +41,9 @@ export default function Home() {
 
   useEffect(() => {
     handleOnboardingCheck()
-  }, [handleOnboardingCheck])
+    // Fetch user data on mount
+    fetchUserData()
+  }, [handleOnboardingCheck, fetchUserData])
 
   const handleOnboardingComplete = () => {
     localStorage.setItem('lisan_onboarding_seen', 'true')
