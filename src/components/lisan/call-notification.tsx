@@ -23,13 +23,16 @@ export function CallNotification() {
     const channel = pusherClient.subscribe('calls')
 
     channel.bind('incoming-call', (data: IncomingCall) => {
-      console.log('Incoming call:', data)
+      console.log('Incoming call received in Notification:', data)
       setIncomingCall(data)
       
       // Auto-dismiss after 30 seconds
       setTimeout(() => {
         setIncomingCall((prev) => {
-          if (prev?.roomId === data.roomId) return null
+          if (prev?.roomId === data.roomId) {
+            console.log('Incoming call auto-dismissed')
+            return null
+          }
           return prev
         })
       }, 30000)
@@ -43,7 +46,8 @@ export function CallNotification() {
 
   const handleJoin = () => {
     if (incomingCall) {
-      router.push(`/room/${incomingCall.roomId}`)
+      console.log('Accepting call, navigating to room with join flag...')
+      router.push(`/room/${incomingCall.roomId}?join=true`)
       setIncomingCall(null)
     }
   }

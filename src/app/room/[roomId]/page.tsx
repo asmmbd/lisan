@@ -1,9 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useSession } from 'next-auth/react'
-import { useParams, useRouter } from 'next/navigation'
-import { motion } from 'framer-motion'
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
+import { motion, AnimatePresence } from 'framer-motion'
 import { PhoneOff, Loader2, Phone } from 'lucide-react'
 import { AgoraVideoCall } from '@/components/lisan/agora-video-call'
 import { useAppStore } from '@/lib/store'
@@ -11,12 +11,26 @@ import { pusherClient } from '@/lib/pusher'
 import { Button } from '@/components/ui/button'
 
 export default function RoomPage() {
+  return (
+    <Suspense fallback={
+      <div className="h-screen w-full flex items-center justify-center bg-black">
+        <Loader2 className="w-8 h-8 animate-spin text-white" />
+      </div>
+    }>
+      <RoomContent />
+    </Suspense>
+  )
+}
+
+function RoomContent() {
   const params = useParams()
+  const searchParams = useSearchParams()
   const router = useRouter()
   const { data: session } = useSession()
   const { setCallTimer } = useAppStore()
   
   const roomId = params.roomId as string
+  const autoJoin = searchParams.get('join') === 'true'
   
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -43,10 +57,17 @@ export default function RoomPage() {
         setRoom(data.room)
         setLoading(false)
 
-        // Auto-join if already participant
+        // Auto-join if already participant (e.g. caller)
         if (data.room.isCaller || data.room.isReceiver) {
           setHasJoined(true)
           fetchAgoraToken(data.room.channelName)
+          return
+        }
+
+        // Auto-join if navigated from notification with join flag
+        if (autoJoin && data.room.status === 'waiting') {
+          console.log('Auto-joining room based on notification flag...')
+          handleJoin()
         }
       } catch (err) {
         setError('Failed to load room')
@@ -55,7 +76,7 @@ export default function RoomPage() {
     }
 
     fetchRoom()
-  }, [roomId, session?.user?.id])
+  }, [roomId, session?.user?.id, autoJoin])
 
   // Subscribe to Pusher events
   useEffect(() => {
