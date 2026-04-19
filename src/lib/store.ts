@@ -32,9 +32,15 @@ interface AppState {
   setIsLoading: (loading: boolean) => void
   error: string | null
   setError: (error: string | null) => void
-  // Vocabulary (Dynamic)
+  // Vocabulary & Categories (Dynamic)
   vocabulary: any[]
+  categories: any[]
+  vocabularySets: any[]
   setVocabulary: (vocabulary: any[]) => void
+  setCategories: (categories: any[]) => void
+  setVocabularySets: (sets: any[]) => void
+  // User Actions
+  updateProfile: (data: { name?: string; image?: string }) => Promise<void>
   // Fetch all user data
   fetchUserData: () => Promise<void>
 }
@@ -46,15 +52,39 @@ export const useAppStore = create<AppState>((set, get) => ({
   showOnboarding: false,
   setShowOnboarding: (show) => set({ showOnboarding: show }),
   
-  // Vocabulary
+  // Vocabulary & Metadata
   vocabulary: [],
+  categories: [],
+  vocabularySets: [],
   setVocabulary: (vocabulary) => set({ vocabulary }),
+  setCategories: (categories) => set({ categories }),
+  setVocabularySets: (vocabularySets) => set({ vocabularySets }),
   
   // Loading & Error
   isLoading: false,
   setIsLoading: (loading) => set({ isLoading: loading }),
   error: null,
   setError: (error) => set({ error }),
+  
+  // User Profile
+  updateProfile: async (data) => {
+    try {
+      const response = await fetch('/api/user/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      })
+      
+      if (!response.ok) throw new Error('Failed to update profile')
+      
+      // We don't necessarily update a global "user" state in Zustand 
+      // since NextAuth handles it, but we could if we wanted to.
+      // For now, NextAuth will pick it up on next session refresh.
+    } catch (err) {
+      console.error('Error updating profile:', err)
+      set({ error: 'Failed to update profile' })
+    }
+  },
   
   // Saved Words (API-backed)
   savedWordIds: [],
@@ -192,6 +222,16 @@ export const useAppStore = create<AppState>((set, get) => ({
       if (vocabRes.ok) {
         const vocabData = await vocabRes.json()
         set({ vocabulary: vocabData.vocabulary || [] })
+      }
+
+      // Fetch metadata (Categories & Sets)
+      const metadataRes = await fetch('/api/categories')
+      if (metadataRes.ok) {
+        const metadataData = await metadataRes.json()
+        set({ 
+          categories: metadataData.categories || [],
+          vocabularySets: metadataData.sets || []
+        })
       }
     } catch (err) {
       console.error('Error fetching user data:', err)

@@ -1,15 +1,13 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { Bell } from 'lucide-react'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { categoryInfo, vocabularySets } from '@/lib/vocabulary-data'
 import { useAppStore } from '@/lib/store'
 import { Progress } from '@/components/ui/progress'
 import { Button } from '@/components/ui/button'
-import { Bookmark, BookmarkCheck, Volume2, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Bookmark, BookmarkCheck, Volume2, ChevronLeft, ChevronRight, User, Bell } from 'lucide-react'
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { Badge } from '@/components/ui/badge'
+import { useSession } from 'next-auth/react'
 import Image from 'next/image'
 
 const container = {
@@ -26,11 +24,15 @@ const item = {
 }
 
 export function HomeScreen() {
-  const { setActiveTab, savedWordIds, toggleSaveWord, vocabulary } = useAppStore()
+  const { data: session } = useSession()
+  const { setActiveTab, savedWordIds, toggleSaveWord, vocabulary, categories, vocabularySets } = useAppStore()
   const [dailyIndex, setDailyIndex] = useState(0)
   const scrollRef = useRef<HTMLDivElement>(null)
 
-  const categories = ['quranic', 'hadith', 'daily'] as const
+  const user = session?.user
+
+  // Show first 3 categories by default if not loaded
+  const topCategories = categories.length > 0 ? categories.slice(0, 3) : []
 
   const nextDaily = useCallback(() => {
     if (vocabulary.length === 0) return
@@ -75,11 +77,13 @@ export function HomeScreen() {
           <button className="w-10 h-10 rounded-full bg-secondary/80 flex items-center justify-center hover:bg-secondary transition-colors">
             <Bell className="w-5 h-5 text-secondary-foreground" />
           </button>
-          <Avatar className="w-10 h-10 border-2 border-primary/20">
-            <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
-              আ
-            </AvatarFallback>
-          </Avatar>
+          <div className="w-10 h-10 rounded-full border-2 border-primary/20 bg-primary/10 flex items-center justify-center overflow-hidden">
+            {user?.image ? (
+              <Image src={user.image} alt={user.name || ''} width={40} height={40} />
+            ) : (
+              <User className="w-5 h-5 text-primary" />
+            )}
+          </div>
         </div>
       </motion.div>
 
@@ -87,20 +91,19 @@ export function HomeScreen() {
       <motion.div variants={item} className="px-4 mt-4">
         <h2 className="text-sm font-semibold text-muted-foreground mb-3 bengali-text">বিভাগসমূহ</h2>
         <div className="grid grid-cols-3 gap-3">
-          {categories.map((cat) => {
-            const info = categoryInfo[cat]
+          {topCategories.map((cat) => {
             return (
               <motion.button
-                key={cat}
+                key={cat.id}
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
                 onClick={() => setActiveTab('dictionary')}
-                className={`bg-gradient-to-br ${info.gradient} rounded-2xl p-4 text-white text-center shadow-md hover:shadow-lg transition-shadow`}
+                className={`bg-gradient-to-br ${cat.gradient || 'from-primary to-primary/80'} rounded-2xl p-4 text-white text-center shadow-md hover:shadow-lg transition-shadow`}
               >
-                <span className="text-3xl mb-2 block">{info.icon}</span>
-                <span className="text-xs font-semibold leading-tight block bengali-text">{info.title}</span>
+                <span className="text-3xl mb-2 block">{cat.icon}</span>
+                <span className="text-xs font-semibold leading-tight block bengali-text">{cat.title}</span>
                 <Badge variant="secondary" className="mt-1.5 bg-white/20 text-white border-0 text-[10px] px-1.5">
-                  {info.count} শব্দ
+                  {vocabulary.filter(v => v.categorySlug === cat.slug).length} শব্দ
                 </Badge>
               </motion.button>
             )
@@ -129,13 +132,13 @@ export function HomeScreen() {
               className="flex-shrink-0 w-44 bg-card rounded-2xl p-4 border border-border shadow-sm hover:shadow-md transition-shadow text-left"
             >
               <span className="text-2xl">{set.icon}</span>
-              <h3 className="text-sm font-semibold mt-2 bengali-text text-card-foreground">{set.title}</h3>
+              <h3 className="text-sm font-semibold mt-2 bengali-text text-card-foreground line-clamp-1">{set.title}</h3>
               <div className="mt-3">
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-[10px] text-muted-foreground bengali-text">{set.progress}/{set.total} শিখেছেন</span>
-                  <span className="text-[10px] text-primary font-semibold">{Math.round((set.progress / set.total) * 100)}%</span>
+                  <span className="text-[10px] text-muted-foreground bengali-text">০/{set.total} শিখেছেন</span>
+                  <span className="text-[10px] text-primary font-semibold">০%</span>
                 </div>
-                <Progress value={(set.progress / set.total) * 100} className="h-1.5" />
+                <Progress value={0} className="h-1.5" />
               </div>
             </motion.button>
           ))}
@@ -151,9 +154,8 @@ export function HomeScreen() {
               <button
                 key={idx}
                 onClick={() => setDailyIndex(idx)}
-                className={`w-2 h-2 rounded-full transition-all ${
-                  idx === dailyIndex ? 'w-4 bg-primary' : 'bg-muted-foreground/30'
-                }`}
+                className={`w-2 h-2 rounded-full transition-all ${idx === dailyIndex ? 'w-4 bg-primary' : 'bg-muted-foreground/30'
+                  }`}
               />
             ))}
           </div>

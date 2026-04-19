@@ -6,12 +6,21 @@ import { Search, Mic, X, Volume2, Bookmark, BookmarkCheck, ArrowLeft, ChevronRig
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { type VocabularyWord } from '@/lib/vocabulary-data'
 import { useAppStore } from '@/lib/store'
 import { ScrollArea } from '@/components/ui/scroll-area'
 
+interface VocabularyWord {
+  id: string
+  arabic: string
+  bengali: string
+  pronunciation: string
+  example: string
+  exampleTranslation: string
+  categorySlug: string
+}
+
 export function DictionaryScreen() {
-  const { savedWordIds, toggleSaveWord, searchHistory, addToHistory, vocabulary } = useAppStore()
+  const { savedWordIds, toggleSaveWord, searchHistory, addToHistory, vocabulary, categories } = useAppStore()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedWord, setSelectedWord] = useState<VocabularyWord | null>(null)
   const [isSearching, setIsSearching] = useState(false)
@@ -33,7 +42,7 @@ export function DictionaryScreen() {
         w.arabic.includes(q) ||
         w.bengali.includes(q) ||
         w.pronunciation.toLowerCase().includes(q) ||
-        w.category.includes(q)
+        w.categorySlug.includes(q)
     )
   }, [searchQuery, vocabulary])
 
@@ -125,25 +134,18 @@ export function DictionaryScreen() {
               {/* Browse by category */}
               <h3 className="text-sm font-semibold text-muted-foreground mb-3 bengali-text">বিভাগ অনুসারে ব্রাউজ</h3>
               <div className="grid grid-cols-2 gap-2 mb-6">
-                {Object.entries({
-                  quranic: { title: 'কোরআনিক', emoji: '📖', count: 5 },
-                  hadith: { title: 'হাদিসের', emoji: '📿', count: 5 },
-                  daily: { title: 'দৈনন্দিন', emoji: '🏠', count: 5 },
-                  study: { title: 'পড়াশোনা', emoji: '📚', count: 3 },
-                  food: { title: 'খাবার', emoji: '🍽️', count: 2 },
-                  family: { title: 'পরিবার', emoji: '👨‍👩‍👧‍👦', count: 3 },
-                  sports: { title: 'খেলাধুলা', emoji: '⚽', count: 3 },
-                  travel: { title: 'ভ্রমণ', emoji: '✈️', count: 2 },
-                }).map(([key, cat]) => (
+                {categories.map((cat) => (
                   <button
-                    key={key}
-                    onClick={() => { setSearchQuery(key === 'quranic' ? 'كتاب' : key); setIsSearching(true) }}
+                    key={cat.id}
+                    onClick={() => { setSearchQuery(cat.slug); setIsSearching(true) }}
                     className="flex items-center gap-3 bg-card rounded-xl p-3 border border-border hover:shadow-sm transition-shadow"
                   >
-                    <span className="text-xl">{cat.emoji}</span>
+                    <span className="text-xl">{cat.icon}</span>
                     <div className="text-left">
                       <p className="text-sm font-medium bengali-text">{cat.title}</p>
-                      <p className="text-[10px] text-muted-foreground bengali-text">{cat.count} শব্দ</p>
+                      <p className="text-[10px] text-muted-foreground bengali-text">
+                        {vocabulary.filter((v: any) => v.categorySlug === cat.slug).length} শব্দ
+                      </p>
                     </div>
                   </button>
                 ))}

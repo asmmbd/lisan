@@ -42,20 +42,6 @@ model SavedWord {
   @@unique([userId, wordId]) // Keep original unique constraint for now
 }
 
-// Global vocabulary database
-model Vocabulary {
-  id                 String      @id @default(cuid())
-  arabic             String
-  bengali            String
-  pronunciation      String
-  example            String?
-  exampleTranslation String?
-  category           String      // 'quranic', 'hadith', 'daily', etc.
-  savedBy            SavedWord[]
-  createdAt          DateTime    @default(now())
-  updatedAt          DateTime    @updatedAt
-}
-
 // User's personal notes
 model Note {
   id        String   @id @default(cuid())
@@ -75,14 +61,42 @@ model SearchHistory {
   createdAt DateTime @default(now())
 }
 
-model Post {
-  id        String   @id @default(cuid())
+// Global vocabulary database
+model Vocabulary {
+  id                 String          @id @default(cuid())
+  arabic             String
+  bengali            String
+  pronunciation      String
+  example            String?
+  exampleTranslation String?
+  categorySlug       String          // Foreign key to Category.slug
+  category           Category        @relation(fields: [categorySlug], references: [slug])
+  savedBy            SavedWord[]
+  sets               VocabularySet[] @relation("SetWords")
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+}
+
+// Vocabulary Categories (Metadata)
+model Category {
+  id        String       @id @default(cuid())
+  slug      String       @unique // 'quranic', 'hadith', 'daily', etc.
   title     String
-  content   String?
-  published Boolean  @default(false)
-  authorId  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  icon      String?
+  gradient  String?
+  words     Vocabulary[]
+  createdAt DateTime     @default(now())
+}
+
+// Vocabulary Sets (e.g., "Daily 100 words")
+model VocabularySet {
+  id          String       @id @default(cuid())
+  title       String
+  icon        String?
+  total       Int          @default(0)
+  category    String?      // Reference to category slug
+  words       Vocabulary[] @relation("SetWords")
+  createdAt   DateTime     @default(now())
 }
 
 // Video Call Matching Queue

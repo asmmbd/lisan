@@ -9,7 +9,9 @@ import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Separator } from '@/components/ui/separator'
 import { useAppStore } from '@/lib/store'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { Input } from '@/components/ui/input'
+import { toast } from 'sonner'
 
 const container = {
   hidden: { opacity: 0 },
@@ -26,10 +28,16 @@ const item = {
 
 export function ProfileScreen() {
   const { theme, setTheme } = useTheme()
-  const { data: session } = useSession()
+  const { data: session, update: updateSession } = useSession()
   const [notifications, setNotifications] = useState(true)
-  const { setActiveTab, savedWordIds, notes } = useAppStore()
+  const { setActiveTab, savedWordIds, notes, updateProfile } = useAppStore()
+  const [isEditing, setIsEditing] = useState(false)
+  const [newName, setNewName] = useState('')
   const user = session?.user
+
+  useEffect(() => {
+    if (user?.name) setNewName(user.name)
+  }, [user?.name])
 
   const isDark = theme === 'dark'
 
@@ -39,6 +47,18 @@ export function ProfileScreen() {
 
   const handleLogout = async () => {
     await signOut({ callbackUrl: '/login' })
+  }
+
+  const handleUpdateName = async () => {
+    if (!newName.trim()) return
+    try {
+      await updateProfile({ name: newName })
+      await updateSession({ name: newName })
+      setIsEditing(false)
+      toast.success('প্রোফাইল আপডেট হয়েছে')
+    } catch (err) {
+      toast.error('আপডেট করতে ব্যর্থ হয়েছে')
+    }
   }
 
   return (
@@ -58,7 +78,25 @@ export function ProfileScreen() {
               </AvatarFallback>
             </Avatar>
             <div className="flex-1">
-              <h2 className="text-lg font-bold bengali-text">{user?.name || 'ব্যবহারকারী'}</h2>
+              {isEditing ? (
+                <div className="flex flex-col gap-2">
+                  <Input 
+                    value={newName} 
+                    onChange={(e) => setNewName(e.target.value)}
+                    className="h-8 py-1 bg-secondary/50 border-primary/20 bengali-text"
+                    placeholder="আপনার নাম লিখুন"
+                  />
+                  <div className="flex gap-2">
+                    <Button size="sm" onClick={handleUpdateName} className="h-7 text-[10px] bengali-text">সেভ</Button>
+                    <Button size="sm" variant="ghost" onClick={() => setIsEditing(false)} className="h-7 text-[10px] bengali-text">বাতিল</Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 group cursor-pointer" onClick={() => setIsEditing(true)}>
+                  <h2 className="text-lg font-bold bengali-text">{user?.name || 'ব্যবহারকারী'}</h2>
+                  <span className="text-[10px] text-primary opacity-0 group-hover:opacity-100 transition-opacity">সম্পাদনা</span>
+                </div>
+              )}
               <p className="text-sm text-muted-foreground">{user?.email || 'email@example.com'}</p>
               <div className="flex items-center gap-2 mt-1.5">
                 <div className="flex items-center gap-1 bg-primary/10 rounded-full px-2 py-0.5">
