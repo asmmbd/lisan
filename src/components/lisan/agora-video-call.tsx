@@ -79,7 +79,11 @@ export function AgoraVideoCall({ appId, channel, token, uid, onLeave, callTimer 
 
         // Join channel (token can be null for testing without authentication)
         const agoraToken = token || null
-        await client.join(appId, channel, agoraToken, uid)
+        // Convert uid to number (Agora requires numeric uid)
+        const numericUid = typeof uid === 'string' ? parseInt(uid.replace(/\D/g, '')) || Date.now() : uid
+        
+        console.log('🔑 Joining with:', { appId: appId?.slice(0, 8) + '...', channel, hasToken: !!agoraToken, uid: numericUid })
+        await client.join(appId, channel, agoraToken, numericUid)
         console.log('✅ Joined channel:', channel)
 
         // Create local tracks

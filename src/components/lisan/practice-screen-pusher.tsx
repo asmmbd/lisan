@@ -1,7 +1,7 @@
 'use client'
 
 import { motion, AnimatePresence } from 'framer-motion'
-import { useEffect, useCallback } from 'react'
+import { useEffect, useCallback, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { Video, Users, Loader2, User, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -13,6 +13,7 @@ export function PracticeScreen() {
   const { practiceState, setPracticeState, callTimer, setCallTimer } = useAppStore()
   const { data: session } = useSession()
   const userId = session?.user?.id || 'guest'
+  const [agoraToken, setAgoraToken] = useState('')
   
   const {
     isConnected: isPusherConnected,
@@ -36,14 +37,44 @@ export function PracticeScreen() {
     return () => clearInterval(interval)
   }, [practiceState, callTimer, setCallTimer])
 
-  // Handle match found - auto join call
+  // Handle match found - fetch token and start call
   useEffect(() => {
     if (isMatched && matchData && practiceState === 'matching') {
-      console.log('🎯 Match found! Starting call...', matchData)
-      setPracticeState('incall')
-      setCallTimer(240)
+      console.log('🎯 Match found! Fetching Agora token...', matchData)
+      
+      // Fetch Agora token for the channel
+      fetch('/api/agora-token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          channelName: matchData.channelName,
+          uid: userId,
+          role: 'publisher'
+        })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.token) {
+          setAgoraToken(data.token)
+          setPracticeState('incall')
+          setCallTimer(240)
+        } else {
+          console.error('Failed to get Agora token:', data.error)
+          // Try without token for testing
+          setAgoraToken('')
+          setPracticeState('incall')
+          setCallTimer(240)
+        }
+      })
+      .catch(err => {
+        console.error('Error fetching token:', err)
+        // Proceed without token for testing
+        setAgoraToken('')
+        setPracticeState('incall')
+        setCallTimer(240)
+      })
     }
-  }, [isMatched, matchData, practiceState, setPracticeState, setCallTimer])
+  }, [isMatched, matchData, practiceState, setPracticeState, setCallTimer, userId])
 
   // Handle partner leaving
   useEffect(() => {
