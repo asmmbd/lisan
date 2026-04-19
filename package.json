@@ -3,7 +3,7 @@
   "version": "0.2.0",
   "private": true,
   "scripts": {
-    "dev": "next dev -p 3000",
+    "dev": "next dev --webpack -p 3000",
     "dev:server": "cd server && bun run dev",
     "build": "next build --webpack && bun run scripts/copy-assets.ts",
     "start": "NODE_ENV=production bun .next/standalone/server.js",

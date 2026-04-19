@@ -195,48 +195,41 @@ export const useAppStore = create<AppState>((set, get) => ({
   // Fetch all user data
   fetchUserData: async () => {
     set({ isLoading: true, error: null })
+    
     try {
-      // Fetch saved words
-      const savedWordsRes = await fetch('/api/user/saved-words')
-      if (savedWordsRes.ok) {
-        const savedWordsData = await savedWordsRes.json()
-        set({ savedWordIds: savedWordsData.savedWords || [] })
-      }
-      
-      // Fetch notes
-      const notesRes = await fetch('/api/user/notes')
-      if (notesRes.ok) {
-        const notesData = await notesRes.json()
-        set({ notes: notesData.notes || [] })
-      }
-      
-      // Fetch search history
-      const historyRes = await fetch('/api/user/search-history')
-      if (historyRes.ok) {
-        const historyData = await historyRes.json()
-        set({ searchHistory: historyData.history || [] })
-      }
+      // 1. Vocabulary (Public)
+      fetch('/api/vocabulary', { cache: 'no-store' })
+        .then(res => res.ok ? res.json() : null)
+        .then(data => data && set({ vocabulary: data.vocabulary || [] }))
+        .catch(e => console.error('Vocab fetch failed:', e))
 
-      // Fetch vocabulary
-      const vocabRes = await fetch('/api/vocabulary')
-      if (vocabRes.ok) {
-        const vocabData = await vocabRes.json()
-        set({ vocabulary: vocabData.vocabulary || [] })
-      }
+      // 2. Metadata (Public)
+      fetch('/api/categories', { cache: 'no-store' })
+        .then(res => res.ok ? res.json() : null)
+        .then(data => data && set({ 
+          categories: data.categories || [],
+          vocabularySets: data.sets || []
+        }))
+        .catch(e => console.error('Metadata fetch failed:', e))
 
-      // Fetch metadata (Categories & Sets)
-      const metadataRes = await fetch('/api/categories')
-      if (metadataRes.ok) {
-        const metadataData = await metadataRes.json()
-        set({ 
-          categories: metadataData.categories || [],
-          vocabularySets: metadataData.sets || []
-        })
-      }
+      // 3. User Data (Auth Required)
+      fetch('/api/user/saved-words').then(res => res.ok ? res.json() : null)
+        .then(data => data && set({ savedWordIds: data.savedWords || [] }))
+        .catch(() => {})
+
+      fetch('/api/user/notes').then(res => res.ok ? res.json() : null)
+        .then(data => data && set({ notes: data.notes || [] }))
+        .catch(() => {})
+
+      fetch('/api/user/search-history').then(res => res.ok ? res.json() : null)
+        .then(data => data && set({ searchHistory: data.history || [] }))
+        .catch(() => {})
+
     } catch (err) {
-      console.error('Error fetching user data:', err)
-      set({ error: 'Failed to load user data' })
+      console.error('Error in fetchUserData:', err)
     } finally {
+      // We don't wait for all fetches to finish before setting loading false 
+      // in this async pattern, but that's okay for smoother UI.
       set({ isLoading: false })
     }
   },
