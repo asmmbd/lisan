@@ -3,7 +3,6 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { pusherTrigger } from '@/lib/pusher'
-import { randomUUID } from 'crypto'
 
 export const dynamic = 'force-dynamic'
 
@@ -17,7 +16,7 @@ export async function POST(req: NextRequest) {
     const { channelName } = await req.json()
     
     // Generate unique room ID (short for URL)
-    const roomId = randomUUID();
+    const roomId = Math.floor(Math.random() * 10000).toString()
     
     // Create room
     const room = await prisma.room.create({

@@ -184,9 +184,7 @@ export function PracticeScreen() {
               </div>
 
               <h2 className="text-xl font-bold bengali-text mb-2">আরবি কথা বলুন</h2>
-              <p className="text-sm text-muted-foreground text-center max-w-xs mb-8 bengali-text">
-                NeonDB + Pusher দিয়ে রিয়েল-টাইম র‍্যান্ডম ম্যাচিং
-              </p>
+              
 
               <div className="flex flex-col gap-3 w-full max-w-xs">
                 {session?.user ? (
@@ -212,29 +210,10 @@ export function PracticeScreen() {
                   </div>
                 )}
                 
-                <p className="text-xs text-muted-foreground text-center bengali-text mt-2">
-                  Powered by Agora + Pusher + NeonDB
-                </p>
+               
               </div>
 
-              {/* How it works */}
-              <div className="mt-8 w-full max-w-xs">
-                <p className="text-xs text-muted-foreground text-center mb-3 bengali-text">কিভাবে কাজ করে</p>
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 bg-secondary/50 rounded-xl p-3">
-                    <span className="text-base">1️⃣</span>
-                    <p className="text-xs text-card-foreground bengali-text">"পার্টনার খুঁজুন" চাপুন</p>
-                  </div>
-                  <div className="flex items-center gap-2 bg-secondary/50 rounded-xl p-3">
-                    <span className="text-base">2️⃣</span>
-                    <p className="text-xs text-card-foreground bengali-text">NeonDB Queue তে যোগ হবেন</p>
-                  </div>
-                  <div className="flex items-center gap-2 bg-secondary/50 rounded-xl p-3">
-                    <span className="text-base">3️⃣</span>
-                    <p className="text-xs text-card-foreground bengali-text">Pusher রিয়েল-টাইম মিলিয়ে দেবে</p>
-                  </div>
-                </div>
-              </div>
+              
             </motion.div>
           )}
 
@@ -270,9 +249,7 @@ export function PracticeScreen() {
                 </p>
               )}
 
-              <p className="text-xs text-muted-foreground text-center max-w-xs mt-4">
-                NeonDB তে আপনার রিকোয়েস্ট সেভ করা হয়েছে। অন্য কেউ খুঁজলে Pusher মিলিয়ে দেবে।
-              </p>
+             
 
               <Button
                 variant="ghost"
