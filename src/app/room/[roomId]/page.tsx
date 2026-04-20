@@ -112,8 +112,7 @@ function RoomContent() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          channelName,
-          uid: session?.user?.id,
+          channel: channelName,
           role: 'publisher',
         }),
       })
@@ -249,7 +248,7 @@ function RoomContent() {
           appId={process.env.NEXT_PUBLIC_AGORA_APP_ID}
           channel={room.channelName}
           token={agoraToken}
-          uid={session?.user?.id || 'guest'}
+          uid={null}
           onLeave={handleEndCall}
           callTimer={240}
         />

@@ -48,8 +48,7 @@ export function PracticeScreen() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          channelName: matchData.channelName,
-          uid: userId,
+          channel: matchData.channelName,
           role: 'publisher'
         })
       })
@@ -308,7 +307,7 @@ export function PracticeScreen() {
                   appId={process.env.NEXT_PUBLIC_AGORA_APP_ID}
                   channel={matchData.channelName}
                   token={agoraToken}
-                  uid={userId}
+                  uid={null}
                   onLeave={handleLeaveCall}
                   callTimer={callTimer}
                 />

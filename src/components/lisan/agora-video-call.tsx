@@ -7,7 +7,7 @@ interface AgoraVideoCallProps {
   appId: string
   channel: string
   token: string
-  uid: string
+  uid: string | null
   onLeave: () => void
   callTimer: number
 }
@@ -78,12 +78,13 @@ export function AgoraVideoCall({ appId, channel, token, uid, onLeave, callTimer 
         })
 
         // Join channel (token can be null for testing without authentication)
+        // uid: null = let Agora auto-assign valid numeric uid
         const agoraToken = token || null
-        // Convert uid to number (Agora requires numeric uid)
-        const numericUid = typeof uid === 'string' ? parseInt(uid.replace(/\D/g, '')) || Date.now() : uid
+        const agoraUid = null
         
-        console.log('🔑 Joining with:', { appId: appId?.slice(0, 8) + '...', channel, hasToken: !!agoraToken, uid: numericUid })
-        await client.join(appId, channel, agoraToken, numericUid)
+        console.log('🔑 Joining with:', { appId: appId?.slice(0, 8) + '...', channel, hasToken: !!agoraToken })
+        const assignedUid = await client.join(appId, channel, agoraToken, agoraUid)
+        console.log('✅ Agora assigned uid:', assignedUid)
         console.log('✅ Joined channel:', channel)
 
         // Create local tracks

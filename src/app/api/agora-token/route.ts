@@ -13,11 +13,11 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const { channel, uid, role = 'publisher' } = await req.json()
+    const { channel, uid = 0, role = 'publisher' } = await req.json()
 
-    if (!channel || !uid) {
+    if (!channel) {
       return NextResponse.json(
-        { error: 'Channel and UID required' },
+        { error: 'Channel required' },
         { status: 400 }
       )
     }
