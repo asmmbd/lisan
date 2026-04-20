@@ -14,19 +14,24 @@ datasource db {
 }
 
 model User {
-  id            String         @id @default(cuid())
-  email         String         @unique
-  name          String?
-  password      String?        // Hashed password for credentials auth
-  image         String?
-  savedWords    SavedWord[]
-  notes         Note[]
-  searchHistory SearchHistory[]
-  callerRooms   Room[]         @relation("CallerRooms")
-  receiverRooms Room[]         @relation("ReceiverRooms")
-  callInvites   CallInvite[]
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  id             String         @id @default(cuid())
+  email          String         @unique
+  name           String?
+  password       String?        // Hashed password for credentials auth
+  image          String?
+  savedWords     SavedWord[]
+  notes          Note[]
+  searchHistory  SearchHistory[]
+  callerRooms    Room[]         @relation("CallerRooms")
+  receiverRooms  Room[]         @relation("ReceiverRooms")
+  callInvites    CallInvite[]
+  // Streak tracking
+  streak         Int            @default(0)       // Current streak count
+  lastStudyDate  DateTime?                       // Last day user studied
+  longestStreak  Int            @default(0)     // Longest streak ever
+  totalXP        Int            @default(0)       // Total XP points earned
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
 }
 
 // User's saved Arabic words

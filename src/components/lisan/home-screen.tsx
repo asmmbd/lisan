@@ -5,7 +5,7 @@ import { useAppStore } from '@/lib/store'
 import { Progress } from '@/components/ui/progress'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Bookmark, BookmarkCheck, Volume2, ChevronLeft, ChevronRight, User, Bell, Trophy } from 'lucide-react'
+import { Bookmark, BookmarkCheck, Volume2, ChevronLeft, ChevronRight, User, Bell, Trophy, Flame } from 'lucide-react'
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { useSession } from 'next-auth/react'
@@ -80,7 +80,7 @@ function HomeSkeleton() {
 export function HomeScreen() {
   const router = useRouter()
   const { data: session } = useSession()
-  const { savedWordIds, toggleSaveWord, vocabulary, categories, vocabularySets, startQuiz, isLoading } = useAppStore()
+  const { savedWordIds, toggleSaveWord, vocabulary, categories, vocabularySets, startQuiz, isLoading, streak, totalXP, studiedToday, fetchStreak, updateStreak } = useAppStore()
   const [dailyIndex, setDailyIndex] = useState(0)
   const scrollRef = useRef<HTMLDivElement>(null)
 
@@ -106,6 +106,13 @@ export function HomeScreen() {
     return () => clearInterval(interval)
   }, [nextDaily])
 
+  // Fetch streak data on mount
+  useEffect(() => {
+    if (session?.user) {
+      fetchStreak()
+    }
+  }, [session?.user?.id, fetchStreak])
+
   const dailyWords = vocabulary.slice(0, 5)
   const currentDaily = dailyWords[dailyIndex]
   const isSaved = currentDaily ? savedWordIds.includes(currentDaily.id) : false
@@ -129,12 +136,19 @@ export function HomeScreen() {
           <p className="text-xs md:text-sm text-muted-foreground bengali-text mt-1">আজ আপনার পড়াশোনা কেমন চলছে?</p>
         </div>
         <div className="flex items-center gap-2 md:gap-4">
+          {/* Streak Badge */}
+          {streak > 0 && (
+            <div className={`flex items-center gap-1 px-3 py-1.5 rounded-xl ${studiedToday ? 'bg-orange-500/10 border border-orange-500/20' : 'bg-secondary/50 border border-border'}`}>
+              <Flame className={`w-4 h-4 ${studiedToday ? 'text-orange-500' : 'text-muted-foreground'}`} />
+              <span className={`text-sm font-bold ${studiedToday ? 'text-orange-600' : 'text-muted-foreground'}`}>{streak}</span>
+            </div>
+          )}
           <button className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-card border border-border flex items-center justify-center hover:bg-secondary transition-all shadow-sm">
             <Bell className="w-5 h-5 text-card-foreground" />
           </button>
           <div className="hidden md:flex flex-col items-end mr-1">
             <p className="text-xs font-bold text-foreground">{user?.name || 'ব্যবহারকারী'}</p>
-            <p className="text-[10px] text-muted-foreground font-medium">পয়েন্ট: ৪৫০০</p>
+            <p className="text-[10px] text-muted-foreground font-medium">পয়েন্ট: {totalXP.toLocaleString('bn-BD')}</p>
           </div>
           <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl border border-primary/20 bg-primary/10 flex items-center justify-center overflow-hidden shadow-sm">
             {user?.image ? (
@@ -296,15 +310,18 @@ export function HomeScreen() {
               <div className="grid grid-cols-3 lg:grid-cols-1 gap-4">
                 <div className="flex flex-col lg:flex-row items-center lg:justify-between p-4 rounded-xl bg-primary/5 border border-primary/10 transition-transform hover:scale-105">
                   <p className="text-[9px] font-bold text-muted-foreground bengali-text uppercase lg:mb-0 mb-1">শব্দ শিখেছেন</p>
-                  <p className="text-2xl font-black text-primary leading-none">২৮</p>
+                  <p className="text-2xl font-black text-primary leading-none">{savedWordIds.length > 0 ? savedWordIds.length.toLocaleString('bn-BD') : '০'}</p>
                 </div>
                 <div className="flex flex-col lg:flex-row items-center lg:justify-between p-4 rounded-xl bg-islamic-gold/5 border border-islamic-gold/10 transition-transform hover:scale-105">
-                  <p className="text-[9px] font-bold text-muted-foreground bengali-text uppercase lg:mb-0 mb-1">আজ শিখেছেন</p>
-                  <p className="text-2xl font-black text-islamic-gold leading-none">৫</p>
+                  <p className="text-[9px] font-bold text-muted-foreground bengali-text uppercase lg:mb-0 mb-1">মোট XP</p>
+                  <p className="text-2xl font-black text-islamic-gold leading-none">{totalXP > 0 ? totalXP.toLocaleString('bn-BD') : '০'}</p>
                 </div>
-                <div className="flex flex-col lg:flex-row items-center lg:justify-between p-4 rounded-xl bg-secondary border border-border transition-transform hover:scale-105">
+                <div className={`flex flex-col lg:flex-row items-center lg:justify-between p-4 rounded-xl border transition-transform hover:scale-105 ${streak > 0 ? 'bg-orange-500/5 border-orange-500/20' : 'bg-secondary border-border'}`}>
                   <p className="text-[9px] font-bold text-muted-foreground bengali-text uppercase lg:mb-0 mb-1">দিনের স্ট্রিক</p>
-                  <p className="text-2xl font-black text-foreground leading-none">৩</p>
+                  <div className="flex items-center gap-1">
+                    {streak > 0 && <Flame className="w-4 h-4 text-orange-500" />}
+                    <p className={`text-2xl font-black leading-none ${streak > 0 ? 'text-orange-500' : 'text-foreground'}`}>{streak > 0 ? streak.toLocaleString('bn-BD') : '০'}</p>
+                  </div>
                 </div>
               </div>
             </div>

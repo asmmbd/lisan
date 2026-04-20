@@ -17,7 +17,9 @@ export function QuizView() {
     quizSettings,
     submitAnswer, 
     resetQuiz,
-    setActiveTab 
+    setActiveTab,
+    studiedToday,
+    updateStreak 
   } = useAppStore()
 
   const [selectedOption, setSelectedOption] = useState<string | null>(null)
@@ -26,6 +28,15 @@ export function QuizView() {
 
   const currentQuestion = quizQuestions[quizCurrentIndex]
   const progress = ((quizCurrentIndex + 1) / quizQuestions.length) * 100
+
+  // Update streak when quiz is completed
+  useEffect(() => {
+    if (quizState === 'completed' && !studiedToday) {
+      // Calculate XP based on score (10 XP per correct answer, min 10 XP)
+      const xpEarned = Math.max(10, quizScore * 10)
+      updateStreak(xpEarned)
+    }
+  }, [quizState, studiedToday, updateStreak, quizScore])
 
   const handleOptionClick = (option: string) => {
     if (isAnswered) return

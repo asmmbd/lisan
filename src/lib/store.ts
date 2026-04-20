@@ -50,6 +50,14 @@ interface AppState {
   startQuiz: (settings: { category?: string; setId?: string; title?: string }) => void
   submitAnswer: (isCorrect: boolean) => void
   resetQuiz: () => void
+  // Streak System
+  streak: number
+  longestStreak: number
+  totalXP: number
+  studiedToday: boolean
+  streakBroken: boolean
+  fetchStreak: () => Promise<void>
+  updateStreak: (xp?: number) => Promise<void>
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -264,6 +272,53 @@ export const useAppStore = create<AppState>((set, get) => ({
     quizQuestions: [],
     quizSettings: null 
   }),
+
+  // Streak System
+  streak: 0,
+  longestStreak: 0,
+  totalXP: 0,
+  studiedToday: false,
+  streakBroken: false,
+
+  fetchStreak: async () => {
+    try {
+      const response = await fetch('/api/user/streak')
+      if (!response.ok) throw new Error('Failed to fetch streak')
+      
+      const data = await response.json()
+      set({
+        streak: data.streak,
+        longestStreak: data.longestStreak,
+        totalXP: data.totalXP,
+        studiedToday: data.studiedToday,
+        streakBroken: data.streakBroken,
+      })
+    } catch (err) {
+      console.error('Error fetching streak:', err)
+    }
+  },
+
+  updateStreak: async (xp = 10) => {
+    try {
+      const response = await fetch('/api/user/streak', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ xp }),
+      })
+      
+      if (!response.ok) throw new Error('Failed to update streak')
+      
+      const data = await response.json()
+      set({
+        streak: data.streak,
+        longestStreak: data.longestStreak,
+        totalXP: data.totalXP,
+        studiedToday: true,
+      })
+    } catch (err) {
+      console.error('Error updating streak:', err)
+    }
+  },
   
   // Fetch all user data
   fetchUserData: async () => {
