@@ -24,16 +24,16 @@ export function CallNotification() {
 
     channel.bind('incoming-call', (data: IncomingCall) => {
       console.log('Incoming call received in Notification:', data)
-      
+
       // Don't show notification if user already in this room
       const currentRoomId = sessionStorage.getItem('currentRoomId')
       if (currentRoomId === data.roomId) {
-        console.log('Already in room, skipping notification')
+        console.log('Already in room, skipping notification!')
         return
       }
-      
+
       setIncomingCall(data)
-      
+
       // Auto-dismiss after 30 seconds
       setTimeout(() => {
         setIncomingCall((prev) => {
@@ -79,7 +79,7 @@ export function CallNotification() {
             <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center">
               <Phone className="w-6 h-6 text-white animate-pulse" />
             </div>
-            
+
             <div className="flex-1">
               <p className="text-white font-semibold">{incomingCall.callerName}</p>
               <p className="text-green-100 text-sm">is calling you...</p>
