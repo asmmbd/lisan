@@ -9,9 +9,20 @@ import { Button } from '@/components/ui/button'
 import { useAppStore } from '@/lib/store'
 import { AgoraVideoCall } from './agora-video-call'
 import { usePusherMatching } from '@/hooks/usePusherMatching'
+import { QuizView } from './quiz-view'
+import { Brain, Trophy, ChevronRight, Play } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
 
 export function PracticeScreen() {
-  const { practiceState, setPracticeState, callTimer, setCallTimer } = useAppStore()
+  const { 
+    practiceState, 
+    setPracticeState, 
+    callTimer, 
+    setCallTimer,
+    quizState,
+    startQuiz,
+    vocabulary
+  } = useAppStore()
   const { data: session } = useSession()
   const userId = session?.user?.id || 'guest'
   const [agoraToken, setAgoraToken] = useState('')
@@ -138,190 +149,215 @@ export function PracticeScreen() {
   }
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="px-4 pt-4 pb-2">
-        <h1 className="text-xl font-bold bengali-text">প্র্যাকটিস</h1>
-        <p className="text-sm text-muted-foreground bengali-text">আরবি কথোপকথন অনুশীলন</p>
-        
-        {/* Error Message */}
-        {matchingError && (
-          <div className="mt-3 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
-            <p className="text-sm text-destructive bengali-text flex items-center gap-2">
-              <span>⚠️</span>
-              {matchingError}
-            </p>
-          </div>
-        )}
-
-        {/* Connection Status */}
-        <div className="mt-2 flex items-center gap-2">
-          <div className={`w-2 h-2 rounded-full ${isPusherConnected ? 'bg-green-500' : 'bg-red-500'}`} />
-          <span className="text-xs text-muted-foreground">
-            {isPusherConnected ? 'Connected' : 'Connecting...'}
-          </span>
-        </div>
-      </div>
-
-      <div className="flex-1 px-4">
-        <AnimatePresence mode="wait">
-          {/* IDLE STATE */}
-          {practiceState === 'idle' && (
-            <motion.div
-              key="idle"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="flex flex-col items-center justify-center h-full pb-20"
-            >
-              <div className="relative mb-8">
-                <div className="w-40 h-40 rounded-full gradient-islamic flex items-center justify-center shadow-xl">
-                  <Video className="w-16 h-16 text-white" />
-                </div>
-                <div className="absolute -bottom-1 -right-1 w-12 h-12 rounded-full bg-accent flex items-center justify-center border-4 border-background">
-                  <span className="text-xl">🗣️</span>
-                </div>
-              </div>
-
-              <h2 className="text-xl font-bold bengali-text mb-2">আরবি কথা বলুন</h2>
-              
-
-              <div className="flex flex-col gap-3 w-full max-w-xs">
-                {session?.user ? (
-                  <Button
-                    onClick={handleCreateCall}
-                    disabled={creatingCall}
-                    className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-2xl h-14 px-8 text-lg font-semibold shadow-lg w-full"
-                  >
-                    {creatingCall ? (
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                    ) : (
-                      <Video className="w-5 h-5" />
-                    )}
-                    <span className="bengali-text">
-                      {creatingCall ? 'কল তৈরি হচ্ছে...' : 'কল করুন'}
-                    </span>
-                  </Button>
-                ) : (
-                  <div className="text-center p-4 bg-secondary/50 rounded-xl">
-                    <p className="text-sm text-muted-foreground bengali-text mb-2">
-                      ভিডিও কল করতে লগইন করুন
-                    </p>
-                  </div>
-                )}
-                
-               
-              </div>
-
-              
-            </motion.div>
-          )}
-
-          {/* MATCHING STATE */}
-          {practiceState === 'matching' && !isMatched && (
-            <motion.div
-              key="matching"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="flex flex-col items-center justify-center h-full pb-20 px-4"
-            >
-              <div className="relative mb-6">
-                <div className="relative w-28 h-28">
-                  <div className="absolute inset-0 rounded-full bg-primary/20 animate-ping" style={{ animationDuration: '2s' }} />
-                  <div className="relative w-28 h-28 rounded-full gradient-islamic flex items-center justify-center z-10">
-                    <Users className="w-12 h-12 text-white" />
-                  </div>
-                </div>
-              </div>
-
-              <motion.h2
-                animate={{ opacity: [1, 0.5, 1] }}
-                transition={{ repeat: Infinity, duration: 2 }}
-                className="text-lg font-semibold bengali-text mb-2"
-              >
-                {isWaiting ? 'পার্টনারের জন্য অপেক্ষা...' : 'পার্টনার খোঁজা হচ্ছে...'}
-              </motion.h2>
-              
-              {isWaiting && (
-                <p className="text-sm text-muted-foreground bengali-text text-center">
-                  Queue Position: {queuePosition}
+    <div className="flex flex-col h-full bg-background overflow-hidden">
+      {/* Quiz Overlay */}
+      {quizState !== 'idle' ? (
+        <QuizView />
+      ) : (
+        <>
+          <div className="px-4 pt-4 pb-2 bg-background z-10">
+            <h1 className="text-2xl font-bold bengali-text">প্র্যাকটিস</h1>
+            <p className="text-sm text-muted-foreground bengali-text">আপনার আরবি দক্ষতা যাচাই করুন</p>
+            
+            {/* Error Message */}
+            {matchingError && (
+              <div className="mt-3 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+                <p className="text-sm text-destructive bengali-text flex items-center gap-2">
+                  <span>⚠️</span>
+                  {matchingError}
                 </p>
-              )}
-
-             
-
-              <Button
-                variant="ghost"
-                onClick={handleCancelMatching}
-                className="mt-8 text-muted-foreground bengali-text"
-              >
-                বাতিল করুন
-              </Button>
-            </motion.div>
-          )}
-
-          {/* MATCHED STATE */}
-          {practiceState === 'matching' && isMatched && matchData && (
-            <motion.div
-              key="matched"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="flex flex-col items-center justify-center h-full pb-20 px-4"
-            >
-              <div className="w-24 h-24 rounded-full bg-emerald-500 flex items-center justify-center mb-4">
-                <User className="w-12 h-12 text-white" />
               </div>
-              
-              <h2 className="text-xl font-bold text-emerald-500 bengali-text mb-2">
-                পার্টনার পাওয়া গেছে!
-              </h2>
-              <p className="text-sm text-muted-foreground text-center mb-2">
-                Partner: {matchData.partnerName}
-              </p>
-              <p className="text-xs text-muted-foreground text-center mb-6">
-                Channel: {matchData.channelName}
-              </p>
-              
-              <Loader2 className="w-8 h-8 animate-spin text-primary" />
-            </motion.div>
-          )}
+            )}
 
-          {/* VIDEO CALL STATE */}
-          {practiceState === 'incall' && matchData && (
-            <motion.div
-              key="incall"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="flex flex-col h-full"
-            >
-              {!process.env.NEXT_PUBLIC_AGORA_APP_ID || !agoraToken ? (
-                <div className="flex flex-col items-center justify-center h-full p-4">
-                  <div className="p-4 bg-destructive/10 rounded-xl text-center">
-                    <p className="text-destructive font-medium mb-2">
-                      {!process.env.NEXT_PUBLIC_AGORA_APP_ID ? '⚠️ Agora App ID Missing' : '⏳ Connecting...'}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      {!process.env.NEXT_PUBLIC_AGORA_APP_ID
-                        ? '.env file এ NEXT_PUBLIC_AGORA_APP_ID যোগ করুন'
-                        : 'Agora token fetch হচ্ছে...'}
-                    </p>
+            {/* Connection Status */}
+            <div className="mt-2 flex items-center gap-2">
+              <div className={`w-2 h-2 rounded-full ${isPusherConnected ? 'bg-green-500' : 'bg-red-500'}`} />
+              <span className="text-[10px] text-muted-foreground">
+                {isPusherConnected ? 'Live matching ready' : 'Live matching offline'}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex-1 px-4 overflow-y-auto custom-scrollbar pb-24">
+            <AnimatePresence mode="wait">
+              {/* IDLE STATE */}
+              {practiceState === 'idle' && (
+                <motion.div
+                  key="idle"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="flex flex-col gap-6 py-4"
+                >
+                  {/* Solo Practice Card */}
+                  <motion.div
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => startQuiz({ title: 'দৈনিক প্র্যাকটিস' })}
+                    className="group relative overflow-hidden bg-card rounded-3xl border border-border shadow-md p-6 cursor-pointer"
+                  >
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full -mr-16 -mt-16 transition-transform group-hover:scale-110" />
+                    <div className="flex items-start justify-between relative z-10">
+                      <div className="flex flex-col gap-1">
+                        <Badge className="w-fit mb-2 bg-primary/20 text-primary hover:bg-primary/20 border-0">মোড: সোলো</Badge>
+                        <h3 className="text-xl font-bold bengali-text">ইন্টারেক্টিভ কুইজ</h3>
+                        <p className="text-sm text-muted-foreground bengali-text">নতুন শব্দ শিখুন এবং দক্ষতা যাচাই করুন</p>
+                      </div>
+                      <div className="w-14 h-14 rounded-2xl gradient-islamic flex items-center justify-center shadow-lg transform rotate-3 transition-transform group-hover:rotate-0">
+                        <Brain className="w-8 h-8 text-white" />
+                      </div>
+                    </div>
+                    <div className="mt-6 flex items-center justify-between relative z-10">
+                       <div className="flex -space-x-2">
+                          {[1,2,3].map(i => (
+                            <div key={i} className="w-8 h-8 rounded-full border-2 border-background bg-secondary flex items-center justify-center text-[10px]">
+                                {i === 1 ? '🇦' : i === 2 ? '🇧' : '🇨'}
+                            </div>
+                          ))}
+                        <div className="w-8 h-8 rounded-full border-2 border-background bg-primary/20 flex items-center justify-center text-[8px] font-bold text-primary">
+                          +{vocabulary.length > 3 ? vocabulary.length - 3 : 0}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 text-primary font-bold">
+                        <span className="bengali-text">শুরু করুন</span>
+                        <Play className="w-4 h-4 fill-current" />
+                      </div>
+                    </div>
+                  </motion.div>
+
+                  {/* Divider */}
+                  <div className="relative flex items-center gap-4 px-4">
+                    <div className="flex-1 h-[1px] bg-border" />
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest bengali-text">অথবা</span>
+                    <div className="flex-1 h-[1px] bg-border" />
                   </div>
-                </div>
-              ) : (
-                <AgoraVideoCall
-                  appId={process.env.NEXT_PUBLIC_AGORA_APP_ID}
-                  channel={matchData.channelName}
-                  token={agoraToken}
-                  uid={null}
-                  onLeave={handleLeaveCall}
-                  callTimer={callTimer}
-                />
+
+                  {/* Live Call Card */}
+                  <motion.div
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={handleCreateCall}
+                    className="group relative overflow-hidden bg-secondary/30 rounded-3xl border border-border/50 shadow-sm p-6 cursor-pointer"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex flex-col gap-1">
+                         <Badge className="w-fit mb-2 bg-islamic-gold/20 text-islamic-gold hover:bg-islamic-gold/20 border-0">মোড: লাইভ</Badge>
+                        <h3 className="text-xl font-bold bengali-text">পার্টনারের সাথে কথা বলুন</h3>
+                        <p className="text-sm text-muted-foreground bengali-text">সরাসরি কথোপকথনের মাধ্যমে উন্নতি করুন</p>
+                      </div>
+                      <div className="w-14 h-14 rounded-2xl bg-white dark:bg-card flex items-center justify-center shadow-md border border-border transition-transform group-hover:scale-105">
+                        <Video className="w-8 h-8 text-primary" />
+                      </div>
+                    </div>
+                    <div className="mt-8 flex items-center gap-2 text-primary text-sm font-semibold">
+                      <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                      <span className="bengali-text">এখনই কল করুন</span>
+                      <ChevronRight className="w-4 h-4" />
+                    </div>
+                  </motion.div>
+                </motion.div>
               )}
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+
+              {/* MATCHING STATE */}
+              {practiceState === 'matching' && !isMatched && (
+                <motion.div
+                  key="matching"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="flex flex-col items-center justify-center h-full pb-20 px-4 mt-20"
+                >
+                  <div className="relative mb-6">
+                    <div className="relative w-28 h-28">
+                      <div className="absolute inset-0 rounded-full bg-primary/20 animate-ping" style={{ animationDuration: '2s' }} />
+                      <div className="relative w-28 h-28 rounded-full gradient-islamic flex items-center justify-center z-10">
+                        <Users className="w-12 h-12 text-white" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <motion.h2
+                    animate={{ opacity: [1, 0.5, 1] }}
+                    transition={{ repeat: Infinity, duration: 2 }}
+                    className="text-lg font-semibold bengali-text mb-2"
+                  >
+                    {isWaiting ? 'পার্টনারের জন্য অপেক্ষা...' : 'পার্টনার খোঁজা হচ্ছে...'}
+                  </motion.h2>
+                  
+                  {isWaiting && (
+                    <p className="text-sm text-muted-foreground bengali-text text-center">
+                      সারিবদ্ধ অবস্থান: {queuePosition}
+                    </p>
+                  )}
+
+                  <Button
+                    variant="ghost"
+                    onClick={handleCancelMatching}
+                    className="mt-8 text-muted-foreground bengali-text border border-border rounded-xl"
+                  >
+                    বাতিল করুন
+                  </Button>
+                </motion.div>
+              )}
+
+              {/* MATCHED STATE */}
+              {practiceState === 'matching' && isMatched && matchData && (
+                <motion.div
+                  key="matched"
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="flex flex-col items-center justify-center h-full pb-20 px-4 mt-20"
+                >
+                  <div className="w-24 h-24 rounded-full bg-emerald-500 flex items-center justify-center mb-4 shadow-lg">
+                    <User className="w-12 h-12 text-white" />
+                  </div>
+                  
+                  <h2 className="text-xl font-bold text-emerald-500 bengali-text mb-2">
+                    পার্টনার পাওয়া গেছে!
+                  </h2>
+                  <p className="text-sm text-muted-foreground text-center mb-8">
+                    {matchData.partnerName} এর সাথে কানেক্ট করা হচ্ছে...
+                  </p>
+                  
+                  <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                </motion.div>
+              )}
+
+              {/* VIDEO CALL STATE */}
+              {practiceState === 'incall' && matchData && (
+                <motion.div
+                  key="incall"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="flex flex-col h-full bg-black rounded-3xl overflow-hidden mt-4 shadow-2xl"
+                >
+                  {!process.env.NEXT_PUBLIC_AGORA_APP_ID || !agoraToken ? (
+                    <div className="flex flex-col items-center justify-center h-full p-4">
+                      <div className="p-4 bg-white/10 rounded-xl text-center text-white">
+                        <p className="font-medium mb-2">
+                          {!process.env.NEXT_PUBLIC_AGORA_APP_ID ? '⚠️ Configuration Error' : '⏳ Connecting...'}
+                        </p>
+                        <p className="text-xs opacity-70">
+                          {agoraToken ? 'Starting call...' : 'Fetching Agora token...'}
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <AgoraVideoCall
+                      appId={process.env.NEXT_PUBLIC_AGORA_APP_ID}
+                      channel={matchData.channelName}
+                      token={agoraToken}
+                      uid={null}
+                      onLeave={handleLeaveCall}
+                      callTimer={callTimer}
+                    />
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </>
+      )}
     </div>
   )
 }

@@ -1,22 +1,10 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence } from 'framer-motion'
 import { useAppStore } from '@/lib/store'
-import { BottomNav } from '@/components/lisan/bottom-nav'
 import { Onboarding } from '@/components/lisan/onboarding'
 import { HomeScreen } from '@/components/lisan/home-screen'
-import { DictionaryScreen } from '@/components/lisan/dictionary-screen'
-import { PracticeScreen } from '@/components/lisan/practice-screen'
-import { SavedScreen } from '@/components/lisan/saved-screen'
-import { ProfileScreen } from '@/components/lisan/profile-screen'
-import { CallNotification } from '@/components/lisan/call-notification'
-
-const pageVariants = {
-  initial: { opacity: 0, y: 8 },
-  animate: { opacity: 1, y: 0 },
-  exit: { opacity: 0, y: -8 },
-}
 
 function useMounted() {
   const [mounted, setMounted] = useState(false)
@@ -30,7 +18,7 @@ function useMounted() {
 }
 
 export default function Home() {
-  const { activeTab, showOnboarding, setShowOnboarding, fetchUserData } = useAppStore()
+  const { showOnboarding, setShowOnboarding, fetchUserData } = useAppStore()
   const mounted = useMounted()
 
   const handleOnboardingCheck = useCallback(() => {
@@ -62,41 +50,17 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-20">
-      <CallNotification />
-      {showOnboarding ? (
-        <Onboarding onComplete={handleOnboardingComplete} />
-      ) : (
-        <>
-          <main className="h-[calc(100vh-80px)] overflow-y-auto custom-scrollbar pb-20">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={activeTab}
-                variants={pageVariants}
-                initial="initial"
-                animate="animate"
-                exit="exit"
-                transition={{ duration: 0.2 }}
-                className="min-h-[calc(100vh-4rem)]"
-              >
-                {activeTab === 'home' && <HomeScreen />}
-                {activeTab === 'dictionary' && <DictionaryScreen />}
-                {activeTab === 'practice' && <PracticeScreen />}
-                {activeTab === 'saved' && <SavedScreen />}
-                {activeTab === 'profile' && <ProfileScreen />}
-              </motion.div>
-            </AnimatePresence>
-          </main>
-        </>
-      )}
-      {/* Bottom Navigation */}
-      <BottomNav />
-
+    <div className="min-h-full">
       {/* Onboarding Overlay */}
       <AnimatePresence>
         {showOnboarding && <Onboarding onComplete={handleOnboardingComplete} />}
       </AnimatePresence>
+
+      {!showOnboarding && (
+        <main className="overflow-y-auto custom-scrollbar">
+          <HomeScreen />
+        </main>
+      )}
     </div>
   )
 }
-

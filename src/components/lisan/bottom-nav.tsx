@@ -1,31 +1,32 @@
 'use client'
 
-import { useAppStore, type TabType } from '@/lib/store'
-import { Home, BookOpen, Video, Bookmark, User } from 'lucide-react'
+import { BookOpen, Video, Bookmark, User, Home } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 
-const tabs: { id: TabType; label: string; icon: React.ElementType }[] = [
-  { id: 'home', label: 'হোম', icon: Home },
-  { id: 'dictionary', label: 'ডিকশনারি', icon: BookOpen },
-  { id: 'practice', label: 'প্র্যাকটিস', icon: Video },
-  { id: 'saved', label: 'সেভ', icon: Bookmark },
-  { id: 'profile', label: 'প্রোফাইল', icon: User },
+const tabs = [
+  { id: 'home', label: 'হোম', icon: Home, href: '/' },
+  { id: 'dictionary', label: 'ডিকশনারি', icon: BookOpen, href: '/dictionary' },
+  { id: 'practice', label: 'প্র্যাকটিস', icon: Video, href: '/practice' },
+  { id: 'saved', label: 'সেভ', icon: Bookmark, href: '/saved' },
+  { id: 'profile', label: 'প্রোফাইল', icon: User, href: '/profile' },
 ]
 
 export function BottomNav() {
-  const { activeTab, setActiveTab } = useAppStore()
+  const pathname = usePathname()
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-md border-t border-border safe-bottom">
       <div className="max-w-lg mx-auto flex items-center justify-around h-16 px-2">
         {tabs.map((tab) => {
-          const isActive = activeTab === tab.id
+          const isActive = pathname === tab.href || (tab.href !== '/' && pathname.startsWith(tab.href))
           const Icon = tab.icon
           return (
-            <button
+            <Link
               key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
+              href={tab.href}
               className={cn(
                 'relative flex flex-col items-center justify-center w-full h-full gap-0.5 transition-colors',
                 isActive ? 'text-primary' : 'text-muted-foreground'
@@ -42,7 +43,7 @@ export function BottomNav() {
               <span className={cn('text-[10px] font-medium', isActive && 'font-semibold')}>
                 {tab.label}
               </span>
-            </button>
+            </Link>
           )
         })}
       </div>

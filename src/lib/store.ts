@@ -9,8 +9,6 @@ interface Note {
 }
 
 interface AppState {
-  activeTab: TabType
-  setActiveTab: (tab: TabType) => void
   showOnboarding: boolean
   setShowOnboarding: (show: boolean) => void
   savedWordIds: string[]
@@ -43,12 +41,19 @@ interface AppState {
   updateProfile: (data: { name?: string; image?: string }) => Promise<void>
   // Fetch all user data
   fetchUserData: () => Promise<void>
+  // Quiz State
+  quizState: 'idle' | 'running' | 'completed'
+  quizCurrentIndex: number
+  quizScore: number
+  quizQuestions: any[]
+  quizSettings: { category?: string; setId?: string; title?: string } | null
+  startQuiz: (settings: { category?: string; setId?: string; title?: string }) => void
+  submitAnswer: (isCorrect: boolean) => void
+  resetQuiz: () => void
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
   // UI State
-  activeTab: 'home',
-  setActiveTab: (tab) => set({ activeTab: tab }),
   showOnboarding: false,
   setShowOnboarding: (show) => set({ showOnboarding: show }),
   
@@ -191,6 +196,74 @@ export const useAppStore = create<AppState>((set, get) => ({
   setPracticeState: (state) => set({ practiceState: state }),
   callTimer: 240,
   setCallTimer: (time) => set({ callTimer: time }),
+  
+  // Quiz State
+  quizState: 'idle',
+  quizCurrentIndex: 0,
+  quizScore: 0,
+  quizQuestions: [],
+  quizSettings: null,
+
+  startQuiz: (settings) => {
+    const { vocabulary } = get()
+    let filtered = [...vocabulary]
+    
+    if (settings.category) {
+      filtered = filtered.filter(v => v.categorySlug === settings.category)
+    } else if (settings.setId) {
+      // In a real app we'd filter by set, but for now let's just take random 10 if no set logic is fully implemented on server
+      // Actually, we can just shuffle and take 10
+    }
+
+    // Shuffle and take 10
+    const questions = filtered.sort(() => Math.random() - 0.5).slice(0, 10).map(word => {
+      // Get 3 wrong options
+      const otherWords = vocabulary.filter(v => v.id !== word.id)
+      const wrongOptions = otherWords.sort(() => Math.random() - 0.5).slice(0, 3).map(v => v.bengali)
+      const options = [word.bengali, ...wrongOptions].sort(() => Math.random() - 0.5)
+      
+      return {
+        ...word,
+        options,
+        correctAnswer: word.bengali
+      }
+    })
+
+    set({ 
+      quizState: 'running', 
+      quizQuestions: questions, 
+      quizCurrentIndex: 0, 
+      quizScore: 0,
+      quizSettings: settings
+    })
+  },
+
+  submitAnswer: (isCorrect) => {
+    set((state) => {
+      const nextIndex = state.quizCurrentIndex + 1
+      const newScore = isCorrect ? state.quizScore + 1 : state.quizScore
+      
+      if (nextIndex >= state.quizQuestions.length) {
+        return { 
+          quizScore: newScore, 
+          quizState: 'completed' 
+        }
+      }
+      
+      return { 
+        quizScore: newScore, 
+        quizCurrentIndex: nextIndex 
+      }
+    })
+  },
+
+  resetQuiz: () => set({ 
+    quizState: 'idle', 
+    quizCurrentIndex: 0, 
+    quizScore: 0, 
+    quizQuestions: [],
+    quizSettings: null 
+  }),
   
   // Fetch all user data
   fetchUserData: async () => {

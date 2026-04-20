@@ -4,11 +4,12 @@ import { motion } from 'framer-motion'
 import { useAppStore } from '@/lib/store'
 import { Progress } from '@/components/ui/progress'
 import { Button } from '@/components/ui/button'
-import { Bookmark, BookmarkCheck, Volume2, ChevronLeft, ChevronRight, User, Bell } from 'lucide-react'
+import { Bookmark, BookmarkCheck, Volume2, ChevronLeft, ChevronRight, User, Bell, Trophy } from 'lucide-react'
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { useSession } from 'next-auth/react'
 import Image from 'next/image'
+import { useRouter } from 'next/navigation'
 
 const container = {
   hidden: { opacity: 0 },
@@ -24,8 +25,9 @@ const item = {
 }
 
 export function HomeScreen() {
+  const router = useRouter()
   const { data: session } = useSession()
-  const { setActiveTab, savedWordIds, toggleSaveWord, vocabulary, categories, vocabularySets } = useAppStore()
+  const { savedWordIds, toggleSaveWord, vocabulary, categories, vocabularySets, startQuiz } = useAppStore()
   const [dailyIndex, setDailyIndex] = useState(0)
   const scrollRef = useRef<HTMLDivElement>(null)
 
@@ -95,14 +97,15 @@ export function HomeScreen() {
             return (
               <motion.button
                 key={cat.id}
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
-                onClick={() => setActiveTab('dictionary')}
-                className={`bg-gradient-to-br ${cat.gradient || 'from-primary to-primary/80'} rounded-2xl p-4 text-white text-center shadow-md hover:shadow-lg transition-shadow`}
+                whileHover={{ scale: 1.05, y: -2 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => startQuiz({ category: cat.slug, title: cat.title })}
+                className={`group relative overflow-hidden bg-gradient-to-br ${cat.gradient || 'from-primary to-primary/80'} rounded-2xl p-4 text-white text-center shadow-md hover:shadow-xl transition-all duration-300`}
               >
-                <span className="text-3xl mb-2 block">{cat.icon}</span>
-                <span className="text-xs font-semibold leading-tight block bengali-text">{cat.title}</span>
-                <Badge variant="secondary" className="mt-1.5 bg-white/20 text-white border-0 text-[10px] px-1.5">
+                <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+                <span className="text-3xl mb-2 block transform transition-transform group-hover:scale-110">{cat.icon}</span>
+                <span className="text-xs font-bold leading-tight block bengali-text">{cat.title}</span>
+                <Badge variant="secondary" className="mt-1.5 bg-white/20 text-white border-0 text-[9px] px-1.5 py-0">
                   {vocabulary.filter(v => v.categorySlug === cat.slug).length} শব্দ
                 </Badge>
               </motion.button>
@@ -116,7 +119,7 @@ export function HomeScreen() {
         <div className="flex items-center justify-between px-4 mb-3">
           <h2 className="text-sm font-semibold text-muted-foreground bengali-text">শব্দ সেট</h2>
           <button
-            onClick={() => setActiveTab('dictionary')}
+            onClick={() => router.push('/dictionary')}
             className="text-xs text-primary font-medium bengali-text"
           >
             সব দেখুন
@@ -126,19 +129,21 @@ export function HomeScreen() {
           {vocabularySets.map((set) => (
             <motion.button
               key={set.id}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => setActiveTab('dictionary')}
-              className="flex-shrink-0 w-44 bg-card rounded-2xl p-4 border border-border shadow-sm hover:shadow-md transition-shadow text-left"
+              whileHover={{ scale: 1.05, x: 2 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => startQuiz({ setId: set.id, title: set.title })}
+              className="flex-shrink-0 w-44 bg-card rounded-2xl p-4 border border-border shadow-sm hover:shadow-md transition-all text-left group"
             >
-              <span className="text-2xl">{set.icon}</span>
-              <h3 className="text-sm font-semibold mt-2 bengali-text text-card-foreground line-clamp-1">{set.title}</h3>
+              <div className="w-10 h-10 rounded-xl bg-primary/5 flex items-center justify-center mb-2 group-hover:bg-primary/10 transition-colors">
+                <span className="text-2xl">{set.icon}</span>
+              </div>
+              <h3 className="text-sm font-bold bengali-text text-card-foreground line-clamp-1">{set.title}</h3>
               <div className="mt-3">
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-[10px] text-muted-foreground bengali-text">০/{set.total} শিখেছেন</span>
-                  <span className="text-[10px] text-primary font-semibold">০%</span>
+                  <span className="text-[10px] text-primary font-bold">০%</span>
                 </div>
-                <Progress value={0} className="h-1.5" />
+                <Progress value={0} className="h-1.5 bg-secondary" />
               </div>
             </motion.button>
           ))}
@@ -223,21 +228,27 @@ export function HomeScreen() {
 
       {/* Quick stats */}
       <motion.div variants={item} className="mt-6 px-4">
-        <div className="bg-card rounded-2xl border border-border p-4 shadow-sm">
-          <h3 className="text-sm font-semibold text-muted-foreground mb-3 bengali-text">আপনার অগ্রগতি</h3>
-          <div className="grid grid-cols-3 gap-4">
-            <div className="text-center">
-              <p className="text-2xl font-bold text-primary">২৮</p>
-              <p className="text-[10px] text-muted-foreground bengali-text">শব্দ শিখেছেন</p>
+        <div className="bg-gradient-to-br from-card to-card/50 rounded-3xl border border-border p-5 shadow-lg relative overflow-hidden">
+          <div className="absolute -bottom-8 -right-8 w-24 h-24 bg-primary/5 rounded-full" />
+          <h3 className="text-xs font-bold text-primary uppercase tracking-widest mb-4 bengali-text text-center">আপনার অগ্রগতি</h3>
+          <div className="grid grid-cols-3 gap-2">
+            <div className="flex flex-col items-center p-3 rounded-2xl bg-primary/5 border border-primary/10">
+              <p className="text-2xl font-black text-primary leading-none mb-1">২৮</p>
+              <p className="text-[9px] font-bold text-muted-foreground bengali-text uppercase">শব্দ শিখেছেন</p>
             </div>
-            <div className="text-center">
-              <p className="text-2xl font-bold text-islamic-gold">৫</p>
-              <p className="text-[10px] text-muted-foreground bengali-text">আজ শিখেছেন</p>
+            <div className="flex flex-col items-center p-3 rounded-2xl bg-islamic-gold/5 border border-islamic-gold/10">
+              <p className="text-2xl font-black text-islamic-gold leading-none mb-1">৫</p>
+              <p className="text-[9px] font-bold text-muted-foreground bengali-text uppercase">আজ শিখেছেন</p>
             </div>
-            <div className="text-center">
-              <p className="text-2xl font-bold text-secondary-foreground">৩</p>
-              <p className="text-[10px] text-muted-foreground bengali-text">দিনের স্ট্রিক</p>
+            <div className="flex flex-col items-center p-3 rounded-2xl bg-secondary border border-border">
+              <p className="text-2xl font-black text-foreground leading-none mb-1">৩</p>
+              <p className="text-[9px] font-bold text-muted-foreground bengali-text uppercase">দিনের স্ট্রিক</p>
             </div>
+          </div>
+
+          <div className="mt-4 flex items-center justify-center gap-2 py-2 px-4 bg-primary/10 rounded-full w-fit mx-auto cursor-pointer hover:bg-primary/20 transition-colors">
+            <Trophy className="w-3 h-3 text-primary" />
+            <span className="text-[10px] font-bold text-primary bengali-text capitalize tracking-wide">লিডারবোর্ড দেখুন</span>
           </div>
         </div>
       </motion.div>

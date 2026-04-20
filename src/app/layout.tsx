@@ -4,6 +4,8 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from '@/components/lisan/theme-provider';
 import { AuthProvider } from '@/components/auth/auth-provider';
+import { BottomNav } from '@/components/lisan/bottom-nav';
+import { CallNotification } from '@/components/lisan/call-notification';
 
 const hindSiliguri = Hind_Siliguri({
   variable: "--font-hind-siliguri",
@@ -37,7 +39,11 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            {children}
+            <div className="min-h-screen bg-background pb-20">
+              <CallNotification />
+              {children}
+              <BottomNav />
+            </div>
             <Toaster />
           </ThemeProvider>
         </AuthProvider>
