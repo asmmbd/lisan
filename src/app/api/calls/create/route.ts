@@ -16,14 +16,15 @@ export async function POST(req: NextRequest) {
     const { channelName } = await req.json()
     
     // Generate unique room ID (numeric 1-10000 for URL, stored as string)
-    const roomId = String(Math.floor(Math.random() * 10000) + 1)
+    const agoraUid = Math.floor(Math.random() * 10000);
+    const roomId = `room_${agoraUid}`; // clearly string
     
     // Create room
     const room = await prisma.room.create({
       data: {
         roomId,
         callerId: session.user.id,
-        channelName: channelName || `room_${roomId}`,
+        channelName: channelName || roomId,
         status: 'waiting',
       },
       include: {
