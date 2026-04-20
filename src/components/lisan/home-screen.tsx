@@ -62,26 +62,25 @@ export function HomeScreen() {
       variants={container}
       initial="hidden"
       animate="show"
-      className="pb-4"
+      className="pb-4 pt-4 md:pt-8"
     >
-      {/* Header */}
-      <motion.div variants={item} className="flex items-center justify-between px-4 pt-4 pb-2">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl overflow-hidden shadow-md">
-            <Image src="/lisan-logo.png" alt="Lisan Logo" width={40} height={40} className="object-cover w-full h-full" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold text-foreground bengali-text">লিসান</h1>
-            <p className="text-xs text-muted-foreground bengali-text">আরবি শিখুন, কুরআন বুঝুন</p>
-          </div>
+      {/* Header - Optimized for Desktop */}
+      <motion.div variants={item} className="flex items-center justify-between px-4 pb-4 md:px-0">
+        <div className="flex flex-col">
+          <h1 className="text-xl md:text-3xl font-black text-foreground bengali-text">আসসালামু আলাইকুম</h1>
+          <p className="text-xs md:text-sm text-muted-foreground bengali-text mt-1">আজ আপনার পড়াশোনা কেমন চলছে?</p>
         </div>
-        <div className="flex items-center gap-2">
-          <button className="w-10 h-10 rounded-full bg-secondary/80 flex items-center justify-center hover:bg-secondary transition-colors">
-            <Bell className="w-5 h-5 text-secondary-foreground" />
+        <div className="flex items-center gap-2 md:gap-4">
+          <button className="w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-card border border-border flex items-center justify-center hover:bg-secondary transition-all shadow-sm">
+            <Bell className="w-5 h-5 text-card-foreground" />
           </button>
-          <div className="w-10 h-10 rounded-full border-2 border-primary/20 bg-primary/10 flex items-center justify-center overflow-hidden">
+          <div className="hidden md:flex flex-col items-end mr-1">
+            <p className="text-xs font-bold text-foreground">{user?.name || 'ব্যবহারকারী'}</p>
+            <p className="text-[10px] text-muted-foreground font-medium">পয়েন্ট: ৪৫০০</p>
+          </div>
+          <div className="w-10 h-10 md:w-12 md:h-12 rounded-2xl border border-primary/20 bg-primary/10 flex items-center justify-center overflow-hidden shadow-sm">
             {user?.image ? (
-              <Image src={user.image} alt={user.name || ''} width={40} height={40} />
+              <Image src={user.image} alt={user.name || ''} width={48} height={48} />
             ) : (
               <User className="w-5 h-5 text-primary" />
             )}
@@ -90,9 +89,9 @@ export function HomeScreen() {
       </motion.div>
 
       {/* Main Categories */}
-      <motion.div variants={item} className="px-4 mt-4">
-        <h2 className="text-sm font-semibold text-muted-foreground mb-3 bengali-text">বিভাগসমূহ</h2>
-        <div className="grid grid-cols-3 gap-3">
+      <motion.div variants={item} className="px-4 mt-6 md:px-0">
+        <h2 className="text-sm font-bold text-muted-foreground mb-4 bengali-text tracking-wide uppercase">বিভাগসমূহ</h2>
+        <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 md:gap-4">
           {topCategories.map((cat) => {
             return (
               <motion.button
@@ -114,10 +113,10 @@ export function HomeScreen() {
         </div>
       </motion.div>
 
-      {/* Vocabulary Sets - Horizontal Scroll */}
-      <motion.div variants={item} className="mt-6">
-        <div className="flex items-center justify-between px-4 mb-3">
-          <h2 className="text-sm font-semibold text-muted-foreground bengali-text">শব্দ সেট</h2>
+      {/* Vocabulary Sets */}
+      <motion.div variants={item} className="mt-8 md:px-0 px-4">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-sm font-bold text-muted-foreground bengali-text tracking-wide uppercase">শব্দ সেট</h2>
           <button
             onClick={() => router.push('/dictionary')}
             className="text-xs text-primary font-medium bengali-text"
@@ -125,14 +124,14 @@ export function HomeScreen() {
             সব দেখুন
           </button>
         </div>
-        <div ref={scrollRef} className="flex gap-3 px-4 overflow-x-auto hide-scrollbar pb-2">
+        <div ref={scrollRef} className="flex md:grid md:grid-cols-2 lg:grid-cols-3 gap-4 overflow-x-auto hide-scrollbar pb-4 md:pb-0">
           {vocabularySets.map((set) => (
             <motion.button
               key={set.id}
               whileHover={{ scale: 1.05, x: 2 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => startQuiz({ setId: set.id, title: set.title })}
-              className="flex-shrink-0 w-44 bg-card rounded-2xl p-4 border border-border shadow-sm hover:shadow-md transition-all text-left group"
+              className="flex-shrink-0 w-44 md:w-full bg-card rounded-3xl p-5 border border-border shadow-sm hover:shadow-xl hover:border-primary/20 transition-all text-left group"
             >
               <div className="w-10 h-10 rounded-xl bg-primary/5 flex items-center justify-center mb-2 group-hover:bg-primary/10 transition-colors">
                 <span className="text-2xl">{set.icon}</span>
@@ -150,8 +149,10 @@ export function HomeScreen() {
         </div>
       </motion.div>
 
-      {/* Daily 5 Words */}
-      <motion.div variants={item} className="mt-6 px-4">
+      {/* Daily Word & Stats - Re-aligned for Desktop */}
+      <div className="flex flex-col lg:flex-row gap-6 mt-10 md:px-0">
+        {/* Daily 5 Words */}
+        <motion.div variants={item} className="flex-1 px-4 lg:px-0">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-sm font-semibold text-muted-foreground bengali-text">আজকের ৫ শব্দ</h2>
           <div className="flex items-center gap-1">
@@ -224,34 +225,39 @@ export function HomeScreen() {
             </div>
           </motion.div>
         )}
-      </motion.div>
+        </motion.div>
 
-      {/* Quick stats */}
-      <motion.div variants={item} className="mt-6 px-4">
-        <div className="bg-gradient-to-br from-card to-card/50 rounded-3xl border border-border p-5 shadow-lg relative overflow-hidden">
-          <div className="absolute -bottom-8 -right-8 w-24 h-24 bg-primary/5 rounded-full" />
-          <h3 className="text-xs font-bold text-primary uppercase tracking-widest mb-4 bengali-text text-center">আপনার অগ্রগতি</h3>
-          <div className="grid grid-cols-3 gap-2">
-            <div className="flex flex-col items-center p-3 rounded-2xl bg-primary/5 border border-primary/10">
-              <p className="text-2xl font-black text-primary leading-none mb-1">২৮</p>
-              <p className="text-[9px] font-bold text-muted-foreground bengali-text uppercase">শব্দ শিখেছেন</p>
+        {/* Quick stats - Moved here for large screens */}
+        <motion.div variants={item} className="flex-1 max-w-full lg:max-w-md px-4 lg:px-0">
+          <div className="h-full bg-gradient-to-br from-card to-card/50 rounded-[2.5rem] border border-border p-8 shadow-xl relative overflow-hidden flex flex-col justify-between">
+            <div className="absolute -bottom-8 -right-8 w-32 h-32 bg-primary/5 rounded-full" />
+            <div className="absolute -top-8 -left-8 w-24 h-24 bg-primary/5 rounded-full" />
+            
+            <div>
+              <h3 className="text-xs font-bold text-primary uppercase tracking-widest mb-6 bengali-text text-center lg:text-left">আপনার অগ্রগতি</h3>
+              <div className="grid grid-cols-3 lg:grid-cols-1 gap-4">
+                <div className="flex flex-col lg:flex-row items-center lg:justify-between p-4 rounded-3xl bg-primary/5 border border-primary/10 transition-transform hover:scale-105">
+                  <p className="text-[9px] font-bold text-muted-foreground bengali-text uppercase lg:mb-0 mb-1">শব্দ শিখেছেন</p>
+                  <p className="text-2xl font-black text-primary leading-none">২৮</p>
+                </div>
+                <div className="flex flex-col lg:flex-row items-center lg:justify-between p-4 rounded-3xl bg-islamic-gold/5 border border-islamic-gold/10 transition-transform hover:scale-105">
+                  <p className="text-[9px] font-bold text-muted-foreground bengali-text uppercase lg:mb-0 mb-1">আজ শিখেছেন</p>
+                  <p className="text-2xl font-black text-islamic-gold leading-none">৫</p>
+                </div>
+                <div className="flex flex-col lg:flex-row items-center lg:justify-between p-4 rounded-3xl bg-secondary border border-border transition-transform hover:scale-105">
+                  <p className="text-[9px] font-bold text-muted-foreground bengali-text uppercase lg:mb-0 mb-1">দিনের স্ট্রিক</p>
+                  <p className="text-2xl font-black text-foreground leading-none">৩</p>
+                </div>
+              </div>
             </div>
-            <div className="flex flex-col items-center p-3 rounded-2xl bg-islamic-gold/5 border border-islamic-gold/10">
-              <p className="text-2xl font-black text-islamic-gold leading-none mb-1">৫</p>
-              <p className="text-[9px] font-bold text-muted-foreground bengali-text uppercase">আজ শিখেছেন</p>
-            </div>
-            <div className="flex flex-col items-center p-3 rounded-2xl bg-secondary border border-border">
-              <p className="text-2xl font-black text-foreground leading-none mb-1">৩</p>
-              <p className="text-[9px] font-bold text-muted-foreground bengali-text uppercase">দিনের স্ট্রিক</p>
+
+            <div className="mt-8 flex items-center justify-center lg:justify-start gap-2 py-3 px-6 bg-primary/10 rounded-2xl w-full lg:w-fit cursor-pointer hover:bg-primary/20 transition-all group">
+              <Trophy className="w-4 h-4 text-primary group-hover:rotate-12 transition-transform" />
+              <span className="text-xs font-bold text-primary bengali-text capitalize tracking-wide">লিডারবোর্ড দেখুন</span>
             </div>
           </div>
-
-          <div className="mt-4 flex items-center justify-center gap-2 py-2 px-4 bg-primary/10 rounded-full w-fit mx-auto cursor-pointer hover:bg-primary/20 transition-colors">
-            <Trophy className="w-3 h-3 text-primary" />
-            <span className="text-[10px] font-bold text-primary bengali-text capitalize tracking-wide">লিডারবোর্ড দেখুন</span>
-          </div>
-        </div>
-      </motion.div>
+        </motion.div>
+      </div>
     </motion.div>
   )
 }

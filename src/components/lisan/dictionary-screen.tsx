@@ -64,8 +64,8 @@ export function DictionaryScreen() {
   return (
     <div className="flex flex-col h-full">
       {/* Search Header */}
-      <div className="px-4 pt-4 pb-2">
-        <h1 className="text-xl font-bold bengali-text mb-3">ডিকশনারি</h1>
+      <div className="px-4 pt-6 md:pt-10 pb-4 max-w-2xl mx-auto w-full">
+        <h1 className="text-xl md:text-3xl font-black bengali-text mb-4 text-center md:text-left">ডিকশনারি</h1>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
@@ -132,8 +132,8 @@ export function DictionaryScreen() {
               className="py-2 pb-24"
             >
               {/* Browse by category */}
-              <h3 className="text-sm font-semibold text-muted-foreground mb-3 bengali-text">বিভাগ অনুসারে ব্রাউজ</h3>
-              <div className="grid grid-cols-2 gap-2 mb-6">
+              <h3 className="text-sm font-bold text-muted-foreground mb-4 bengali-text tracking-wide uppercase">বিভাগ অনুসারে ব্রাউজ</h3>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 mb-10">
                 {categories.map((cat) => (
                   <button
                     key={cat.id}
@@ -252,15 +252,15 @@ function WordDetailModal({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[90] bg-black/50 flex items-end justify-center"
+      className="fixed inset-0 z-[90] bg-black/60 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-6"
       onClick={onClose}
     >
       <motion.div
-        initial={{ y: 300 }}
-        animate={{ y: 0 }}
-        exit={{ y: 300 }}
+        initial={{ y: 300, scale: 0.95 }}
+        animate={{ y: 0, scale: 1 }}
+        exit={{ y: 300, scale: 0.95 }}
         transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-        className="w-full max-w-lg bg-card rounded-t-3xl overflow-hidden"
+        className="w-full max-w-lg bg-card rounded-t-[2.5rem] md:rounded-[2.5rem] overflow-hidden shadow-2xl border border-white/10"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Handle */}

@@ -155,9 +155,9 @@ export function PracticeScreen() {
         <QuizView />
       ) : (
         <>
-          <div className="px-4 pt-4 pb-2 bg-background z-10">
-            <h1 className="text-2xl font-bold bengali-text">প্র্যাকটিস</h1>
-            <p className="text-sm text-muted-foreground bengali-text">আপনার আরবি দক্ষতা যাচাই করুন</p>
+          <div className="px-4 pt-6 md:pt-10 pb-4 max-w-4xl mx-auto w-full">
+            <h1 className="text-xl md:text-3xl font-black bengali-text text-center md:text-left">প্র্যাকটিস</h1>
+            <p className="text-sm md:text-base text-muted-foreground bengali-text text-center md:text-left mt-1">আপনার আরবি দক্ষতা যাচাই করুন</p>
             
             {/* Error Message */}
             {matchingError && (
@@ -170,15 +170,7 @@ export function PracticeScreen() {
             )}
 
             {/* Connection Status */}
-            <div className="mt-2 flex items-center gap-2">
-              <div className={`w-2 h-2 rounded-full ${isPusherConnected ? 'bg-green-500' : 'bg-red-500'}`} />
-              <span className="text-[10px] text-muted-foreground">
-                {isPusherConnected ? 'Live matching ready' : 'Live matching offline'}
-              </span>
-            </div>
-          </div>
-
-          <div className="flex-1 px-4 overflow-y-auto custom-scrollbar pb-24">
+          <div className="flex-1 px-4 max-w-4xl mx-auto w-full overflow-y-auto custom-scrollbar pb-24 md:pb-10">
             <AnimatePresence mode="wait">
               {/* IDLE STATE */}
               {practiceState === 'idle' && (
@@ -187,7 +179,7 @@ export function PracticeScreen() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
-                  className="flex flex-col gap-6 py-4"
+                  className="grid grid-cols-1 md:grid-cols-2 gap-6 py-6"
                 >
                   {/* Solo Practice Card */}
                   <motion.div
@@ -225,8 +217,8 @@ export function PracticeScreen() {
                     </div>
                   </motion.div>
 
-                  {/* Divider */}
-                  <div className="relative flex items-center gap-4 px-4">
+                  {/* No divider on desktop grid */}
+                  <div className="md:hidden relative flex items-center gap-4 px-4">
                     <div className="flex-1 h-[1px] bg-border" />
                     <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest bengali-text">অথবা</span>
                     <div className="flex-1 h-[1px] bg-border" />

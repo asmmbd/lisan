@@ -15,13 +15,13 @@ export function SavedScreen() {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="px-4 pt-4 pb-2">
-        <h1 className="text-xl font-bold bengali-text">সেভ</h1>
-        <p className="text-sm text-muted-foreground bengali-text">আপনার সংরক্ষিত শব্দ ও নোট</p>
+      <div className="px-4 pt-6 md:pt-10 pb-4 max-w-4xl mx-auto w-full text-center md:text-left">
+        <h1 className="text-xl md:text-3xl font-black bengali-text">সেভ</h1>
+        <p className="text-sm md:text-base text-muted-foreground bengali-text mt-1">আপনার সংরক্ষিত শব্দ ও নোট</p>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col px-4">
-        <TabsList className="w-full bg-secondary/50 rounded-xl h-10 p-1 mb-3">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col px-4 max-w-4xl mx-auto w-full">
+        <TabsList className="w-full bg-secondary/50 rounded-xl h-11 p-1 mb-6">
           <TabsTrigger value="words" className="rounded-lg flex-1 gap-1.5 text-xs data-[state=active]:bg-card data-[state=active]:shadow-sm">
             <Bookmark className="w-3.5 h-3.5" />
             <span className="bengali-text">শব্দ</span>
@@ -73,7 +73,7 @@ function SavedWordsList() {
           hidden: { opacity: 0 },
           show: { opacity: 1, transition: { staggerChildren: 0.05 } },
         }}
-        className="space-y-2 pb-24"
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 pb-24 md:pb-10"
       >
         {savedWords.map((word) => (
           <motion.div
@@ -175,7 +175,7 @@ function NotesList() {
             description="আপনার শেখার নোট লিখুন"
           />
         ) : (
-          <div className="space-y-2 pb-24">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pb-24 md:pb-10">
             {notes.map((note, idx) => (
               <motion.div
                 key={note.id}

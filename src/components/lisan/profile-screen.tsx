@@ -30,7 +30,7 @@ export function ProfileScreen() {
   const { theme, setTheme } = useTheme()
   const { data: session, update: updateSession } = useSession()
   const [notifications, setNotifications] = useState(true)
-  const { setActiveTab, savedWordIds, notes, updateProfile } = useAppStore()
+  const { savedWordIds, notes, updateProfile } = useAppStore()
   const [isEditing, setIsEditing] = useState(false)
   const [newName, setNewName] = useState('')
   const user = session?.user
@@ -66,7 +66,7 @@ export function ProfileScreen() {
       variants={container}
       initial="hidden"
       animate="show"
-      className="pb-24"
+      className="pb-24 max-w-4xl mx-auto w-full px-0 md:px-6"
     >
       {/* User Info Card */}
       <motion.div variants={item} className="px-4 pt-4">
@@ -80,8 +80,8 @@ export function ProfileScreen() {
             <div className="flex-1">
               {isEditing ? (
                 <div className="flex flex-col gap-2">
-                  <Input 
-                    value={newName} 
+                  <Input
+                    value={newName}
                     onChange={(e) => setNewName(e.target.value)}
                     className="h-8 py-1 bg-secondary/50 border-primary/20 bengali-text"
                     placeholder="আপনার নাম লিখুন"
@@ -125,97 +125,100 @@ export function ProfileScreen() {
         </div>
       </motion.div>
 
-      {/* Settings Section */}
-      <motion.div variants={item} className="px-4 mt-5">
-        <h3 className="text-sm font-semibold text-muted-foreground mb-3 bengali-text">সেটিংস</h3>
-        <div className="bg-card rounded-2xl border border-border overflow-hidden shadow-sm">
-          {/* Dark Mode */}
-          <div className="flex items-center justify-between p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-secondary/70 flex items-center justify-center">
-                {isDark ? <Moon className="w-4 h-4 text-primary" /> : <Sun className="w-4 h-4 text-primary" />}
+      {/* Responsive Settings Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6 px-4 md:px-0">
+        {/* Settings Section */}
+        <motion.div variants={item}>
+          <h3 className="text-sm font-bold text-muted-foreground mb-3 bengali-text tracking-wide uppercase">সেটিংস</h3>
+          <div className="bg-card rounded-2xl border border-border overflow-hidden shadow-sm">
+            {/* Dark Mode */}
+            <div className="flex items-center justify-between p-4">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-secondary/70 flex items-center justify-center">
+                  {isDark ? <Moon className="w-4 h-4 text-primary" /> : <Sun className="w-4 h-4 text-primary" />}
+                </div>
+                <div>
+                  <p className="text-sm font-medium bengali-text">ডার্ক মোড</p>
+                  <p className="text-[10px] text-muted-foreground bengali-text">অন্ধকার থিম ব্যবহার করুন</p>
+                </div>
               </div>
-              <div>
-                <p className="text-sm font-medium bengali-text">ডার্ক মোড</p>
-                <p className="text-[10px] text-muted-foreground bengali-text">অন্ধকার থিম ব্যবহার করুন</p>
-              </div>
+              <Switch checked={isDark} onCheckedChange={toggleTheme} />
             </div>
-            <Switch checked={isDark} onCheckedChange={toggleTheme} />
+
+            <Separator className="bg-border" />
+
+            {/* Language */}
+            <button className="flex items-center justify-between p-4 w-full hover:bg-secondary/30 transition-colors">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-secondary/70 flex items-center justify-center">
+                  <Globe className="w-4 h-4 text-primary" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium bengali-text">ভাষা</p>
+                  <p className="text-[10px] text-muted-foreground bengali-text">বাংলা</p>
+                </div>
+              </div>
+              <ChevronRight className="w-4 h-4 text-muted-foreground" />
+            </button>
+
+            <Separator className="bg-border" />
+
+            {/* Notifications */}
+            <div className="flex items-center justify-between p-4">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-secondary/70 flex items-center justify-center">
+                  <Bell className="w-4 h-4 text-primary" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium bengali-text">নোটিফিকেশন</p>
+                  <p className="text-[10px] text-muted-foreground bengali-text">দৈনিক রিমাইন্ডার</p>
+                </div>
+              </div>
+              <Switch checked={notifications} onCheckedChange={setNotifications} />
+            </div>
           </div>
+        </motion.div>
 
-          <Separator className="bg-border" />
+        {/* Learning Preferences */}
+        <motion.div variants={item}>
+          <h3 className="text-sm font-bold text-muted-foreground mb-3 bengali-text tracking-wide uppercase">শেখার পছন্দ</h3>
+          <div className="bg-card rounded-2xl border border-border overflow-hidden shadow-sm">
+            <button className="flex items-center justify-between p-4 w-full hover:bg-secondary/30 transition-colors">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-secondary/70 flex items-center justify-center">
+                  <span className="text-base">📖</span>
+                </div>
+                <div>
+                  <p className="text-sm font-medium bengali-text">প্রতিদিন শেখার লক্ষ্য</p>
+                  <p className="text-[10px] text-muted-foreground bengali-text">৫টি শব্দ</p>
+                </div>
+              </div>
+              <ChevronRight className="w-4 h-4 text-muted-foreground" />
+            </button>
 
-          {/* Language */}
-          <button className="flex items-center justify-between p-4 w-full hover:bg-secondary/30 transition-colors">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-secondary/70 flex items-center justify-center">
-                <Globe className="w-4 h-4 text-primary" />
-              </div>
-              <div>
-                <p className="text-sm font-medium bengali-text">ভাষা</p>
-                <p className="text-[10px] text-muted-foreground bengali-text">বাংলা</p>
-              </div>
-            </div>
-            <ChevronRight className="w-4 h-4 text-muted-foreground" />
-          </button>
+            <Separator className="bg-border" />
 
-          <Separator className="bg-border" />
-
-          {/* Notifications */}
-          <div className="flex items-center justify-between p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-secondary/70 flex items-center justify-center">
-                <Bell className="w-4 h-4 text-primary" />
+            <button className="flex items-center justify-between p-4 w-full hover:bg-secondary/30 transition-colors">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-secondary/70 flex items-center justify-center">
+                  <span className="text-base">🎯</span>
+                </div>
+                <div>
+                  <p className="text-sm font-medium bengali-text">শেখার স্তর</p>
+                  <p className="text-[10px] text-muted-foreground bengali-text">প্রাথমিক</p>
+                </div>
               </div>
-              <div>
-                <p className="text-sm font-medium bengali-text">নোটিফিকেশন</p>
-                <p className="text-[10px] text-muted-foreground bengali-text">দৈনিক রিমাইন্ডার</p>
-              </div>
-            </div>
-            <Switch checked={notifications} onCheckedChange={setNotifications} />
+              <ChevronRight className="w-4 h-4 text-muted-foreground" />
+            </button>
           </div>
-        </div>
-      </motion.div>
-
-      {/* Learning Preferences */}
-      <motion.div variants={item} className="px-4 mt-5">
-        <h3 className="text-sm font-semibold text-muted-foreground mb-3 bengali-text">শেখার পছন্দ</h3>
-        <div className="bg-card rounded-2xl border border-border overflow-hidden shadow-sm">
-          <button className="flex items-center justify-between p-4 w-full hover:bg-secondary/30 transition-colors">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-secondary/70 flex items-center justify-center">
-                <span className="text-base">📖</span>
-              </div>
-              <div>
-                <p className="text-sm font-medium bengali-text">প্রতিদিন শেখার লক্ষ্য</p>
-                <p className="text-[10px] text-muted-foreground bengali-text">৫টি শব্দ</p>
-              </div>
-            </div>
-            <ChevronRight className="w-4 h-4 text-muted-foreground" />
-          </button>
-
-          <Separator className="bg-border" />
-
-          <button className="flex items-center justify-between p-4 w-full hover:bg-secondary/30 transition-colors">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-secondary/70 flex items-center justify-center">
-                <span className="text-base">🎯</span>
-              </div>
-              <div>
-                <p className="text-sm font-medium bengali-text">শেখার স্তর</p>
-                <p className="text-[10px] text-muted-foreground bengali-text">প্রাথমিক</p>
-              </div>
-            </div>
-            <ChevronRight className="w-4 h-4 text-muted-foreground" />
-          </button>
-        </div>
-      </motion.div>
+        </motion.div>
+      </div>
 
       {/* Account Section */}
-      <motion.div variants={item} className="px-4 mt-5">
-        <h3 className="text-sm font-semibold text-muted-foreground mb-3 bengali-text">অ্যাকাউন্ট</h3>
+      <motion.div variants={item} className="px-4 md:px-0 mt-8">
+        <h3 className="text-sm font-bold text-muted-foreground mb-3 bengali-text tracking-wide uppercase">অ্যাকাউন্ট</h3>
         <div className="bg-card rounded-2xl border border-border overflow-hidden shadow-sm">
-          <button 
+          <button
             onClick={handleLogout}
             className="flex items-center gap-3 p-4 w-full hover:bg-secondary/30 transition-colors"
           >
