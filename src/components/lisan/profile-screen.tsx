@@ -8,6 +8,7 @@ import { Switch } from '@/components/ui/switch'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Separator } from '@/components/ui/separator'
+import { Skeleton } from '@/components/ui/skeleton'
 import { useAppStore } from '@/lib/store'
 import { useState, useEffect } from 'react'
 import { Input } from '@/components/ui/input'
@@ -26,11 +27,76 @@ const item = {
   show: { opacity: 1, y: 0 },
 }
 
+function ProfileSkeleton() {
+  return (
+    <div className="pb-24 max-w-4xl mx-auto w-full px-0 md:px-6 space-y-6">
+      {/* User Info Card Skeleton */}
+      <div className="px-4 pt-4">
+        <div className="bg-card rounded-xl border border-border p-5 shadow-sm space-y-4">
+          <div className="flex items-center gap-4">
+            <Skeleton className="w-16 h-16 rounded-full" />
+            <div className="flex-1 space-y-2">
+              <Skeleton className="h-6 w-32" />
+              <Skeleton className="h-4 w-48" />
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-4 pt-4 border-t border-border">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="text-center space-y-2">
+                <Skeleton className="h-8 w-12 mx-auto" />
+                <Skeleton className="h-3 w-20 mx-auto" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Settings Skeleton */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 px-4 md:px-0">
+        <div className="space-y-3">
+          <Skeleton className="h-4 w-24" />
+          <div className="bg-card rounded-xl border border-border overflow-hidden space-y-3 p-4">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Skeleton className="w-9 h-9 rounded-xl" />
+                  <div className="space-y-1">
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-3 w-16" />
+                  </div>
+                </div>
+                <Skeleton className="w-10 h-5 rounded-full" />
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="space-y-3">
+          <Skeleton className="h-4 w-28" />
+          <div className="bg-card rounded-xl border border-border overflow-hidden space-y-3 p-4">
+            {[1, 2].map((i) => (
+              <div key={i} className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Skeleton className="w-9 h-9 rounded-xl" />
+                  <div className="space-y-1">
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-3 w-12" />
+                  </div>
+                </div>
+                <Skeleton className="w-4 h-4" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function ProfileScreen() {
   const { theme, setTheme } = useTheme()
-  const { data: session, update: updateSession } = useSession()
+  const { data: session, status, update: updateSession } = useSession()
   const [notifications, setNotifications] = useState(true)
-  const { savedWordIds, notes, updateProfile } = useAppStore()
+  const { savedWordIds, notes, updateProfile, isLoading } = useAppStore()
   const [isEditing, setIsEditing] = useState(false)
   const [newName, setNewName] = useState('')
   const user = session?.user
@@ -38,6 +104,11 @@ export function ProfileScreen() {
   useEffect(() => {
     if (user?.name) setNewName(user.name)
   }, [user?.name])
+
+  // Show skeleton while loading (after all hooks)
+  if (status === 'loading' || isLoading) {
+    return <ProfileSkeleton />
+  }
 
   const isDark = theme === 'dark'
 

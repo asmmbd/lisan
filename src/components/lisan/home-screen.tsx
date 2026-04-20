@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import { useAppStore } from '@/lib/store'
 import { Progress } from '@/components/ui/progress'
 import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
 import { Bookmark, BookmarkCheck, Volume2, ChevronLeft, ChevronRight, User, Bell, Trophy } from 'lucide-react'
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { Badge } from '@/components/ui/badge'
@@ -24,14 +25,71 @@ const item = {
   show: { opacity: 1, y: 0 },
 }
 
+function HomeSkeleton() {
+  return (
+    <div className="pb-4 pt-4 md:pt-8 space-y-6">
+      {/* Header Skeleton */}
+      <div className="flex items-center justify-between px-4 pb-4 md:px-0">
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-4 w-32" />
+        </div>
+        <div className="flex items-center gap-2 md:gap-4">
+          <Skeleton className="w-10 h-10 md:w-12 md:h-12 rounded-xl" />
+          <Skeleton className="w-10 h-10 md:w-12 md:h-12 rounded-xl" />
+        </div>
+      </div>
+
+      {/* Categories Skeleton */}
+      <div className="px-4 md:px-0">
+        <Skeleton className="h-4 w-20 mb-4" />
+        <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 md:gap-4">
+          {[1, 2, 3].map((i) => (
+            <Skeleton key={i} className="h-24 rounded-xl" />
+          ))}
+        </div>
+      </div>
+
+      {/* Vocabulary Sets Skeleton */}
+      <div className="px-4 md:px-0">
+        <div className="flex items-center justify-between mb-4">
+          <Skeleton className="h-4 w-24" />
+          <Skeleton className="h-4 w-16" />
+        </div>
+        <div className="flex gap-4 overflow-hidden">
+          {[1, 2, 3].map((i) => (
+            <Skeleton key={i} className="h-32 w-44 md:w-full rounded-xl flex-shrink-0" />
+          ))}
+        </div>
+      </div>
+
+      {/* Daily Word & Stats Skeleton */}
+      <div className="flex flex-col lg:flex-row gap-6 px-4 lg:px-0">
+        <div className="flex-1 space-y-3">
+          <Skeleton className="h-4 w-32" />
+          <Skeleton className="h-48 rounded-xl" />
+        </div>
+        <div className="flex-1 max-w-full lg:max-w-md">
+          <Skeleton className="h-64 rounded-xl" />
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function HomeScreen() {
   const router = useRouter()
   const { data: session } = useSession()
-  const { savedWordIds, toggleSaveWord, vocabulary, categories, vocabularySets, startQuiz } = useAppStore()
+  const { savedWordIds, toggleSaveWord, vocabulary, categories, vocabularySets, startQuiz, isLoading } = useAppStore()
   const [dailyIndex, setDailyIndex] = useState(0)
   const scrollRef = useRef<HTMLDivElement>(null)
 
   const user = session?.user
+
+  // Show skeleton while loading
+  if (isLoading || (categories.length === 0 && vocabulary.length === 0)) {
+    return <HomeSkeleton />
+  }
 
   // Show first 3 categories by default if not loaded
   const topCategories = categories.length > 0 ? categories.slice(0, 3) : []

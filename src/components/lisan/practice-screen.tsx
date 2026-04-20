@@ -6,12 +6,33 @@ import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { Video, Users, Loader2, User, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
 import { useAppStore } from '@/lib/store'
 import { AgoraVideoCall } from './agora-video-call'
 import { usePusherMatching } from '@/hooks/usePusherMatching'
 import { QuizView } from './quiz-view'
 import { Brain, Trophy, ChevronRight, Play } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+
+function PracticeSkeleton() {
+  return (
+    <div className="flex flex-col h-full bg-background overflow-hidden">
+      {/* Header Skeleton */}
+      <div className="px-4 pt-6 md:pt-10 pb-4 max-w-4xl mx-auto w-full">
+        <Skeleton className="h-8 w-32 mb-2" />
+        <Skeleton className="h-4 w-48" />
+      </div>
+
+      {/* Cards Skeleton */}
+      <div className="flex-1 px-4 max-w-4xl mx-auto w-full py-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Skeleton className="h-48 rounded-xl" />
+          <Skeleton className="h-48 rounded-xl" />
+        </div>
+      </div>
+    </div>
+  )
+}
 
 export function PracticeScreen() {
   const { 
@@ -21,7 +42,8 @@ export function PracticeScreen() {
     setCallTimer,
     quizState,
     startQuiz,
-    vocabulary
+    vocabulary,
+    isLoading
   } = useAppStore()
   const { data: session } = useSession()
   const userId = session?.user?.id || 'guest'
@@ -146,6 +168,11 @@ export function PracticeScreen() {
     }
     setPracticeState('idle')
     setCallTimer(240)
+  }
+
+  // Show skeleton while loading (after all hooks)
+  if (isLoading || vocabulary.length === 0) {
+    return <PracticeSkeleton />
   }
 
   return (

@@ -6,6 +6,7 @@ import { Search, Mic, X, Volume2, Bookmark, BookmarkCheck, ArrowLeft, ChevronRig
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
 import { useAppStore } from '@/lib/store'
 import { ScrollArea } from '@/components/ui/scroll-area'
 
@@ -19,12 +20,39 @@ interface VocabularyWord {
   categorySlug: string
 }
 
+function DictionarySkeleton() {
+  return (
+    <div className="flex flex-col h-full">
+      {/* Header Skeleton */}
+      <div className="px-4 pt-6 md:pt-10 pb-4 max-w-2xl mx-auto w-full">
+        <Skeleton className="h-8 w-32 mb-4" />
+        <Skeleton className="h-11 w-full rounded-xl" />
+      </div>
+
+      {/* Content Skeleton */}
+      <div className="flex-1 px-4 space-y-4">
+        <Skeleton className="h-4 w-40" />
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <Skeleton key={i} className="h-16 rounded-xl" />
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function DictionaryScreen() {
-  const { savedWordIds, toggleSaveWord, searchHistory, addToHistory, vocabulary, categories } = useAppStore()
+  const { savedWordIds, toggleSaveWord, searchHistory, addToHistory, vocabulary, categories, isLoading } = useAppStore()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedWord, setSelectedWord] = useState<VocabularyWord | null>(null)
   const [isSearching, setIsSearching] = useState(false)
   const searchInputRef = useRef<HTMLInputElement>(null)
+
+  // Show skeleton while loading
+  if (isLoading || (categories.length === 0 && vocabulary.length === 0)) {
+    return <DictionarySkeleton />
+  }
 
   useEffect(() => {
     // Auto-focus the search input when screen mounts

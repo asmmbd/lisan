@@ -7,11 +7,40 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
 import { useAppStore } from '@/lib/store'
 import { ScrollArea } from '@/components/ui/scroll-area'
 
+function SavedSkeleton() {
+  return (
+    <div className="flex flex-col h-full">
+      {/* Header Skeleton */}
+      <div className="px-4 pt-6 md:pt-10 pb-4 max-w-4xl mx-auto w-full text-center md:text-left">
+        <Skeleton className="h-8 w-24 mb-2" />
+        <Skeleton className="h-4 w-48" />
+      </div>
+
+      {/* Tabs Skeleton */}
+      <div className="px-4 max-w-4xl mx-auto w-full space-y-4">
+        <Skeleton className="h-11 w-full rounded-xl" />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <Skeleton key={i} className="h-20 rounded-xl" />
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function SavedScreen() {
   const [activeTab, setActiveTab] = useState('words')
+  const { isLoading, vocabulary, savedWordIds } = useAppStore()
+
+  // Show skeleton while loading
+  if (isLoading || (vocabulary.length === 0 && savedWordIds.length === 0)) {
+    return <SavedSkeleton />
+  }
 
   return (
     <div className="flex flex-col h-full">
