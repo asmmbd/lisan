@@ -71,7 +71,7 @@ export function QuizView() {
                 // Should restart with original settings
             }} 
             variant="outline" 
-            className="rounded-2xl gap-2 bengali-text"
+            className="rounded-xl gap-2 bengali-text"
           >
             <RotateCcw className="w-4 h-4" /> পুনরায় খেলুন
           </Button>
@@ -80,7 +80,7 @@ export function QuizView() {
               resetQuiz()
               setActiveTab('home')
             }} 
-            className="rounded-2xl gap-2 bengali-text"
+            className="rounded-xl gap-2 bengali-text"
           >
             <Home className="w-4 h-4" /> হোম
           </Button>
@@ -114,7 +114,7 @@ export function QuizView() {
         exit={{ opacity: 0, x: -20 }}
         className="flex-1 flex flex-col pt-4"
       >
-        <div className="bg-card rounded-3xl border border-border p-8 shadow-sm text-center mb-8 relative overflow-hidden">
+        <div className="bg-card rounded-xl border border-border p-8 shadow-sm text-center mb-8 relative overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-1 gradient-islamic" />
           <p className="text-xs text-muted-foreground mb-4 bengali-text uppercase tracking-widest">এই শব্দটির অর্থ কী?</p>
           <h2 className="arabic-text text-5xl font-bold text-foreground mb-2">
@@ -130,7 +130,7 @@ export function QuizView() {
             const isCorrectOption = isAnswered && option === currentQuestion.correctAnswer
             const isWrongSelection = isAnswered && isSelected && !isCorrect
             
-            let btnClass = "h-16 text-lg justify-start px-6 rounded-2xl border-2 transition-all duration-200 "
+            let btnClass = "h-16 text-lg justify-start px-6 rounded-xl border-2 transition-all duration-200 "
             if (!isAnswered) {
               btnClass += "border-border hover:border-primary hover:bg-primary/5 active:scale-95"
             } else if (isCorrectOption) {
@@ -169,7 +169,7 @@ export function QuizView() {
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
             >
-              <div className={`p-4 rounded-2xl mb-4 flex items-center justify-between ${
+              <div className={`p-4 rounded-xl mb-4 flex items-center justify-between ${
                 isCorrect 
                   ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400' 
                   : 'bg-destructive/10 border border-destructive/20 text-destructive'

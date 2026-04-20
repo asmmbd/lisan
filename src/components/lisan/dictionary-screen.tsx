@@ -260,7 +260,7 @@ function WordDetailModal({
         animate={{ y: 0, scale: 1 }}
         exit={{ y: 300, scale: 0.95 }}
         transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-        className="w-full max-w-lg bg-card rounded-t-[2.5rem] md:rounded-[2.5rem] overflow-hidden shadow-2xl border border-white/10"
+        className="w-full max-w-lg bg-card rounded-t-xl md:rounded-xl overflow-hidden shadow-2xl border border-white/10"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Handle */}

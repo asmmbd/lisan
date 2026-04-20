@@ -70,7 +70,7 @@ export function ProfileScreen() {
     >
       {/* User Info Card */}
       <motion.div variants={item} className="px-4 pt-4">
-        <div className="bg-card rounded-2xl border border-border p-5 shadow-sm">
+        <div className="bg-card rounded-xl border border-border p-5 shadow-sm">
           <div className="flex items-center gap-4">
             <Avatar className="w-16 h-16 border-2 border-primary/20">
               <AvatarFallback className="bg-primary/10 text-primary text-xl font-bold">
@@ -130,7 +130,7 @@ export function ProfileScreen() {
         {/* Settings Section */}
         <motion.div variants={item}>
           <h3 className="text-sm font-bold text-muted-foreground mb-3 bengali-text tracking-wide uppercase">সেটিংস</h3>
-          <div className="bg-card rounded-2xl border border-border overflow-hidden shadow-sm">
+          <div className="bg-card rounded-xl border border-border overflow-hidden shadow-sm">
             {/* Dark Mode */}
             <div className="flex items-center justify-between p-4">
               <div className="flex items-center gap-3">
@@ -182,7 +182,7 @@ export function ProfileScreen() {
         {/* Learning Preferences */}
         <motion.div variants={item}>
           <h3 className="text-sm font-bold text-muted-foreground mb-3 bengali-text tracking-wide uppercase">শেখার পছন্দ</h3>
-          <div className="bg-card rounded-2xl border border-border overflow-hidden shadow-sm">
+          <div className="bg-card rounded-xl border border-border overflow-hidden shadow-sm">
             <button className="flex items-center justify-between p-4 w-full hover:bg-secondary/30 transition-colors">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-xl bg-secondary/70 flex items-center justify-center">
@@ -217,7 +217,7 @@ export function ProfileScreen() {
       {/* Account Section */}
       <motion.div variants={item} className="px-4 md:px-0 mt-8">
         <h3 className="text-sm font-bold text-muted-foreground mb-3 bengali-text tracking-wide uppercase">অ্যাকাউন্ট</h3>
-        <div className="bg-card rounded-2xl border border-border overflow-hidden shadow-sm">
+        <div className="bg-card rounded-xl border border-border overflow-hidden shadow-sm">
           <button
             onClick={handleLogout}
             className="flex items-center gap-3 p-4 w-full hover:bg-secondary/30 transition-colors"

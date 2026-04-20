@@ -149,7 +149,7 @@ export function AgoraVideoCall({ appId, channel, token, uid, onLeave, callTimer 
   return (
     <div className="flex flex-col h-full pb-20">
       {/* Video Container */}
-      <div className="relative flex-1 bg-black rounded-2xl overflow-hidden mb-3 min-h-[280px]">
+      <div className="relative flex-1 bg-black rounded-xl overflow-hidden mb-3 min-h-[280px]">
         
         {/* Remote Video (Big) */}
         <div 

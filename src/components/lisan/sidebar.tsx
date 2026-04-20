@@ -42,7 +42,7 @@ export function Sidebar() {
               key={tab.id}
               href={tab.href}
               className={cn(
-                'group relative flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-300',
+                'group relative flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300',
                 isActive 
                   ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/25' 
                   : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
@@ -68,7 +68,7 @@ export function Sidebar() {
       <div className="mt-auto pt-4 border-t border-border/50">
         <button 
           onClick={() => signOut()}
-          className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all duration-300"
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all duration-300"
         >
           <LogOut className="w-5 h-5" />
           <span className="text-sm font-medium bengali-text">লগআউট</span>

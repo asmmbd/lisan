@@ -78,7 +78,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
             className="flex flex-col items-center text-center"
           >
             {/* Icon with gradient background */}
-            <div className={`w-36 h-36 rounded-3xl bg-gradient-to-br ${slide.gradient} flex items-center justify-center mb-8 shadow-lg`}>
+            <div className={`w-36 h-36 rounded-xl bg-gradient-to-br ${slide.gradient} flex items-center justify-center mb-8 shadow-lg`}>
               <span className="text-6xl">{slide.icon}</span>
             </div>
 

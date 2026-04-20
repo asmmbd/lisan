@@ -73,7 +73,7 @@ export function CallNotification() {
           initial={{ y: -100, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: -100, opacity: 0 }}
-          className="fixed top-4 left-4 right-4 z-50 bg-gradient-to-r from-green-600 to-green-700 rounded-2xl p-4 shadow-2xl"
+          className="fixed top-4 left-4 right-4 z-50 bg-gradient-to-r from-green-600 to-green-700 rounded-xl p-4 shadow-2xl"
         >
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center">

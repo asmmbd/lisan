@@ -71,14 +71,14 @@ export function HomeScreen() {
           <p className="text-xs md:text-sm text-muted-foreground bengali-text mt-1">আজ আপনার পড়াশোনা কেমন চলছে?</p>
         </div>
         <div className="flex items-center gap-2 md:gap-4">
-          <button className="w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-card border border-border flex items-center justify-center hover:bg-secondary transition-all shadow-sm">
+          <button className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-card border border-border flex items-center justify-center hover:bg-secondary transition-all shadow-sm">
             <Bell className="w-5 h-5 text-card-foreground" />
           </button>
           <div className="hidden md:flex flex-col items-end mr-1">
             <p className="text-xs font-bold text-foreground">{user?.name || 'ব্যবহারকারী'}</p>
             <p className="text-[10px] text-muted-foreground font-medium">পয়েন্ট: ৪৫০০</p>
           </div>
-          <div className="w-10 h-10 md:w-12 md:h-12 rounded-2xl border border-primary/20 bg-primary/10 flex items-center justify-center overflow-hidden shadow-sm">
+          <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl border border-primary/20 bg-primary/10 flex items-center justify-center overflow-hidden shadow-sm">
             {user?.image ? (
               <Image src={user.image} alt={user.name || ''} width={48} height={48} />
             ) : (
@@ -99,7 +99,7 @@ export function HomeScreen() {
                 whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => startQuiz({ category: cat.slug, title: cat.title })}
-                className={`group relative overflow-hidden bg-gradient-to-br ${cat.gradient || 'from-primary to-primary/80'} rounded-2xl p-4 text-white text-center shadow-md hover:shadow-xl transition-all duration-300`}
+                className={`group relative overflow-hidden bg-gradient-to-br ${cat.gradient || 'from-primary to-primary/80'} rounded-xl p-4 text-white text-center shadow-md hover:shadow-xl transition-all duration-300`}
               >
                 <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
                 <span className="text-3xl mb-2 block transform transition-transform group-hover:scale-110">{cat.icon}</span>
@@ -131,7 +131,7 @@ export function HomeScreen() {
               whileHover={{ scale: 1.05, x: 2 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => startQuiz({ setId: set.id, title: set.title })}
-              className="flex-shrink-0 w-44 md:w-full bg-card rounded-3xl p-5 border border-border shadow-sm hover:shadow-xl hover:border-primary/20 transition-all text-left group"
+              className="flex-shrink-0 w-44 md:w-full bg-card rounded-xl p-5 border border-border shadow-sm hover:shadow-xl hover:border-primary/20 transition-all text-left group"
             >
               <div className="w-10 h-10 rounded-xl bg-primary/5 flex items-center justify-center mb-2 group-hover:bg-primary/10 transition-colors">
                 <span className="text-2xl">{set.icon}</span>
@@ -174,7 +174,7 @@ export function HomeScreen() {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -30 }}
             transition={{ duration: 0.3 }}
-            className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden"
+            className="bg-card rounded-xl border border-border shadow-sm overflow-hidden"
           >
             {/* Arabic word section */}
             <div className="gradient-islamic p-6 text-center relative">
@@ -229,29 +229,29 @@ export function HomeScreen() {
 
         {/* Quick stats - Moved here for large screens */}
         <motion.div variants={item} className="flex-1 max-w-full lg:max-w-md px-4 lg:px-0">
-          <div className="h-full bg-gradient-to-br from-card to-card/50 rounded-[2.5rem] border border-border p-8 shadow-xl relative overflow-hidden flex flex-col justify-between">
+          <div className="h-full bg-gradient-to-br from-card to-card/50 rounded-xl border border-border p-8 shadow-xl relative overflow-hidden flex flex-col justify-between">
             <div className="absolute -bottom-8 -right-8 w-32 h-32 bg-primary/5 rounded-full" />
             <div className="absolute -top-8 -left-8 w-24 h-24 bg-primary/5 rounded-full" />
             
             <div>
               <h3 className="text-xs font-bold text-primary uppercase tracking-widest mb-6 bengali-text text-center lg:text-left">আপনার অগ্রগতি</h3>
               <div className="grid grid-cols-3 lg:grid-cols-1 gap-4">
-                <div className="flex flex-col lg:flex-row items-center lg:justify-between p-4 rounded-3xl bg-primary/5 border border-primary/10 transition-transform hover:scale-105">
+                <div className="flex flex-col lg:flex-row items-center lg:justify-between p-4 rounded-xl bg-primary/5 border border-primary/10 transition-transform hover:scale-105">
                   <p className="text-[9px] font-bold text-muted-foreground bengali-text uppercase lg:mb-0 mb-1">শব্দ শিখেছেন</p>
                   <p className="text-2xl font-black text-primary leading-none">২৮</p>
                 </div>
-                <div className="flex flex-col lg:flex-row items-center lg:justify-between p-4 rounded-3xl bg-islamic-gold/5 border border-islamic-gold/10 transition-transform hover:scale-105">
+                <div className="flex flex-col lg:flex-row items-center lg:justify-between p-4 rounded-xl bg-islamic-gold/5 border border-islamic-gold/10 transition-transform hover:scale-105">
                   <p className="text-[9px] font-bold text-muted-foreground bengali-text uppercase lg:mb-0 mb-1">আজ শিখেছেন</p>
                   <p className="text-2xl font-black text-islamic-gold leading-none">৫</p>
                 </div>
-                <div className="flex flex-col lg:flex-row items-center lg:justify-between p-4 rounded-3xl bg-secondary border border-border transition-transform hover:scale-105">
+                <div className="flex flex-col lg:flex-row items-center lg:justify-between p-4 rounded-xl bg-secondary border border-border transition-transform hover:scale-105">
                   <p className="text-[9px] font-bold text-muted-foreground bengali-text uppercase lg:mb-0 mb-1">দিনের স্ট্রিক</p>
                   <p className="text-2xl font-black text-foreground leading-none">৩</p>
                 </div>
               </div>
             </div>
 
-            <div className="mt-8 flex items-center justify-center lg:justify-start gap-2 py-3 px-6 bg-primary/10 rounded-2xl w-full lg:w-fit cursor-pointer hover:bg-primary/20 transition-all group">
+            <div className="mt-8 flex items-center justify-center lg:justify-start gap-2 py-3 px-6 bg-primary/10 rounded-lg w-full lg:w-fit cursor-pointer hover:bg-primary/20 transition-all group">
               <Trophy className="w-4 h-4 text-primary group-hover:rotate-12 transition-transform" />
               <span className="text-xs font-bold text-primary bengali-text capitalize tracking-wide">লিডারবোর্ড দেখুন</span>
             </div>

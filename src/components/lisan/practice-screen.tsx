@@ -194,7 +194,7 @@ export function PracticeScreen() {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => startQuiz({ title: 'দৈনিক প্র্যাকটিস' })}
-                    className="group relative overflow-hidden bg-card rounded-3xl border border-border shadow-md p-6 cursor-pointer"
+                    className="group relative overflow-hidden bg-card rounded-xl border border-border shadow-md p-6 cursor-pointer"
                   >
                     <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full -mr-16 -mt-16 transition-transform group-hover:scale-110" />
                     <div className="flex items-start justify-between relative z-10">
@@ -203,7 +203,7 @@ export function PracticeScreen() {
                         <h3 className="text-xl font-bold bengali-text">ইন্টারেক্টিভ কুইজ</h3>
                         <p className="text-sm text-muted-foreground bengali-text">নতুন শব্দ শিখুন এবং দক্ষতা যাচাই করুন</p>
                       </div>
-                      <div className="w-14 h-14 rounded-2xl gradient-islamic flex items-center justify-center shadow-lg transform rotate-3 transition-transform group-hover:rotate-0">
+                      <div className="w-14 h-14 rounded-xl gradient-islamic flex items-center justify-center shadow-lg transform rotate-3 transition-transform group-hover:rotate-0">
                         <Brain className="w-8 h-8 text-white" />
                       </div>
                     </div>
@@ -237,7 +237,7 @@ export function PracticeScreen() {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={handleCreateCall}
-                    className="group relative overflow-hidden bg-secondary/30 rounded-3xl border border-border/50 shadow-sm p-6 cursor-pointer"
+                    className="group relative overflow-hidden bg-secondary/30 rounded-xl border border-border/50 shadow-sm p-6 cursor-pointer"
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex flex-col gap-1">
@@ -245,7 +245,7 @@ export function PracticeScreen() {
                         <h3 className="text-xl font-bold bengali-text">পার্টনারের সাথে কথা বলুন</h3>
                         <p className="text-sm text-muted-foreground bengali-text">সরাসরি কথোপকথনের মাধ্যমে উন্নতি করুন</p>
                       </div>
-                      <div className="w-14 h-14 rounded-2xl bg-white dark:bg-card flex items-center justify-center shadow-md border border-border transition-transform group-hover:scale-105">
+                      <div className="w-14 h-14 rounded-xl bg-white dark:bg-card flex items-center justify-center shadow-md border border-border transition-transform group-hover:scale-105">
                         <Video className="w-8 h-8 text-primary" />
                       </div>
                     </div>
@@ -329,7 +329,7 @@ export function PracticeScreen() {
                   key="incall"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="flex flex-col h-full bg-black rounded-3xl overflow-hidden mt-4 shadow-2xl"
+                  className="flex flex-col h-full bg-black rounded-xl overflow-hidden mt-4 shadow-2xl"
                 >
                   {!process.env.NEXT_PUBLIC_AGORA_APP_ID || !agoraToken ? (
                     <div className="flex flex-col items-center justify-center h-full p-4">
