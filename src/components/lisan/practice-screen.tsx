@@ -295,11 +295,17 @@ export function PracticeScreen() {
               exit={{ opacity: 0 }}
               className="flex flex-col h-full"
             >
-              {!process.env.NEXT_PUBLIC_AGORA_APP_ID ? (
+              {!process.env.NEXT_PUBLIC_AGORA_APP_ID || !agoraToken ? (
                 <div className="flex flex-col items-center justify-center h-full p-4">
                   <div className="p-4 bg-destructive/10 rounded-xl text-center">
-                    <p className="text-destructive font-medium mb-2">⚠️ Agora App ID Missing</p>
-                    <p className="text-sm text-muted-foreground">.env file এ NEXT_PUBLIC_AGORA_APP_ID যোগ করুন</p>
+                    <p className="text-destructive font-medium mb-2">
+                      {!process.env.NEXT_PUBLIC_AGORA_APP_ID ? '⚠️ Agora App ID Missing' : '⏳ Connecting...'}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {!process.env.NEXT_PUBLIC_AGORA_APP_ID
+                        ? '.env file এ NEXT_PUBLIC_AGORA_APP_ID যোগ করুন'
+                        : 'Agora token fetch হচ্ছে...'}
+                    </p>
                   </div>
                 </div>
               ) : (

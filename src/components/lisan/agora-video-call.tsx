@@ -33,78 +33,73 @@ export function AgoraVideoCall({ appId, channel, token, uid, onLeave, callTimer 
   }, [])
 
   useEffect(() => {
+    // Wait for token to be ready before initializing
+    if (!appId || !channel) return
+
+    let cancelled = false
     let AgoraRTC: any
-    
+
     const initAgora = async () => {
       try {
-        // Dynamic import for Agora
         const AgoraModule = await import('agora-rtc-sdk-ng')
         AgoraRTC = AgoraModule.default
-        
-        console.log('🎬 Initializing Agora, channel:', channel)
-        
-        // Create client
+
         const client = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' })
         clientRef.current = client
 
-        // Handle remote users
         client.on('user-published', async (user: any, mediaType: string) => {
           await client.subscribe(user, mediaType)
-          console.log('👤 Remote user published:', user.uid, mediaType)
-          
           if (mediaType === 'video' && remoteVideoRef.current) {
             user.videoTrack?.play(remoteVideoRef.current)
           }
           if (mediaType === 'audio') {
             user.audioTrack?.play()
           }
-          
           setRemoteUsers(prev => prev + 1)
         })
 
         client.on('user-unpublished', (user: any, mediaType: string) => {
-          console.log('👤 Remote user unpublished:', user.uid, mediaType)
-          if (mediaType === 'video') {
-            user.videoTrack?.stop()
-          }
-          if (mediaType === 'audio') {
-            user.audioTrack?.stop()
-          }
+          if (mediaType === 'video') user.videoTrack?.stop()
+          if (mediaType === 'audio') user.audioTrack?.stop()
         })
 
         client.on('user-left', () => {
-          console.log('👤 Remote user left')
           setRemoteUsers(prev => Math.max(0, prev - 1))
         })
 
-        // Join channel (token can be null for testing without authentication)
-        // uid: null = let Agora auto-assign valid numeric uid
-        const agoraToken = token || null
-        const agoraUid = null
-        
-        console.log('🔑 Joining with:', { appId: appId?.slice(0, 8) + '...', channel, hasToken: !!agoraToken })
-        const assignedUid = await client.join(appId, channel, agoraToken, agoraUid)
-        console.log('✅ Agora assigned uid:', assignedUid)
-        console.log('✅ Joined channel:', channel)
+        if (cancelled) return
 
-        // Create local tracks
+        const assignedUid = await client.join(appId, channel, token || null, null)
+        console.log('✅ Joined, uid:', assignedUid)
+
+        if (cancelled) {
+          await client.leave().catch(() => {})
+          return
+        }
+
         const [audioTrack, videoTrack] = await AgoraRTC.createMicrophoneAndCameraTracks()
+
+        if (cancelled) {
+          audioTrack.stop(); audioTrack.close()
+          videoTrack.stop(); videoTrack.close()
+          await client.leave().catch(() => {})
+          return
+        }
+
         localAudioTrackRef.current = audioTrack
         localVideoTrackRef.current = videoTrack
 
-        // Play local video
         if (localVideoRef.current) {
           videoTrack.play(localVideoRef.current)
         }
-        
-        // Publish tracks
+
         await client.publish([audioTrack, videoTrack])
-        console.log('✅ Published local tracks')
 
         setIsConnected(true)
         setIsConnecting(false)
-        
+
       } catch (err: any) {
+        if (cancelled) return
         console.error('❌ Agora error:', err)
         setError(err.message || 'ভিডিও কল শুরু করতে ব্যর্থ')
         setIsConnecting(false)
@@ -114,16 +109,14 @@ export function AgoraVideoCall({ appId, channel, token, uid, onLeave, callTimer 
     initAgora()
 
     return () => {
-      // Cleanup
-      console.log('🧹 Cleaning up Agora')
+      cancelled = true
       localAudioTrackRef.current?.stop()
       localAudioTrackRef.current?.close()
       localVideoTrackRef.current?.stop()
       localVideoTrackRef.current?.close()
-      
       clientRef.current?.leave().catch(() => {})
     }
-  }, [appId, channel, token, uid])
+  }, [appId, channel])
 
   const handleLeave = () => {
     localAudioTrackRef.current?.stop()

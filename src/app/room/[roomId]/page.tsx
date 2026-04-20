@@ -243,7 +243,7 @@ function RoomContent() {
   return (
     <div className="h-screen w-full bg-black relative overflow-hidden">
       {/* Agora Video Call */}
-      {process.env.NEXT_PUBLIC_AGORA_APP_ID && room?.channelName ? (
+      {process.env.NEXT_PUBLIC_AGORA_APP_ID && room?.channelName && agoraToken ? (
         <AgoraVideoCall
           appId={process.env.NEXT_PUBLIC_AGORA_APP_ID}
           channel={room.channelName}
