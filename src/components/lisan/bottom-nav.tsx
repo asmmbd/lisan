@@ -5,7 +5,6 @@ import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useAppStore } from '@/lib/store'
 
 const tabs = [
   { id: 'home', label: 'হোম', icon: Home, href: '/' },
@@ -17,16 +16,7 @@ const tabs = [
 
 export function BottomNav() {
   const pathname = usePathname()
-  const { practiceState, quizState } = useAppStore()
 
-  // Hide BottomNav on calling screen or during active practice/quiz session
-  const isCalling = pathname.startsWith('/room')
-  const isInCall = practiceState === 'incall' || practiceState === 'incoming'
-  const isQuizRunning = quizState === 'running'
-
-  if (isCalling || isInCall || isQuizRunning) {
-    return null
-  }
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-md border-t border-border safe-bottom">
       <div className="max-w-lg mx-auto flex items-center justify-around h-16 px-2">
