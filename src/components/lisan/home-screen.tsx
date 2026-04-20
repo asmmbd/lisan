@@ -86,11 +86,6 @@ export function HomeScreen() {
 
   const user = session?.user
 
-  // Show skeleton while loading
-  if (isLoading || (categories.length === 0 && vocabulary.length === 0)) {
-    return <HomeSkeleton />
-  }
-
   // Show first 3 categories by default if not loaded
   const topCategories = categories.length > 0 ? categories.slice(0, 3) : []
 
@@ -114,6 +109,11 @@ export function HomeScreen() {
   const dailyWords = vocabulary.slice(0, 5)
   const currentDaily = dailyWords[dailyIndex]
   const isSaved = currentDaily ? savedWordIds.includes(currentDaily.id) : false
+
+  // Show skeleton while loading (after all hooks)
+  if (isLoading || (categories.length === 0 && vocabulary.length === 0)) {
+    return <HomeSkeleton />
+  }
 
   return (
     <motion.div

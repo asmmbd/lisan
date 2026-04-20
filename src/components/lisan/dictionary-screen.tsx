@@ -49,11 +49,6 @@ export function DictionaryScreen() {
   const [isSearching, setIsSearching] = useState(false)
   const searchInputRef = useRef<HTMLInputElement>(null)
 
-  // Show skeleton while loading
-  if (isLoading || (categories.length === 0 && vocabulary.length === 0)) {
-    return <DictionarySkeleton />
-  }
-
   useEffect(() => {
     // Auto-focus the search input when screen mounts
     const timer = setTimeout(() => {
@@ -87,6 +82,11 @@ export function DictionaryScreen() {
   const handleHistoryClick = (term: string) => {
     setSearchQuery(term)
     setIsSearching(true)
+  }
+
+  // Show skeleton while loading (after all hooks)
+  if (isLoading || (categories.length === 0 && vocabulary.length === 0)) {
+    return <DictionarySkeleton />
   }
 
   return (
