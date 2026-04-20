@@ -15,8 +15,8 @@ export async function POST(req: NextRequest) {
 
     const { channelName } = await req.json()
     
-    // Generate unique room ID (short for URL)
-    const roomId = Math.floor(Math.random() * 10000).toString()
+    // Generate unique room ID (numeric 1-10000 for URL)
+    const roomId = Math.floor(Math.random() * 10000) + 1
     
     // Create room
     const room = await prisma.room.create({

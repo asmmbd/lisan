@@ -127,7 +127,7 @@ model ActiveMatch {
 // WhatsApp-style Call Rooms
 model Room {
   id          String       @id @default(cuid())
-  roomId      String       @unique // Short unique ID for URL
+  roomId      Int          @unique // Numeric ID for URL
   callerId    String
   caller      User         @relation("CallerRooms", fields: [callerId], references: [id])
   receiverId  String?
