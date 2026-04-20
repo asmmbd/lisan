@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, Suspense } from 'react'
+import { useEffect, useState, Suspense, useRef } from 'react'
 import { useSession } from 'next-auth/react'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -36,8 +36,18 @@ function RoomContent() {
   const [error, setError] = useState<string | null>(null)
   const [room, setRoom] = useState<any>(null)
   const [hasJoined, setHasJoined] = useState(false)
+  const [isJoining, setIsJoining] = useState(false)
   const [agoraToken, setAgoraToken] = useState('')
   const [callEnded, setCallEnded] = useState(false)
+  const joiningInProgress = useRef(false)
+
+  // Track current room to prevent duplicate notifications
+  useEffect(() => {
+    sessionStorage.setItem('currentRoomId', roomId)
+    return () => {
+      sessionStorage.removeItem('currentRoomId')
+    }
+  }, [roomId])
 
   // Fetch room info
   useEffect(() => {
@@ -125,6 +135,11 @@ function RoomContent() {
 
   // Join call
   const handleJoin = async () => {
+    // Prevent double join - check both state and ref
+    if (isJoining || hasJoined || joiningInProgress.current) return
+    
+    joiningInProgress.current = true
+    setIsJoining(true)
     try {
       const res = await fetch('/api/calls/join', {
         method: 'POST',
@@ -141,10 +156,14 @@ function RoomContent() {
       const data = await res.json()
       setRoom(data.room)
       setHasJoined(true)
+      setIsJoining(false)
+      joiningInProgress.current = false
       setCallTimer(240)
       fetchAgoraToken(data.room.channelName)
     } catch (err) {
       setError('Failed to join call')
+      setIsJoining(false)
+      joiningInProgress.current = false
     }
   }
 
@@ -224,14 +243,19 @@ function RoomContent() {
             </motion.button>
 
             <motion.button
-              whileTap={{ scale: 0.95 }}
+              whileTap={{ scale: isJoining ? 1 : 0.95 }}
               onClick={handleJoin}
-              className="flex flex-col items-center gap-2"
+              disabled={isJoining}
+              className={`flex flex-col items-center gap-2 ${isJoining ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
-              <div className="w-16 h-16 rounded-full bg-green-500 flex items-center justify-center">
-                <Phone className="w-8 h-8" />
+              <div className={`w-16 h-16 rounded-full flex items-center justify-center ${isJoining ? 'bg-gray-500' : 'bg-green-500'}`}>
+                {isJoining ? (
+                  <Loader2 className="w-8 h-8 animate-spin" />
+                ) : (
+                  <Phone className="w-8 h-8" />
+                )}
               </div>
-              <span className="text-sm">Join</span>
+              <span className="text-sm">{isJoining ? 'Joining...' : 'Join'}</span>
             </motion.button>
           </div>
         </motion.div>

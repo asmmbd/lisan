@@ -124,13 +124,6 @@ export function VideoCall({
             <span className="text-white text-sm">কানেক্ট হচ্ছে...</span>
           </div>
         )}
-
-        {/* Conversation hint */}
-        <div className="absolute bottom-3 left-3 right-3 bg-black/60 backdrop-blur-sm rounded-xl p-3">
-          <p className="text-xs text-white/90 bengali-text">
-            💡 বিষয়: দৈনন্দিন জীবন - সকালের রুটিন সম্পর্কে কথা বলুন
-          </p>
-        </div>
       </div>
 
       {/* Call controls */}

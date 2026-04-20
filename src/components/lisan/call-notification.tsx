@@ -24,6 +24,14 @@ export function CallNotification() {
 
     channel.bind('incoming-call', (data: IncomingCall) => {
       console.log('Incoming call received in Notification:', data)
+      
+      // Don't show notification if user already in this room
+      const currentRoomId = sessionStorage.getItem('currentRoomId')
+      if (currentRoomId === data.roomId) {
+        console.log('Already in room, skipping notification')
+        return
+      }
+      
       setIncomingCall(data)
       
       // Auto-dismiss after 30 seconds
@@ -47,6 +55,8 @@ export function CallNotification() {
   const handleJoin = () => {
     if (incomingCall) {
       console.log('Accepting call, navigating to room with join flag...')
+      // Set current room before navigating
+      sessionStorage.setItem('currentRoomId', incomingCall.roomId)
       router.push(`/room/${incomingCall.roomId}?join=true`)
       setIncomingCall(null)
     }
