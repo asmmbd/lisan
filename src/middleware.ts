@@ -4,7 +4,20 @@ import { NextResponse } from 'next/server'
 export default withAuth(
   function middleware(req) {
     // If user is on a public path, allow without checking token
-    const publicPaths = ['/login', '/register', '/api/auth']
+    const publicPaths = [
+      '/login',
+      '/register',
+      '/api/auth',
+      '/offline',
+      '/manifest.webmanifest',
+      '/sw.js',
+      '/icon-192.png',
+      '/icon-512.png',
+      '/apple-icon.png',
+      '/logo.svg',
+      '/lisan-logo.png',
+      '/robots.txt',
+    ]
     const isPublicPath = publicPaths.some(path => 
       req.nextUrl.pathname === path || req.nextUrl.pathname.startsWith(`${path}/`)
     )
@@ -24,7 +37,20 @@ export default withAuth(
     callbacks: {
       authorized({ req, token }) {
         // Allow public paths without token
-        const publicPaths = ['/login', '/register', '/api/auth']
+        const publicPaths = [
+          '/login',
+          '/register',
+          '/api/auth',
+          '/offline',
+          '/manifest.webmanifest',
+          '/sw.js',
+          '/icon-192.png',
+          '/icon-512.png',
+          '/apple-icon.png',
+          '/logo.svg',
+          '/lisan-logo.png',
+          '/robots.txt',
+        ]
         const isPublicPath = publicPaths.some(path => 
           req.nextUrl.pathname === path || req.nextUrl.pathname.startsWith(`${path}/`)
         )
