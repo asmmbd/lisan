@@ -261,7 +261,7 @@ export function PracticeScreen() {
                     </div>
 
                     <div className="relative z-10 flex items-center justify-between mt-6">
-                      <div className="flex items-center gap-4">
+                      <div className="hidden md:flex items-center gap-4">
                         <div className="flex -space-x-3">
                           {[1,2,3,4].map(i => (
                             <div key={i} className="w-10 h-10 rounded-full border-2 border-emerald-600 bg-white flex items-center justify-center text-sm shadow-lg">
