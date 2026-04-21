@@ -148,6 +148,44 @@ html[dir='rtl'] .ltr-safe {
   text-align: left;
 }
 
+@media (min-width: 768px) {
+  html[dir='ltr'] .sidebar-shell {
+    left: 0;
+    right: auto;
+    border-right: 1px solid var(--border);
+    border-left: 0;
+  }
+
+  html[dir='rtl'] .sidebar-shell {
+    right: 0;
+    left: auto;
+    border-left: 1px solid var(--border);
+    border-right: 0;
+  }
+
+  html[dir='ltr'] .main-layout-content {
+    margin-left: 16rem;
+    margin-right: 0;
+  }
+
+  html[dir='rtl'] .main-layout-content {
+    margin-right: 16rem;
+    margin-left: 0;
+  }
+
+  html[dir='ltr'] .sidebar-active-indicator {
+    left: 0;
+    right: auto;
+    border-radius: 0 9999px 9999px 0;
+  }
+
+  html[dir='rtl'] .sidebar-active-indicator {
+    right: 0;
+    left: auto;
+    border-radius: 9999px 0 0 9999px;
+  }
+}
+
 /* Custom scrollbar */
 .custom-scrollbar::-webkit-scrollbar {
   width: 4px;

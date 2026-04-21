@@ -22,7 +22,7 @@ export function Sidebar() {
   ]
 
   return (
-    <aside className="hidden md:flex flex-col w-64 h-screen fixed left-0 top-0 z-50 bg-card/80 backdrop-blur-xl border-r border-border py-8 px-4 overflow-y-auto overflow-x-hidden">
+    <aside className="sidebar-shell hidden md:flex flex-col w-64 h-screen fixed top-0 z-50 bg-card/80 backdrop-blur-xl py-8 px-4 overflow-y-auto overflow-x-hidden">
       <div className="flex items-center gap-3 px-2 mb-10">
         <div className="w-10 h-10 rounded-xl overflow-hidden shadow-lg border border-primary/20">
           <Image src="/lisan-logo.png" alt="Lisan Logo" width={40} height={40} className="object-cover" />
@@ -55,7 +55,7 @@ export function Sidebar() {
               {isActive && (
                 <motion.div
                   layoutId="activeSidebarTab"
-                  className="absolute left-0 w-1 h-6 bg-white rounded-r-full"
+                  className="sidebar-active-indicator absolute w-1 h-6 bg-white"
                   transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                 />
               )}
