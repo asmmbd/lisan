@@ -18,10 +18,10 @@ const levelIcons: Record<QuizLevel, typeof Sparkles> = {
   advanced: Trophy,
 }
 
-const levelColors: Record<QuizLevel, string> = {
-  beginner: 'from-emerald-500 to-teal-600',
-  intermediate: 'from-amber-500 to-orange-500',
-  advanced: 'from-rose-500 to-red-600',
+const levelAccentStyles: Record<QuizLevel, string> = {
+  beginner: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300',
+  intermediate: 'bg-amber-500/10 text-amber-700 dark:text-amber-300',
+  advanced: 'bg-rose-500/10 text-rose-700 dark:text-rose-300',
 }
 
 export default function PracticeQuizPage() {
@@ -90,24 +90,37 @@ export default function PracticeQuizPage() {
   ]
 
   return (
-    <div className="mx-auto max-w-5xl w-full px-4 py-6 md:px-6">
-      <div className="flex items-center justify-between gap-4 mb-8">
-        <div>
+    <div className="mx-auto max-w-4xl w-full px-4 py-6 md:px-6">
+      <div className="mb-6">
+        <div className="rounded-2xl border border-border bg-card px-4 py-4 shadow-sm md:px-5">
           <button
             onClick={() => router.push('/practice')}
-            className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm text-muted-foreground hover:bg-secondary mb-3"
+            className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-secondary/70"
           >
             <ChevronLeft className="w-4 h-4" />
             <span className={textClass}>{t('quiz.backToPractice')}</span>
           </button>
-          <h1 className={cn('text-2xl md:text-4xl font-black', textClass)}>{t('quiz.levelPageTitle')}</h1>
-          <p className={cn('text-sm md:text-base text-muted-foreground mt-2 max-w-2xl', textClass)}>
+          <h1 className={cn('mt-3 text-xl font-black md:text-2xl', textClass)}>{t('quiz.levelPageTitle')}</h1>
+          <p className={cn('mt-2 max-w-2xl text-sm text-muted-foreground', textClass)}>
             {t('quiz.levelPageSubtitle')}
           </p>
+
+          <div className="mt-4 grid grid-cols-3 gap-2 md:max-w-md">
+            {(['beginner', 'intermediate', 'advanced'] as QuizLevel[]).map((level) => (
+              <div key={level} className="rounded-xl bg-secondary/45 px-3 py-2">
+                <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                  {levelsLabel(level, t)}
+                </p>
+                <p className="mt-1 text-base font-semibold text-foreground">
+                  {formatNumber(levelCounts[level])}
+                </p>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+      <div className="space-y-3">
         {levels.map((level, index) => {
           const Icon = levelIcons[level.id]
           const count = levelCounts[level.id]
@@ -115,37 +128,40 @@ export default function PracticeQuizPage() {
           return (
             <motion.div
               key={level.id}
-              initial={{ opacity: 0, y: 18 }}
+              initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.08 }}
-              className="rounded-3xl border border-border bg-card shadow-lg overflow-hidden"
+              transition={{ delay: index * 0.06 }}
+              className="rounded-2xl border border-border bg-card p-4 shadow-sm md:p-5"
             >
-              <div className={cn('p-6 bg-gradient-to-br text-white', levelColors[level.id])}>
-                <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center mb-4">
-                  <Icon className="w-6 h-6" />
-                </div>
-                <h2 className={cn('text-2xl font-black', textClass)}>{level.title}</h2>
-                <p className={cn('text-white/85 mt-2 text-sm', textClass)}>{level.description}</p>
-              </div>
-
-              <div className="p-6 space-y-5">
-                <div className="space-y-2">
-                  <p className={cn('text-sm text-muted-foreground', textClass)}>{level.details}</p>
-                  <div className="rounded-2xl bg-secondary/60 border border-border px-4 py-3">
-                    <p className={cn('text-sm font-medium', textClass)}>
-                      {t('quiz.availableWords', { count: formatNumber(count) })}
-                    </p>
+              <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <div className="flex items-start gap-3">
+                  <div className={cn('flex h-11 w-11 shrink-0 items-center justify-center rounded-xl', levelAccentStyles[level.id])}>
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <h2 className={cn('text-base font-semibold md:text-lg', textClass)}>{level.title}</h2>
+                    <p className={cn('mt-1 text-sm text-muted-foreground', textClass)}>{level.description}</p>
                   </div>
                 </div>
 
-                <Button
-                  onClick={() => startQuiz({ title: level.title, level: level.id })}
-                  className={cn('w-full rounded-2xl h-12 text-base gap-2', textClass)}
-                  disabled={count === 0}
-                >
-                  <Play className="w-4 h-4" />
-                  {t('quiz.startLevelQuiz')}
-                </Button>
+                <div className="grid gap-3 md:min-w-[248px]">
+                  <div className="rounded-xl border border-border bg-secondary/35 px-3 py-3">
+                    <p className={cn('text-xs text-muted-foreground', textClass)}>{level.details}</p>
+                    <p className={cn('mt-1 text-sm font-medium', textClass)}>
+                      {t('quiz.availableWords', { count: formatNumber(count) })}
+                    </p>
+                  </div>
+
+                  <Button
+                    onClick={() => startQuiz({ title: level.title, level: level.id })}
+                    className={cn('h-11 w-full gap-2 rounded-xl md:w-auto md:px-6', textClass)}
+                    disabled={count === 0}
+                    variant={count === 0 ? 'outline' : 'default'}
+                  >
+                    <Play className="h-4 w-4" />
+                    {t('quiz.startLevelQuiz')}
+                  </Button>
+                </div>
               </div>
             </motion.div>
           )
@@ -153,4 +169,10 @@ export default function PracticeQuizPage() {
       </div>
     </div>
   )
+}
+
+function levelsLabel(level: QuizLevel, t: (key: string, variables?: Record<string, string | number>) => string) {
+  if (level === 'beginner') return t('quiz.beginnerTitle')
+  if (level === 'intermediate') return t('quiz.intermediateTitle')
+  return t('quiz.advancedTitle')
 }
