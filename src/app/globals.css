@@ -135,7 +135,7 @@
 
 /* Bengali font styling */
 .bengali-text {
-  font-family: var(--font-geist-sans), 'Noto Sans Bengali', sans-serif;
+  font-family: var(--font-hind-siliguri), 'Hind Siliguri', 'Noto Sans Bengali', sans-serif;
   line-height: 1.6;
 }
 

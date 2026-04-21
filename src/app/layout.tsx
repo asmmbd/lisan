@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Hind_Siliguri } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from '@/components/lisan/theme-provider';
@@ -6,6 +7,13 @@ import { AuthProvider } from '@/components/auth/auth-provider';
 import { CallNotification } from '@/components/lisan/call-notification';
 import { LanguageProvider } from '@/components/lisan/language-provider';
 import { PwaRegister } from '@/components/lisan/pwa-register';
+
+const hindSiliguri = Hind_Siliguri({
+  variable: "--font-hind-siliguri",
+  subsets: ["bengali"],
+  weight: ["300", "400", "500", "600", "700"],
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "লিসান - আরবি শিখুন",
@@ -43,7 +51,7 @@ export default function RootLayout({
   return (
     <html lang="bn" suppressHydrationWarning>
       <body
-        className="antialiased bg-background text-foreground"
+        className={`${hindSiliguri.variable} ${hindSiliguri.className} antialiased bg-background text-foreground`}
       >
         <AuthProvider>
           <LanguageProvider>
