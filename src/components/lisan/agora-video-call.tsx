@@ -25,12 +25,33 @@ export function AgoraVideoCall({ appId, channel, token, uid, onLeave, callTimer 
   const [remoteUsers, setRemoteUsers] = useState(0)
   const [isMuted, setIsMuted] = useState(false)
   const [isCameraOff, setIsCameraOff] = useState(false)
+  const [timeRemaining, setTimeRemaining] = useState(180) // 3 minutes countdown
+  const [callStarted, setCallStarted] = useState(false)
 
   const formatTime = useCallback((seconds: number) => {
     const m = Math.floor(seconds / 60)
     const s = seconds % 60
     return `${m}:${s.toString().padStart(2, '0')}`
   }, [])
+
+  // Countdown timer effect - 3 minutes
+  useEffect(() => {
+    if (!callStarted || timeRemaining <= 0) return
+
+    const timer = setInterval(() => {
+      setTimeRemaining(prev => {
+        if (prev <= 1) {
+          // Time's up - auto end call
+          clearInterval(timer)
+          handleLeave()
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+
+    return () => clearInterval(timer)
+  }, [callStarted, timeRemaining])
 
   useEffect(() => {
     // Wait for token to be ready before initializing
@@ -97,6 +118,9 @@ export function AgoraVideoCall({ appId, channel, token, uid, onLeave, callTimer 
 
         setIsConnected(true)
         setIsConnecting(false)
+
+        // Start countdown when connected
+        setCallStarted(true)
 
       } catch (err: any) {
         if (cancelled) return
@@ -211,13 +235,16 @@ export function AgoraVideoCall({ appId, channel, token, uid, onLeave, callTimer 
           </div>
         )}
 
-        {/* Timer */}
-        <div className="absolute top-3 left-3 bg-black/70 backdrop-blur-sm rounded-full px-3 py-1.5 flex items-center gap-1.5 z-10">
+        {/* Timer - Shows countdown from 3 minutes */}
+        <div className={`absolute top-3 left-3 backdrop-blur-sm rounded-full px-3 py-1.5 flex items-center gap-1.5 z-10 ${
+          timeRemaining <= 30 ? 'bg-red-600/80 animate-pulse' : 'bg-black/70'
+        }`}>
           <Clock className="w-3 h-3 text-white" />
-          <span className="text-white text-xs font-mono">{formatTime(callTimer)}</span>
+          <span className="text-white text-xs font-mono font-bold">{formatTime(timeRemaining)}</span>
           {isConnected && (
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse ml-1" />
           )}
+          <span className="text-white/70 text-[10px] ml-1">/ 3:00</span>
         </div>
 
         {/* Participant count */}
