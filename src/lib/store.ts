@@ -57,7 +57,7 @@ interface AppState {
   setCategories: (categories: any[]) => void
   setVocabularySets: (sets: any[]) => void
   // User Actions
-  updateProfile: (data: { name?: string; image?: string }) => Promise<void>
+  updateProfile: (data: { name?: string; image?: string }) => Promise<{ id: string; name: string | null; email: string; image: string | null }>
   // Fetch all user data
   fetchUserData: () => Promise<void>
   // Quiz State
@@ -108,13 +108,13 @@ export const useAppStore = create<AppState>((set, get) => ({
       })
       
       if (!response.ok) throw new Error('Failed to update profile')
-      
-      // We don't necessarily update a global "user" state in Zustand 
-      // since NextAuth handles it, but we could if we wanted to.
-      // For now, NextAuth will pick it up on next session refresh.
+
+      const result = await response.json()
+      return result.user
     } catch (err) {
       console.error('Error updating profile:', err)
       set({ error: 'Failed to update profile' })
+      throw err
     }
   },
   

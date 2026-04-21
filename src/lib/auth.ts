@@ -43,13 +43,22 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = user.id
         token.email = user.email
         token.name = user.name
         token.image = user.image
       }
+
+      if (trigger === 'update' && session?.name) {
+        token.name = session.name
+      }
+
+      if (trigger === 'update' && 'image' in (session || {})) {
+        token.image = session.image as string | null | undefined
+      }
+
       return token
     },
     async session({ session, token }) {
@@ -64,7 +73,6 @@ export const authOptions: NextAuthOptions = {
   },
   pages: {
     signIn: '/login',
-    signUp: '/register',
     error: '/login',
   },
   session: {

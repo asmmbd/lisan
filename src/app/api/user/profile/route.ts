@@ -15,8 +15,8 @@ export async function PUT(req: NextRequest) {
     const updatedUser = await prisma.user.update({
       where: { id: session.user.id },
       data: {
-        ...(name && { name }),
-        ...(image && { image }),
+        ...(typeof name === 'string' ? { name } : {}),
+        ...(typeof image === 'string' ? { image } : {}),
       },
       select: {
         id: true,

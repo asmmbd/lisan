@@ -1,12 +1,12 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import Image from 'next/image'
 import { Trophy, Flame, ChevronLeft, Star } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useLanguage } from '@/components/lisan/language-provider'
 import { cn } from '@/lib/utils'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 
 type LeaderboardEntry = {
   id: string
@@ -139,15 +139,12 @@ function LeaderboardRow({
         {formatNumber(entry.rank)}
       </div>
 
-      <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-secondary">
-        {entry.image ? (
-          <Image src={entry.image} alt={entry.name || ''} width={44} height={44} className="h-full w-full object-cover" />
-        ) : (
-          <span className={cn('text-sm font-semibold', textClass)}>
-            {(entry.name || t('common.unknownUser')).slice(0, 1)}
-          </span>
-        )}
-      </div>
+      <Avatar className="h-11 w-11 shrink-0 border border-border bg-secondary">
+        {entry.image ? <AvatarImage src={entry.image} alt={entry.name || ''} /> : null}
+        <AvatarFallback className={cn('text-sm font-semibold', textClass)}>
+          {(entry.name || t('common.unknownUser')).slice(0, 1)}
+        </AvatarFallback>
+      </Avatar>
 
       <div className="min-w-0 flex-1">
         <p className={cn('truncate text-sm font-semibold md:text-base', textClass)}>{entry.name || t('common.unknownUser')}</p>

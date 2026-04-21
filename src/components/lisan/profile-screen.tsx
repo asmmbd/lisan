@@ -1,16 +1,16 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { Moon, Sun, Globe, Bell, LogOut, Trash2, Shield } from 'lucide-react'
+import { Moon, Sun, Globe, Bell, LogOut, Trash2, Shield, Camera, Loader2 } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { useSession, signOut } from 'next-auth/react'
 import { Switch } from '@/components/ui/switch'
 import { Button } from '@/components/ui/button'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useAppStore } from '@/lib/store'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, type ChangeEvent } from 'react'
 import { Input } from '@/components/ui/input'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
@@ -82,7 +82,9 @@ export function ProfileScreen() {
   const [notifications, setNotifications] = useState(true)
   const { savedWordIds, notes, updateProfile, isLoading } = useAppStore()
   const [isEditing, setIsEditing] = useState(false)
+  const [isUploadingImage, setIsUploadingImage] = useState(false)
   const [newName, setNewName] = useState('')
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const user = session?.user
 
   useEffect(() => {
@@ -106,12 +108,74 @@ export function ProfileScreen() {
   const handleUpdateName = async () => {
     if (!newName.trim()) return
     try {
-      await updateProfile({ name: newName })
+      const updatedUser = await updateProfile({ name: newName })
       await updateSession({ name: newName })
+      if (updatedUser?.image !== undefined) {
+        await updateSession({ image: updatedUser.image })
+      }
       setIsEditing(false)
       toast.success(t('profile.profileUpdated'))
     } catch {
       toast.error(t('profile.profileUpdateFailed'))
+    }
+  }
+
+  const handleAvatarUpload = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    if (!file.type.startsWith('image/')) {
+      toast.error(t('profile.photoFileTypeError'))
+      event.target.value = ''
+      return
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error(t('profile.photoSizeError'))
+      event.target.value = ''
+      return
+    }
+
+    setIsUploadingImage(true)
+
+    try {
+      const authResponse = await fetch('/api/imagekit/auth', { cache: 'no-store' })
+      const authPayload = await authResponse.json()
+
+      if (!authResponse.ok) {
+        throw new Error(authPayload.error || 'Failed to get upload auth')
+      }
+
+      const safeFileName = `${user?.id || 'user'}-${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('fileName', safeFileName)
+      formData.append('folder', '/lisan/profile-photos')
+      formData.append('useUniqueFileName', 'true')
+      formData.append('token', authPayload.token)
+      formData.append('expire', String(authPayload.expire))
+      formData.append('signature', authPayload.signature)
+      formData.append('publicKey', authPayload.publicKey)
+
+      const uploadResponse = await fetch('https://upload.imagekit.io/api/v1/files/upload', {
+        method: 'POST',
+        body: formData,
+      })
+      const uploadPayload = await uploadResponse.json()
+
+      if (!uploadResponse.ok || !uploadPayload.url) {
+        throw new Error(uploadPayload.message || 'Upload failed')
+      }
+
+      const updatedUser = await updateProfile({ image: uploadPayload.url })
+      await updateSession({ image: updatedUser.image })
+      toast.success(t('profile.photoUpdated'))
+    } catch (error) {
+      console.error('Image upload failed:', error)
+      toast.error(t('profile.photoUpdateFailed'))
+    } finally {
+      setIsUploadingImage(false)
+      event.target.value = ''
     }
   }
 
@@ -125,11 +189,32 @@ export function ProfileScreen() {
       <motion.div variants={item} className="px-4 pt-4">
         <div className="bg-card rounded-xl border border-border p-5 shadow-sm">
           <div className="flex items-center gap-4">
-            <Avatar className="w-16 h-16 border-2 border-primary/20">
-              <AvatarFallback className="bg-primary/10 text-primary text-xl font-bold">
-                {user?.name?.charAt(0) || user?.email?.charAt(0) || '?'}
-              </AvatarFallback>
-            </Avatar>
+            <div className="relative">
+              <Avatar className="w-16 h-16 border-2 border-primary/20">
+                {user?.image ? (
+                  <AvatarImage src={user.image} alt={user?.name || t('common.unknownUser')} />
+                ) : null}
+                <AvatarFallback className="bg-primary/10 text-primary text-xl font-bold">
+                  {user?.name?.charAt(0) || user?.email?.charAt(0) || '?'}
+                </AvatarFallback>
+              </Avatar>
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploadingImage}
+                className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full border border-border bg-background text-primary shadow-sm transition-colors hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-70"
+                aria-label={t('profile.changePhoto')}
+              >
+                {isUploadingImage ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Camera className="h-3.5 w-3.5" />}
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleAvatarUpload}
+              />
+            </div>
             <div className="flex-1">
               {isEditing ? (
                 <div className="flex flex-col gap-2">
@@ -157,6 +242,14 @@ export function ProfileScreen() {
                   <span className={cn('text-[10px] text-primary font-medium', textClass)}>{t('profile.level')}</span>
                 </div>
               </div>
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploadingImage}
+                className={cn('mt-2 text-xs font-medium text-primary transition-opacity hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-60', textClass)}
+              >
+                {isUploadingImage ? t('profile.uploadingPhoto') : t('profile.changePhoto')}
+              </button>
             </div>
           </div>
 

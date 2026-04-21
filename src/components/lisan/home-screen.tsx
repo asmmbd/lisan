@@ -9,7 +9,7 @@ import { Bookmark, BookmarkCheck, Volume2, ChevronLeft, ChevronRight, User, Bell
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { useSession } from 'next-auth/react'
-import Image from 'next/image'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { useLanguage } from './language-provider'
@@ -153,13 +153,12 @@ export function HomeScreen() {
               {t('common.points')}: {formatNumber(totalXP)}
             </p>
           </div>
-          <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl border border-primary/20 bg-primary/10 flex items-center justify-center overflow-hidden shadow-sm">
-            {user?.image ? (
-              <Image src={user.image} alt={user.name || ''} width={48} height={48} />
-            ) : (
-              <User className="w-5 h-5 text-primary" />
-            )}
-          </div>
+          <Avatar className="w-10 h-10 md:w-12 md:h-12 rounded-xl border border-primary/20 bg-primary/10 shadow-sm">
+            {user?.image ? <AvatarImage src={user.image} alt={user.name || ''} /> : null}
+            <AvatarFallback className="bg-primary/10 text-primary">
+              {user?.name?.charAt(0) || <User className="w-5 h-5 text-primary" />}
+            </AvatarFallback>
+          </Avatar>
         </div>
       </motion.div>
 
