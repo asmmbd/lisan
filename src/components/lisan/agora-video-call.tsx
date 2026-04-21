@@ -12,7 +12,7 @@ interface AgoraVideoCallProps {
   callTimer: number
 }
 
-export function AgoraVideoCall({ appId, channel, token, uid, onLeave, callTimer }: AgoraVideoCallProps) {
+export function AgoraVideoCall({ appId, channel, token, onLeave, callTimer }: AgoraVideoCallProps) {
   const localVideoRef = useRef<HTMLDivElement>(null)
   const remoteVideoRef = useRef<HTMLDivElement>(null)
   const clientRef = useRef<any>(null)
