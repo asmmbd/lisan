@@ -10,7 +10,6 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { useAppStore } from '@/lib/store'
 import { AgoraVideoCall } from './agora-video-call'
 import { usePusherMatching } from '@/hooks/usePusherMatching'
-import { QuizView } from './quiz-view'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { useLanguage } from './language-provider'
@@ -38,8 +37,6 @@ export function PracticeScreen() {
     setPracticeState,
     callTimer,
     setCallTimer,
-    quizState,
-    startQuiz,
     vocabulary,
     isLoading
   } = useAppStore()
@@ -151,10 +148,7 @@ export function PracticeScreen() {
 
   return (
     <div className="flex flex-col h-full bg-background overflow-hidden">
-      {quizState !== 'idle' ? (
-        <QuizView />
-      ) : (
-        <>
+      <>
           <div className="px-4 pt-6 md:pt-10 pb-4 max-w-4xl mx-auto w-full">
             <div className="flex items-center gap-3 mb-2">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg">
@@ -246,7 +240,7 @@ export function PracticeScreen() {
                     <motion.div
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
-                      onClick={() => startQuiz({ title: t('practice.dailyPracticeQuiz') })}
+                      onClick={() => router.push('/practice/quiz')}
                       className="group bg-card rounded-xl border border-border p-5 cursor-pointer hover:border-primary/50 transition-colors"
                     >
                       <div className="flex items-center gap-4">
@@ -375,8 +369,7 @@ export function PracticeScreen() {
               )}
             </AnimatePresence>
           </div>
-        </>
-      )}
+      </>
     </div>
   )
 }

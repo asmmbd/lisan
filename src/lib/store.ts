@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { getQuizQuestionCount, getVocabularyLevel, type QuizLevel } from './quiz'
 
 export type TabType = 'home' | 'dictionary' | 'practice' | 'saved' | 'profile'
 
@@ -64,8 +65,8 @@ interface AppState {
   quizCurrentIndex: number
   quizScore: number
   quizQuestions: QuizQuestion[]
-  quizSettings: { category?: string; setId?: string; title?: string } | null
-  startQuiz: (settings: { category?: string; setId?: string; title?: string }) => void
+  quizSettings: { category?: string; setId?: string; title?: string; level?: QuizLevel } | null
+  startQuiz: (settings: { category?: string; setId?: string; title?: string; level?: QuizLevel }) => void
   submitAnswer: (isCorrect: boolean) => void
   resetQuiz: () => void
   // Streak System
@@ -241,6 +242,13 @@ export const useAppStore = create<AppState>((set, get) => ({
       // Actually, we can just shuffle and take 10
     }
 
+    if (settings.level) {
+      const leveledVocabulary = filtered.filter((word) => getVocabularyLevel(word) === settings.level)
+      if (leveledVocabulary.length >= 4) {
+        filtered = leveledVocabulary
+      }
+    }
+
     const pickWrongOptions = (words: any[], currentWord: any, field: 'arabic' | 'bengali') => {
       const uniqueValues = words
         .filter((candidate) => candidate.id !== currentWord.id && candidate[field] && candidate[field] !== currentWord[field])
@@ -252,7 +260,7 @@ export const useAppStore = create<AppState>((set, get) => ({
 
     const questions: QuizQuestion[] = filtered
       .sort(() => Math.random() - 0.5)
-      .slice(0, 10)
+      .slice(0, getQuizQuestionCount(settings.level))
       .map((word, index) => {
         const direction: QuizDirection = index % 2 === 0 ? 'ar_to_bn' : 'bn_to_ar'
         const answerField = direction === 'ar_to_bn' ? 'bengali' : 'arabic'
