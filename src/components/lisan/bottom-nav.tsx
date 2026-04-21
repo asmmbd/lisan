@@ -5,17 +5,19 @@ import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-
-const tabs = [
-  { id: 'home', label: 'হোম', icon: Home, href: '/' },
-  { id: 'dictionary', label: 'ডিকশনারি', icon: BookOpen, href: '/dictionary' },
-  { id: 'practice', label: 'প্র্যাকটিস', icon: Video, href: '/practice' },
-  { id: 'saved', label: 'সেভ', icon: Bookmark, href: '/saved' },
-  { id: 'profile', label: 'প্রোফাইল', icon: User, href: '/profile' },
-]
+import { useLanguage } from './language-provider'
 
 export function BottomNav() {
   const pathname = usePathname()
+  const { t, textClass } = useLanguage()
+
+  const tabs = [
+    { id: 'home', label: t('nav.home'), icon: Home, href: '/' },
+    { id: 'dictionary', label: t('nav.dictionary'), icon: BookOpen, href: '/dictionary' },
+    { id: 'practice', label: t('nav.practice'), icon: Video, href: '/practice' },
+    { id: 'saved', label: t('nav.saved'), icon: Bookmark, href: '/saved' },
+    { id: 'profile', label: t('nav.profile'), icon: User, href: '/profile' },
+  ]
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-md border-t border-border safe-bottom md:hidden">
@@ -40,7 +42,7 @@ export function BottomNav() {
                 />
               )}
               <Icon className={cn('w-5 h-5', isActive && 'stroke-[2.5px]')} />
-              <span className={cn('text-[10px] font-medium', isActive && 'font-semibold')}>
+              <span className={cn('text-[10px] font-medium', textClass, isActive && 'font-semibold')}>
                 {tab.label}
               </span>
             </Link>

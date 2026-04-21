@@ -9,6 +9,8 @@ import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useAppStore } from '@/lib/store'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { cn } from '@/lib/utils'
+import { useLanguage } from './language-provider'
 
 interface VocabularyWord {
   id: string
@@ -23,13 +25,10 @@ interface VocabularyWord {
 function DictionarySkeleton() {
   return (
     <div className="flex flex-col h-full">
-      {/* Header Skeleton */}
       <div className="px-4 pt-6 md:pt-10 pb-4 max-w-2xl mx-auto w-full">
         <Skeleton className="h-8 w-32 mb-4" />
         <Skeleton className="h-11 w-full rounded-xl" />
       </div>
-
-      {/* Content Skeleton */}
       <div className="flex-1 px-4 space-y-4">
         <Skeleton className="h-4 w-40" />
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
@@ -43,6 +42,7 @@ function DictionarySkeleton() {
 }
 
 export function DictionaryScreen() {
+  const { t, textClass, formatNumber } = useLanguage()
   const { savedWordIds, toggleSaveWord, searchHistory, addToHistory, vocabulary, categories, isLoading } = useAppStore()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedWord, setSelectedWord] = useState<VocabularyWord | null>(null)
@@ -50,7 +50,6 @@ export function DictionaryScreen() {
   const searchInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    // Auto-focus the search input when screen mounts
     const timer = setTimeout(() => {
       searchInputRef.current?.focus()
     }, 100)
@@ -79,30 +78,23 @@ export function DictionaryScreen() {
     addToHistory(word.arabic)
   }
 
-  const handleHistoryClick = (term: string) => {
-    setSearchQuery(term)
-    setIsSearching(true)
-  }
-
-  // Show skeleton while loading (after all hooks)
   if (isLoading || (categories.length === 0 && vocabulary.length === 0)) {
     return <DictionarySkeleton />
   }
 
   return (
     <div className="flex flex-col h-full">
-      {/* Search Header */}
       <div className="px-4 pt-6 md:pt-10 pb-4 max-w-2xl mx-auto w-full">
-        <h1 className="text-xl md:text-3xl font-black bengali-text mb-4 text-center md:text-left">ডিকশনারি</h1>
+        <h1 className={cn('text-xl md:text-3xl font-black mb-4 text-center md:text-left', textClass)}>{t('dictionary.title')}</h1>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
             ref={searchInputRef}
-            placeholder="আরবি বা বাংলা লিখে খুঁজুন"
+            placeholder={t('dictionary.placeholder')}
             value={searchQuery}
             onChange={(e) => handleSearch(e.target.value)}
             autoFocus
-            className="pl-10 pr-10 h-11 rounded-xl bg-secondary/50 border-border bengali-text"
+            className={cn('pl-10 pr-10 h-11 rounded-xl bg-secondary/50 border-border', textClass)}
           />
           {searchQuery && (
             <button
@@ -118,11 +110,9 @@ export function DictionaryScreen() {
         </div>
       </div>
 
-      {/* Content */}
       <ScrollArea className="flex-1 px-4">
         <AnimatePresence mode="wait">
           {isSearching && searchQuery ? (
-            /* Search Results */
             <motion.div
               key="results"
               initial={{ opacity: 0 }}
@@ -134,8 +124,8 @@ export function DictionaryScreen() {
                 <EmptySearchState />
               ) : (
                 <div className="space-y-2">
-                  <p className="text-xs text-muted-foreground bengali-text mb-2">
-                    {filteredWords.length}টি ফলাফল পাওয়া গেছে
+                  <p className={cn('text-xs text-muted-foreground mb-2', textClass)}>
+                    {formatNumber(filteredWords.length)} {t('dictionary.resultsFound')}
                   </p>
                   {filteredWords.map((word, idx) => (
                     <WordListItem
@@ -151,7 +141,6 @@ export function DictionaryScreen() {
               )}
             </motion.div>
           ) : (
-            /* Default state - Browse & History */
             <motion.div
               key="browse"
               initial={{ opacity: 0 }}
@@ -159,8 +148,7 @@ export function DictionaryScreen() {
               exit={{ opacity: 0 }}
               className="py-2 pb-24"
             >
-              {/* Browse by category */}
-              <h3 className="text-sm font-bold text-muted-foreground mb-4 bengali-text tracking-wide uppercase">বিভাগ অনুসারে ব্রাউজ</h3>
+              <h3 className={cn('text-sm font-bold text-muted-foreground mb-4 tracking-wide uppercase', textClass)}>{t('dictionary.browse')}</h3>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 mb-10">
                 {categories.map((cat) => (
                   <button
@@ -170,28 +158,27 @@ export function DictionaryScreen() {
                   >
                     <span className="text-xl">{cat.icon}</span>
                     <div className="text-left">
-                      <p className="text-sm font-medium bengali-text">{cat.title}</p>
-                      <p className="text-[10px] text-muted-foreground bengali-text">
-                        {vocabulary.filter((v: any) => v.categorySlug === cat.slug).length} শব্দ
+                      <p className={cn('text-sm font-medium', textClass)}>{cat.title}</p>
+                      <p className={cn('text-[10px] text-muted-foreground', textClass)}>
+                        {formatNumber(vocabulary.filter((v: any) => v.categorySlug === cat.slug).length)} {t('home.words')}
                       </p>
                     </div>
                   </button>
                 ))}
               </div>
 
-              {/* Search History */}
               {searchHistory.length > 0 && (
                 <>
                   <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-sm font-semibold text-muted-foreground bengali-text">সাম্প্রতিক অনুসন্ধান</h3>
+                    <h3 className={cn('text-sm font-semibold text-muted-foreground', textClass)}>{t('dictionary.recentSearches')}</h3>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {searchHistory.map((term, idx) => (
                       <Badge
                         key={idx}
                         variant="secondary"
-                        className="cursor-pointer hover:bg-secondary/80 bengali-text"
-                        onClick={() => handleHistoryClick(term)}
+                        className={cn('cursor-pointer hover:bg-secondary/80', textClass)}
+                        onClick={() => handleSearch(term)}
                       >
                         {term}
                       </Badge>
@@ -204,7 +191,6 @@ export function DictionaryScreen() {
         </AnimatePresence>
       </ScrollArea>
 
-      {/* Word Detail Modal */}
       <AnimatePresence>
         {selectedWord && (
           <WordDetailModal
@@ -217,6 +203,18 @@ export function DictionaryScreen() {
       </AnimatePresence>
     </div>
   )
+
+  function EmptySearchState() {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 text-center">
+        <div className="w-20 h-20 rounded-full bg-secondary/50 flex items-center justify-center mb-4">
+          <Search className="w-8 h-8 text-muted-foreground" />
+        </div>
+        <h3 className={cn('text-base font-semibold mb-1', textClass)}>{t('dictionary.noResults')}</h3>
+        <p className={cn('text-sm text-muted-foreground', textClass)}>{t('dictionary.noResultsDescription')}</p>
+      </div>
+    )
+  }
 }
 
 function WordListItem({
@@ -232,6 +230,8 @@ function WordListItem({
   onToggleSave: () => void
   index: number
 }) {
+  const { textClass } = useLanguage()
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -245,7 +245,7 @@ function WordListItem({
           <p className="arabic-text text-lg font-bold">{word.arabic}</p>
           <span className="text-xs text-muted-foreground">({word.pronunciation})</span>
         </div>
-        <p className="text-sm text-card-foreground bengali-text truncate">{word.bengali}</p>
+        <p className={cn('text-sm text-card-foreground truncate', textClass)}>{word.bengali}</p>
       </div>
       <div className="flex items-center gap-1">
         <button
@@ -275,6 +275,8 @@ function WordDetailModal({
   onClose: () => void
   onToggleSave: () => void
 }) {
+  const { t, textClass } = useLanguage()
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -291,12 +293,10 @@ function WordDetailModal({
         className="w-full max-w-lg bg-card rounded-t-xl md:rounded-xl overflow-hidden shadow-2xl border border-white/10"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Handle */}
         <div className="flex justify-center pt-3 pb-2">
           <div className="w-10 h-1 rounded-full bg-muted-foreground/30" />
         </div>
 
-        {/* Header */}
         <div className="flex items-center justify-between px-5 pb-2">
           <button onClick={onClose} className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center">
             <ArrowLeft className="w-4 h-4" />
@@ -308,18 +308,17 @@ function WordDetailModal({
             {isSaved ? (
               <>
                 <BookmarkCheck className="w-4 h-4" />
-                <span className="text-xs font-medium bengali-text">সেভ আছে</span>
+                <span className={cn('text-xs font-medium', textClass)}>{t('dictionary.saved')}</span>
               </>
             ) : (
               <>
                 <Bookmark className="w-4 h-4" />
-                <span className="text-xs font-medium bengali-text">সেভ করুন</span>
+                <span className={cn('text-xs font-medium', textClass)}>{t('dictionary.save')}</span>
               </>
             )}
           </button>
         </div>
 
-        {/* Word Content */}
         <div className="px-5 pb-8">
           <div className="text-center mb-6">
             <p className="arabic-text text-5xl font-bold text-foreground mb-2">{word.arabic}</p>
@@ -327,43 +326,28 @@ function WordDetailModal({
           </div>
 
           <div className="space-y-4">
-            {/* Meaning */}
             <div className="bg-secondary/50 rounded-xl p-4">
-              <p className="text-xs text-muted-foreground mb-1 bengali-text">অর্থ</p>
-              <p className="text-lg font-semibold bengali-text">{word.bengali}</p>
+              <p className={cn('text-xs text-muted-foreground mb-1', textClass)}>{t('dictionary.meaning')}</p>
+              <p className={cn('text-lg font-semibold', textClass)}>{word.bengali}</p>
             </div>
 
-            {/* Example */}
             <div className="bg-accent/50 rounded-xl p-4">
-              <p className="text-xs text-muted-foreground mb-1 bengali-text">উদাহরণ</p>
+              <p className={cn('text-xs text-muted-foreground mb-1', textClass)}>{t('dictionary.example')}</p>
               <p className="arabic-text text-lg mb-1">{word.example}</p>
-              <p className="text-sm text-muted-foreground bengali-text">{word.exampleTranslation}</p>
+              <p className={cn('text-sm text-muted-foreground', textClass)}>{word.exampleTranslation}</p>
             </div>
 
-            {/* Action Buttons */}
             <div className="flex gap-3">
               <Button
                 className="flex-1 gap-2 bg-primary hover:bg-primary/90 rounded-xl h-11"
               >
                 <Volume2 className="w-4 h-4" />
-                <span className="bengali-text">উচ্চারণ শুনুন</span>
+                <span className={textClass}>{t('common.listen')}</span>
               </Button>
             </div>
           </div>
         </div>
       </motion.div>
     </motion.div>
-  )
-}
-
-function EmptySearchState() {
-  return (
-    <div className="flex flex-col items-center justify-center py-12 text-center">
-      <div className="w-20 h-20 rounded-full bg-secondary/50 flex items-center justify-center mb-4">
-        <Search className="w-8 h-8 text-muted-foreground" />
-      </div>
-      <h3 className="text-base font-semibold bengali-text mb-1">কোনো ফলাফল পাওয়া যায়নি</h3>
-      <p className="text-sm text-muted-foreground bengali-text">অন্য কোনো শব্দ দিয়ে খুঁজে দেখুন</p>
-    </div>
   )
 }

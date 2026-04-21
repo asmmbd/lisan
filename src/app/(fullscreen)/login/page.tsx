@@ -10,9 +10,11 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { useLanguage } from '@/components/lisan/language-provider'
 
 export default function LoginPage() {
   const router = useRouter()
+  const { t, textClass } = useLanguage()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -32,13 +34,13 @@ export default function LoginPage() {
       })
 
       if (result?.error) {
-        setError('ইমেইল বা পাসওয়ার্ড ভুল')
+        setError(t('auth.wrongCredentials'))
       } else {
         router.push('/')
         router.refresh()
       }
-    } catch (err) {
-      setError('কিছু ভুল হয়েছে')
+    } catch {
+      setError(t('auth.genericError'))
     } finally {
       setIsLoading(false)
     }
@@ -57,9 +59,9 @@ export default function LoginPage() {
             <div className="mx-auto w-16 h-16 rounded-full gradient-islamic flex items-center justify-center mb-4">
               <LogIn className="w-8 h-8 text-white" />
             </div>
-            <CardTitle className="text-2xl font-bold bengali-text">লগইন করুন</CardTitle>
-            <CardDescription className="bengali-text">
-              আপনার অ্যাকাউন্টে প্রবেশ করুন
+            <CardTitle className={`text-2xl font-bold ${textClass}`}>{t('auth.loginTitle')}</CardTitle>
+            <CardDescription className={textClass}>
+              {t('auth.loginDescription')}
             </CardDescription>
           </CardHeader>
 
@@ -67,12 +69,12 @@ export default function LoginPage() {
             <form onSubmit={handleSubmit} className="space-y-4">
               {error && (
                 <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
-                  <p className="text-sm text-destructive bengali-text text-center">{error}</p>
+                  <p className={`text-sm text-destructive text-center ${textClass}`}>{error}</p>
                 </div>
               )}
 
               <div className="space-y-2">
-                <Label htmlFor="email" className="bengali-text">ইমেইল</Label>
+                <Label htmlFor="email" className={textClass}>{t('auth.email')}</Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
@@ -81,14 +83,14 @@ export default function LoginPage() {
                     placeholder="your@email.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="pl-10"
+                    className="pl-10 ltr-safe"
                     required
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password" className="bengali-text">পাসওয়ার্ড</Label>
+                <Label htmlFor="password" className={textClass}>{t('auth.password')}</Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
@@ -97,7 +99,7 @@ export default function LoginPage() {
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10 pr-10"
+                    className="pl-10 pr-10 ltr-safe"
                     required
                   />
                   <button
@@ -122,16 +124,16 @@ export default function LoginPage() {
                     className="w-5 h-5 border-2 border-white border-t-transparent rounded-full"
                   />
                 ) : (
-                  <span className="bengali-text">লগইন করুন</span>
+                  <span className={textClass}>{t('auth.loginTitle')}</span>
                 )}
               </Button>
             </form>
 
             <div className="mt-6 text-center">
-              <p className="text-sm text-muted-foreground bengali-text">
-                অ্যাকাউন্ট নেই?{' '}
+              <p className={`text-sm text-muted-foreground ${textClass}`}>
+                {t('auth.noAccount')}{' '}
                 <Link href="/register" className="text-primary hover:underline font-medium">
-                  রেজিস্টার করুন
+                  {t('auth.registerTitle')}
                 </Link>
               </p>
             </div>

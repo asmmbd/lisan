@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { Moon, Sun, Globe, Bell, LogOut, Trash2, ChevronRight, Shield } from 'lucide-react'
+import { Moon, Sun, Globe, Bell, LogOut, Trash2, Shield } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { useSession, signOut } from 'next-auth/react'
 import { Switch } from '@/components/ui/switch'
@@ -13,6 +13,8 @@ import { useAppStore } from '@/lib/store'
 import { useState, useEffect } from 'react'
 import { Input } from '@/components/ui/input'
 import { toast } from 'sonner'
+import { cn } from '@/lib/utils'
+import { useLanguage } from './language-provider'
 
 const container = {
   hidden: { opacity: 0 },
@@ -30,7 +32,6 @@ const item = {
 function ProfileSkeleton() {
   return (
     <div className="pb-24 max-w-4xl mx-auto w-full px-0 md:px-6 space-y-6">
-      {/* User Info Card Skeleton */}
       <div className="px-4 pt-4">
         <div className="bg-card rounded-xl border border-border p-5 shadow-sm space-y-4">
           <div className="flex items-center gap-4">
@@ -51,7 +52,6 @@ function ProfileSkeleton() {
         </div>
       </div>
 
-      {/* Settings Skeleton */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 px-4 md:px-0">
         <div className="space-y-3">
           <Skeleton className="h-4 w-24" />
@@ -70,23 +70,6 @@ function ProfileSkeleton() {
             ))}
           </div>
         </div>
-        <div className="space-y-3">
-          <Skeleton className="h-4 w-28" />
-          <div className="bg-card rounded-xl border border-border overflow-hidden space-y-3 p-4">
-            {[1, 2].map((i) => (
-              <div key={i} className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Skeleton className="w-9 h-9 rounded-xl" />
-                  <div className="space-y-1">
-                    <Skeleton className="h-4 w-32" />
-                    <Skeleton className="h-3 w-12" />
-                  </div>
-                </div>
-                <Skeleton className="w-4 h-4" />
-              </div>
-            ))}
-          </div>
-        </div>
       </div>
     </div>
   )
@@ -95,6 +78,7 @@ function ProfileSkeleton() {
 export function ProfileScreen() {
   const { theme, setTheme } = useTheme()
   const { data: session, status, update: updateSession } = useSession()
+  const { language, setLanguage, t, textClass, formatNumber } = useLanguage()
   const [notifications, setNotifications] = useState(true)
   const { savedWordIds, notes, updateProfile, isLoading } = useAppStore()
   const [isEditing, setIsEditing] = useState(false)
@@ -105,7 +89,6 @@ export function ProfileScreen() {
     if (user?.name) setNewName(user.name)
   }, [user?.name])
 
-  // Show skeleton while loading (after all hooks)
   if (status === 'loading' || isLoading) {
     return <ProfileSkeleton />
   }
@@ -126,9 +109,9 @@ export function ProfileScreen() {
       await updateProfile({ name: newName })
       await updateSession({ name: newName })
       setIsEditing(false)
-      toast.success('প্রোফাইল আপডেট হয়েছে')
-    } catch (err) {
-      toast.error('আপডেট করতে ব্যর্থ হয়েছে')
+      toast.success(t('profile.profileUpdated'))
+    } catch {
+      toast.error(t('profile.profileUpdateFailed'))
     }
   }
 
@@ -139,7 +122,6 @@ export function ProfileScreen() {
       animate="show"
       className="pb-24 max-w-4xl mx-auto w-full px-0 md:px-6"
     >
-      {/* User Info Card */}
       <motion.div variants={item} className="px-4 pt-4">
         <div className="bg-card rounded-xl border border-border p-5 shadow-sm">
           <div className="flex items-center gap-4">
@@ -154,63 +136,59 @@ export function ProfileScreen() {
                   <Input
                     value={newName}
                     onChange={(e) => setNewName(e.target.value)}
-                    className="h-8 py-1 bg-secondary/50 border-primary/20 bengali-text"
-                    placeholder="আপনার নাম লিখুন"
+                    className={cn('h-8 py-1 bg-secondary/50 border-primary/20', textClass)}
+                    placeholder={t('profile.namePlaceholder')}
                   />
                   <div className="flex gap-2">
-                    <Button size="sm" onClick={handleUpdateName} className="h-7 text-[10px] bengali-text">সেভ</Button>
-                    <Button size="sm" variant="ghost" onClick={() => setIsEditing(false)} className="h-7 text-[10px] bengali-text">বাতিল</Button>
+                    <Button size="sm" onClick={handleUpdateName} className={cn('h-7 text-[10px]', textClass)}>{t('common.save')}</Button>
+                    <Button size="sm" variant="ghost" onClick={() => setIsEditing(false)} className={cn('h-7 text-[10px]', textClass)}>{t('common.cancel')}</Button>
                   </div>
                 </div>
               ) : (
                 <div className="flex items-center gap-2 group cursor-pointer" onClick={() => setIsEditing(true)}>
-                  <h2 className="text-lg font-bold bengali-text">{user?.name || 'ব্যবহারকারী'}</h2>
-                  <span className="text-[10px] text-primary opacity-0 group-hover:opacity-100 transition-opacity">সম্পাদনা</span>
+                  <h2 className={cn('text-lg font-bold', textClass)}>{user?.name || t('common.unknownUser')}</h2>
+                  <span className="text-[10px] text-primary opacity-0 group-hover:opacity-100 transition-opacity">{t('profile.edit')}</span>
                 </div>
               )}
-              <p className="text-sm text-muted-foreground">{user?.email || 'email@example.com'}</p>
+              <p className="text-sm text-muted-foreground ltr-safe">{user?.email || 'email@example.com'}</p>
               <div className="flex items-center gap-2 mt-1.5">
                 <div className="flex items-center gap-1 bg-primary/10 rounded-full px-2 py-0.5">
                   <Shield className="w-3 h-3 text-primary" />
-                  <span className="text-[10px] text-primary font-medium bengali-text">মাঝারি স্তর</span>
+                  <span className={cn('text-[10px] text-primary font-medium', textClass)}>{t('profile.level')}</span>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Stats row */}
           <div className="grid grid-cols-3 gap-4 mt-4 pt-4 border-t border-border">
             <div className="text-center">
-              <p className="text-xl font-bold text-primary">{savedWordIds.length}</p>
-              <p className="text-[10px] text-muted-foreground bengali-text">শব্দ শিখেছেন</p>
+              <p className="text-xl font-bold text-primary">{formatNumber(savedWordIds.length)}</p>
+              <p className={cn('text-[10px] text-muted-foreground', textClass)}>{t('profile.wordsLearned')}</p>
             </div>
             <div className="text-center">
-              <p className="text-xl font-bold text-islamic-gold">{notes.length}</p>
-              <p className="text-[10px] text-muted-foreground bengali-text">নোট</p>
+              <p className="text-xl font-bold text-islamic-gold">{formatNumber(notes.length)}</p>
+              <p className={cn('text-[10px] text-muted-foreground', textClass)}>{t('profile.notes')}</p>
             </div>
             <div className="text-center">
-              <p className="text-xl font-bold text-secondary-foreground">{savedWordIds.length > 0 ? Math.ceil(savedWordIds.length / 5) : 0}</p>
-              <p className="text-[10px] text-muted-foreground bengali-text">দিন স্ট্রিক</p>
+              <p className="text-xl font-bold text-secondary-foreground">{formatNumber(savedWordIds.length > 0 ? Math.ceil(savedWordIds.length / 5) : 0)}</p>
+              <p className={cn('text-[10px] text-muted-foreground', textClass)}>{t('profile.streak')}</p>
             </div>
           </div>
         </div>
       </motion.div>
 
-      {/* Responsive Settings Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6 px-4 md:px-0">
-        {/* Settings Section */}
         <motion.div variants={item}>
-          <h3 className="text-sm font-bold text-muted-foreground mb-3 bengali-text tracking-wide uppercase">সেটিংস</h3>
+          <h3 className={cn('text-sm font-bold text-muted-foreground mb-3 tracking-wide uppercase', textClass)}>{t('profile.settings')}</h3>
           <div className="bg-card rounded-xl border border-border overflow-hidden shadow-sm">
-            {/* Dark Mode */}
             <div className="flex items-center justify-between p-4">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-xl bg-secondary/70 flex items-center justify-center">
                   {isDark ? <Moon className="w-4 h-4 text-primary" /> : <Sun className="w-4 h-4 text-primary" />}
                 </div>
                 <div>
-                  <p className="text-sm font-medium bengali-text">ডার্ক মোড</p>
-                  <p className="text-[10px] text-muted-foreground bengali-text">অন্ধকার থিম ব্যবহার করুন</p>
+                  <p className={cn('text-sm font-medium', textClass)}>{t('profile.darkMode')}</p>
+                  <p className={cn('text-[10px] text-muted-foreground', textClass)}>{t('profile.darkModeDescription')}</p>
                 </div>
               </div>
               <Switch checked={isDark} onCheckedChange={toggleTheme} />
@@ -218,31 +196,47 @@ export function ProfileScreen() {
 
             <Separator className="bg-border" />
 
-            {/* Language */}
-            <button className="flex items-center justify-between p-4 w-full hover:bg-secondary/30 transition-colors">
-              <div className="flex items-center gap-3">
+            <div className="p-4">
+              <div className="flex items-start gap-3">
                 <div className="w-9 h-9 rounded-xl bg-secondary/70 flex items-center justify-center">
                   <Globe className="w-4 h-4 text-primary" />
                 </div>
-                <div>
-                  <p className="text-sm font-medium bengali-text">ভাষা</p>
-                  <p className="text-[10px] text-muted-foreground bengali-text">বাংলা</p>
+                <div className="flex-1">
+                  <p className={cn('text-sm font-medium', textClass)}>{t('profile.language')}</p>
+                  <div className="flex gap-2 mt-2">
+                    <Button
+                      type="button"
+                      variant={language === 'bn' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setLanguage('bn')}
+                      className="rounded-full"
+                    >
+                      {t('profile.bangla')}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={language === 'ar' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setLanguage('ar')}
+                      className="rounded-full arabic-text"
+                    >
+                      {t('profile.arabic')}
+                    </Button>
+                  </div>
                 </div>
               </div>
-              <ChevronRight className="w-4 h-4 text-muted-foreground" />
-            </button>
+            </div>
 
             <Separator className="bg-border" />
 
-            {/* Notifications */}
             <div className="flex items-center justify-between p-4">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-xl bg-secondary/70 flex items-center justify-center">
                   <Bell className="w-4 h-4 text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium bengali-text">নোটিফিকেশন</p>
-                  <p className="text-[10px] text-muted-foreground bengali-text">দৈনিক রিমাইন্ডার</p>
+                  <p className={cn('text-sm font-medium', textClass)}>{t('profile.notifications')}</p>
+                  <p className={cn('text-[10px] text-muted-foreground', textClass)}>{t('profile.notificationsDescription')}</p>
                 </div>
               </div>
               <Switch checked={notifications} onCheckedChange={setNotifications} />
@@ -250,44 +244,40 @@ export function ProfileScreen() {
           </div>
         </motion.div>
 
-        {/* Learning Preferences */}
         <motion.div variants={item}>
-          <h3 className="text-sm font-bold text-muted-foreground mb-3 bengali-text tracking-wide uppercase">শেখার পছন্দ</h3>
+          <h3 className={cn('text-sm font-bold text-muted-foreground mb-3 tracking-wide uppercase', textClass)}>{t('profile.learningPreferences')}</h3>
           <div className="bg-card rounded-xl border border-border overflow-hidden shadow-sm">
-            <button className="flex items-center justify-between p-4 w-full hover:bg-secondary/30 transition-colors">
+            <div className="flex items-center justify-between p-4 w-full">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-xl bg-secondary/70 flex items-center justify-center">
                   <span className="text-base">📖</span>
                 </div>
                 <div>
-                  <p className="text-sm font-medium bengali-text">প্রতিদিন শেখার লক্ষ্য</p>
-                  <p className="text-[10px] text-muted-foreground bengali-text">৫টি শব্দ</p>
+                  <p className={cn('text-sm font-medium', textClass)}>{t('profile.dailyGoal')}</p>
+                  <p className={cn('text-[10px] text-muted-foreground', textClass)}>{t('profile.dailyGoalValue')}</p>
                 </div>
               </div>
-              <ChevronRight className="w-4 h-4 text-muted-foreground" />
-            </button>
+            </div>
 
             <Separator className="bg-border" />
 
-            <button className="flex items-center justify-between p-4 w-full hover:bg-secondary/30 transition-colors">
+            <div className="flex items-center justify-between p-4 w-full">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-xl bg-secondary/70 flex items-center justify-center">
                   <span className="text-base">🎯</span>
                 </div>
                 <div>
-                  <p className="text-sm font-medium bengali-text">শেখার স্তর</p>
-                  <p className="text-[10px] text-muted-foreground bengali-text">প্রাথমিক</p>
+                  <p className={cn('text-sm font-medium', textClass)}>{t('profile.learningLevel')}</p>
+                  <p className={cn('text-[10px] text-muted-foreground', textClass)}>{t('profile.learningLevelValue')}</p>
                 </div>
               </div>
-              <ChevronRight className="w-4 h-4 text-muted-foreground" />
-            </button>
+            </div>
           </div>
         </motion.div>
       </div>
 
-      {/* Account Section */}
       <motion.div variants={item} className="px-4 md:px-0 mt-8">
-        <h3 className="text-sm font-bold text-muted-foreground mb-3 bengali-text tracking-wide uppercase">অ্যাকাউন্ট</h3>
+        <h3 className={cn('text-sm font-bold text-muted-foreground mb-3 tracking-wide uppercase', textClass)}>{t('profile.account')}</h3>
         <div className="bg-card rounded-xl border border-border overflow-hidden shadow-sm">
           <button
             onClick={handleLogout}
@@ -296,7 +286,7 @@ export function ProfileScreen() {
             <div className="w-9 h-9 rounded-xl bg-destructive/10 flex items-center justify-center">
               <LogOut className="w-4 h-4 text-destructive" />
             </div>
-            <p className="text-sm font-medium text-destructive bengali-text">লগআউট</p>
+            <p className={cn('text-sm font-medium text-destructive', textClass)}>{t('nav.logout')}</p>
           </button>
 
           <Separator className="bg-border" />
@@ -306,23 +296,22 @@ export function ProfileScreen() {
               <Trash2 className="w-4 h-4 text-destructive" />
             </div>
             <div>
-              <p className="text-sm font-medium text-destructive bengali-text">অ্যাকাউন্ট মুছুন</p>
-              <p className="text-[10px] text-muted-foreground bengali-text">সকল ডাটা মুছে যাবে</p>
+              <p className={cn('text-sm font-medium text-destructive', textClass)}>{t('profile.deleteAccount')}</p>
+              <p className={cn('text-[10px] text-muted-foreground', textClass)}>{t('profile.deleteAccountWarning')}</p>
             </div>
           </button>
         </div>
       </motion.div>
 
-      {/* App Info */}
       <motion.div variants={item} className="px-4 mt-6 text-center">
         <div className="flex items-center justify-center gap-2 mb-1">
           <div className="w-6 h-6 rounded-md gradient-islamic flex items-center justify-center">
             <span className="text-white text-xs font-bold">ل</span>
           </div>
-          <span className="text-sm font-semibold bengali-text">লিসান</span>
+          <span className={cn('text-sm font-semibold', textClass)}>{t('common.appName')}</span>
         </div>
-        <p className="text-[10px] text-muted-foreground bengali-text">সংস্করণ ১.০.০</p>
-        <p className="text-[10px] text-muted-foreground bengali-text mt-1">
+        <p className={cn('text-[10px] text-muted-foreground', textClass)}>{t('common.version')}</p>
+        <p className="text-[10px] text-muted-foreground arabic-text mt-1">
           بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ
         </p>
       </motion.div>

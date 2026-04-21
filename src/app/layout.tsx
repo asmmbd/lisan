@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from '@/components/lisan/theme-provider';
 import { AuthProvider } from '@/components/auth/auth-provider';
 import { CallNotification } from '@/components/lisan/call-notification';
+import { LanguageProvider } from '@/components/lisan/language-provider';
 
 const hindSiliguri = Hind_Siliguri({
   variable: "--font-hind-siliguri",
@@ -13,9 +14,9 @@ const hindSiliguri = Hind_Siliguri({
 });
 
 export const metadata: Metadata = {
-  title: "Lisan - আরবি শিখুন | Arabic Vocabulary Learning",
-  description: "আরবি শব্দ শিখুন এবং কথোপকথন অনুশীলন করুন। Learn Arabic vocabulary and practice conversation skills.",
-  keywords: ["Lisan", "Arabic", "Bengali", "Vocabulary", "Islamic", "Quran", "Learning"],
+  title: "লিসান - আরবি শিখুন",
+  description: "আরবি শব্দ শিখুন এবং কথোপকথন অনুশীলন করুন।",
+  keywords: ["লিসান", "Arabic", "Bangla", "Vocabulary", "Islamic", "Quran"],
   icons: {
     icon: "/logo.svg",
   },
@@ -32,18 +33,20 @@ export default function RootLayout({
         className={`${hindSiliguri.className} antialiased bg-background text-foreground`}
       >
         <AuthProvider>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="light"
-            enableSystem
-            disableTransitionOnChange
-          >
-            <div className="min-h-screen bg-background">
-              <CallNotification />
-              {children}
-            </div>
-            <Toaster />
-          </ThemeProvider>
+          <LanguageProvider>
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="light"
+              enableSystem
+              disableTransitionOnChange
+            >
+              <div className="min-h-screen bg-background">
+                <CallNotification />
+                {children}
+              </div>
+              <Toaster />
+            </ThemeProvider>
+          </LanguageProvider>
         </AuthProvider>
       </body>
     </html>

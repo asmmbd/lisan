@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Phone, PhoneOff } from 'lucide-react'
 import { pusherClient } from '@/lib/pusher'
 import { useRouter } from 'next/navigation'
+import { useLanguage } from './language-provider'
 
 interface IncomingCall {
   roomId: string
@@ -16,33 +17,22 @@ interface IncomingCall {
 
 export function CallNotification() {
   const router = useRouter()
+  const { t } = useLanguage()
   const [incomingCall, setIncomingCall] = useState<IncomingCall | null>(null)
 
   useEffect(() => {
-    // Subscribe to calls channel
     const channel = pusherClient.subscribe('calls')
 
     channel.bind('incoming-call', (data: IncomingCall) => {
-      console.log('Incoming call received in Notification:', data)
-
-      // Don't show notification if user already in this room
       const currentRoomId = sessionStorage.getItem('currentRoomId')
       if (currentRoomId === data.roomId) {
-        console.log('Already in room, skipping notification!')
         return
       }
 
       setIncomingCall(data)
 
-      // Auto-dismiss after 30 seconds
       setTimeout(() => {
-        setIncomingCall((prev) => {
-          if (prev?.roomId === data.roomId) {
-            console.log('Incoming call auto-dismissed')
-            return null
-          }
-          return prev
-        })
+        setIncomingCall((prev) => prev?.roomId === data.roomId ? null : prev)
       }, 30000)
     })
 
@@ -54,16 +44,10 @@ export function CallNotification() {
 
   const handleJoin = () => {
     if (incomingCall) {
-      console.log('Accepting call, navigating to room with join flag...')
-      // Set current room before navigating
       sessionStorage.setItem('currentRoomId', incomingCall.roomId)
       router.push(`/room/${incomingCall.roomId}?join=true`)
       setIncomingCall(null)
     }
-  }
-
-  const handleDecline = () => {
-    setIncomingCall(null)
   }
 
   return (
@@ -82,13 +66,13 @@ export function CallNotification() {
 
             <div className="flex-1">
               <p className="text-white font-semibold">{incomingCall.callerName}</p>
-              <p className="text-green-100 text-sm">is calling you...</p>
+              <p className="text-green-100 text-sm">{t('calls.incoming')}</p>
             </div>
 
             <div className="flex gap-3">
               <motion.button
                 whileTap={{ scale: 0.9 }}
-                onClick={handleDecline}
+                onClick={() => setIncomingCall(null)}
                 className="w-12 h-12 rounded-full bg-red-500 flex items-center justify-center shadow-lg"
               >
                 <PhoneOff className="w-5 h-5 text-white" />

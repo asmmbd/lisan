@@ -10,17 +10,16 @@ import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useAppStore } from '@/lib/store'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { cn } from '@/lib/utils'
+import { useLanguage } from './language-provider'
 
 function SavedSkeleton() {
   return (
     <div className="flex flex-col h-full">
-      {/* Header Skeleton */}
       <div className="px-4 pt-6 md:pt-10 pb-4 max-w-4xl mx-auto w-full text-center md:text-left">
         <Skeleton className="h-8 w-24 mb-2" />
         <Skeleton className="h-4 w-48" />
       </div>
-
-      {/* Tabs Skeleton */}
       <div className="px-4 max-w-4xl mx-auto w-full space-y-4">
         <Skeleton className="h-11 w-full rounded-xl" />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -35,9 +34,9 @@ function SavedSkeleton() {
 
 export function SavedScreen() {
   const [activeTab, setActiveTab] = useState('words')
+  const { t, textClass } = useLanguage()
   const { isLoading, vocabulary, savedWordIds } = useAppStore()
 
-  // Show skeleton while loading
   if (isLoading || (vocabulary.length === 0 && savedWordIds.length === 0)) {
     return <SavedSkeleton />
   }
@@ -45,23 +44,23 @@ export function SavedScreen() {
   return (
     <div className="flex flex-col h-full">
       <div className="px-4 pt-6 md:pt-10 pb-4 max-w-4xl mx-auto w-full text-center md:text-left">
-        <h1 className="text-xl md:text-3xl font-black bengali-text">সেভ</h1>
-        <p className="text-sm md:text-base text-muted-foreground bengali-text mt-1">আপনার সংরক্ষিত শব্দ ও নোট</p>
+        <h1 className={cn('text-xl md:text-3xl font-black', textClass)}>{t('saved.title')}</h1>
+        <p className={cn('text-sm md:text-base text-muted-foreground mt-1', textClass)}>{t('saved.subtitle')}</p>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col px-4 max-w-4xl mx-auto w-full">
         <TabsList className="w-full bg-secondary/50 rounded-xl h-11 p-1 mb-6">
           <TabsTrigger value="words" className="rounded-lg flex-1 gap-1.5 text-xs data-[state=active]:bg-card data-[state=active]:shadow-sm">
             <Bookmark className="w-3.5 h-3.5" />
-            <span className="bengali-text">শব্দ</span>
+            <span className={textClass}>{t('saved.wordsTab')}</span>
           </TabsTrigger>
           <TabsTrigger value="notes" className="rounded-lg flex-1 gap-1.5 text-xs data-[state=active]:bg-card data-[state=active]:shadow-sm">
             <FileText className="w-3.5 h-3.5" />
-            <span className="bengali-text">নোট</span>
+            <span className={textClass}>{t('saved.notesTab')}</span>
           </TabsTrigger>
           <TabsTrigger value="history" className="rounded-lg flex-1 gap-1.5 text-xs data-[state=active]:bg-card data-[state=active]:shadow-sm">
             <Clock className="w-3.5 h-3.5" />
-            <span className="bengali-text">ইতিহাস</span>
+            <span className={textClass}>{t('saved.historyTab')}</span>
           </TabsTrigger>
         </TabsList>
 
@@ -80,6 +79,7 @@ export function SavedScreen() {
 }
 
 function SavedWordsList() {
+  const { t, textClass } = useLanguage()
   const { savedWordIds, toggleSaveWord, vocabulary } = useAppStore()
   const savedWords = (vocabulary as any[]).filter((w) => savedWordIds.includes(w.id))
 
@@ -87,8 +87,8 @@ function SavedWordsList() {
     return (
       <EmptyState
         icon={<Bookmark className="w-8 h-8 text-muted-foreground" />}
-        title="কোনো শব্দ সেভ করা হয়নি"
-        description="ডিকশনারি থেকে শব্দ সেভ করুন"
+        title={t('saved.noSavedWords')}
+        description={t('saved.saveFromDictionary')}
       />
     )
   }
@@ -115,7 +115,7 @@ function SavedWordsList() {
           >
             <div className="flex-1 min-w-0">
               <p className="arabic-text text-lg font-bold">{word.arabic}</p>
-              <p className="text-sm text-card-foreground bengali-text">{word.bengali}</p>
+              <p className={cn('text-sm text-card-foreground', textClass)}>{word.bengali}</p>
               <p className="text-xs text-muted-foreground">{word.pronunciation}</p>
             </div>
             <button
@@ -132,6 +132,7 @@ function SavedWordsList() {
 }
 
 function NotesList() {
+  const { t, textClass } = useLanguage()
   const { notes, addNote, deleteNote } = useAppStore()
   const [isAdding, setIsAdding] = useState(false)
   const [newNote, setNewNote] = useState('')
@@ -146,17 +147,15 @@ function NotesList() {
 
   return (
     <div className="flex flex-col h-[calc(100vh-260px)]">
-      {/* Add note button */}
       <Button
         onClick={() => setIsAdding(!isAdding)}
         className="w-full gap-2 bg-primary/10 text-primary hover:bg-primary/20 rounded-xl h-10 mb-3 border-0"
         variant="outline"
       >
         <Plus className="w-4 h-4" />
-        <span className="bengali-text text-sm">নতুন নোট</span>
+        <span className={cn('text-sm', textClass)}>{t('saved.newNote')}</span>
       </Button>
 
-      {/* Add note form */}
       <AnimatePresence>
         {isAdding && (
           <motion.div
@@ -167,27 +166,27 @@ function NotesList() {
           >
             <div className="bg-card rounded-xl border border-border p-3">
               <Textarea
-                placeholder="আপনার নোট লিখুন..."
+                placeholder={t('saved.writeNote')}
                 value={newNote}
                 onChange={(e) => setNewNote(e.target.value)}
-                className="min-h-[80px] border-0 bg-transparent bengali-text resize-none p-0 focus-visible:ring-0"
+                className={cn('min-h-[80px] border-0 bg-transparent resize-none p-0 focus-visible:ring-0', textClass)}
               />
               <div className="flex items-center justify-end gap-2 mt-2">
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => { setIsAdding(false); setNewNote('') }}
-                  className="bengali-text text-xs"
+                  className={cn('text-xs', textClass)}
                 >
-                  বাতিল
+                  {t('common.cancel')}
                 </Button>
                 <Button
                   size="sm"
                   onClick={handleAdd}
-                  className="bengali-text text-xs bg-primary hover:bg-primary/90 rounded-lg"
+                  className={cn('text-xs bg-primary hover:bg-primary/90 rounded-lg', textClass)}
                   disabled={!newNote.trim()}
                 >
-                  সেভ করুন
+                  {t('common.save')}
                 </Button>
               </div>
             </div>
@@ -195,13 +194,12 @@ function NotesList() {
         )}
       </AnimatePresence>
 
-      {/* Notes list */}
       <ScrollArea className="flex-1">
         {notes.length === 0 ? (
           <EmptyState
             icon={<FileText className="w-8 h-8 text-muted-foreground" />}
-            title="কোনো নোট নেই"
-            description="আপনার শেখার নোট লিখুন"
+            title={t('saved.noNotes')}
+            description={t('saved.noNotesDescription')}
           />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pb-24 md:pb-10">
@@ -213,7 +211,7 @@ function NotesList() {
                 transition={{ delay: idx * 0.05 }}
                 className="bg-card rounded-xl p-3 border border-border"
               >
-                <p className="text-sm bengali-text whitespace-pre-wrap">{note.text}</p>
+                <p className={cn('text-sm whitespace-pre-wrap', textClass)}>{note.text}</p>
                 <div className="flex items-center justify-between mt-2">
                   <p className="text-[10px] text-muted-foreground">{note.createdAt}</p>
                   <button
@@ -233,14 +231,15 @@ function NotesList() {
 }
 
 function SearchHistory() {
+  const { t, textClass, formatNumber } = useLanguage()
   const { searchHistory, clearHistory } = useAppStore()
 
   if (searchHistory.length === 0) {
     return (
       <EmptyState
         icon={<Clock className="w-8 h-8 text-muted-foreground" />}
-        title="কোনো অনুসন্ধান ইতিহাস নেই"
-        description="ডিকশনারিতে শব্দ খুঁজুন"
+        title={t('saved.noHistory')}
+        description={t('saved.noHistoryDescription')}
       />
     )
   }
@@ -248,14 +247,14 @@ function SearchHistory() {
   return (
     <div>
       <div className="flex items-center justify-between mb-3">
-        <p className="text-xs text-muted-foreground bengali-text">{searchHistory.length}টি অনুসন্ধান</p>
+        <p className={cn('text-xs text-muted-foreground', textClass)}>{formatNumber(searchHistory.length)} {t('saved.searches')}</p>
         <Button
           variant="ghost"
           size="sm"
           onClick={clearHistory}
-          className="text-xs text-destructive hover:text-destructive bengali-text h-7"
+          className={cn('text-xs text-destructive hover:text-destructive h-7', textClass)}
         >
-          সব মুছুন
+          {t('saved.clearAll')}
         </Button>
       </div>
       <ScrollArea className="h-[calc(100vh-300px)]">
@@ -272,7 +271,7 @@ function SearchHistory() {
               <div className="flex-1">
                 <p className="text-sm font-medium arabic-text">{term}</p>
               </div>
-              <Badge variant="secondary" className="text-[10px]">অনুসন্ধান</Badge>
+              <Badge variant="secondary" className={cn('text-[10px]', textClass)}>{t('saved.searched')}</Badge>
             </motion.div>
           ))}
         </div>
@@ -290,13 +289,15 @@ function EmptyState({
   title: string
   description: string
 }) {
+  const { textClass } = useLanguage()
+
   return (
     <div className="flex flex-col items-center justify-center py-16 text-center">
       <div className="w-16 h-16 rounded-full bg-secondary/50 flex items-center justify-center mb-4">
         {icon}
       </div>
-      <h3 className="text-base font-semibold bengali-text mb-1">{title}</h3>
-      <p className="text-sm text-muted-foreground bengali-text">{description}</p>
+      <h3 className={cn('text-base font-semibold mb-1', textClass)}>{title}</h3>
+      <p className={cn('text-sm text-muted-foreground', textClass)}>{description}</p>
     </div>
   )
 }

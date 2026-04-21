@@ -3,12 +3,14 @@
 import { useEffect, useState, Suspense, useRef } from 'react'
 import { useSession } from 'next-auth/react'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { PhoneOff, Loader2, Phone } from 'lucide-react'
 import { AgoraVideoCall } from '@/components/lisan/agora-video-call'
 import { useAppStore } from '@/lib/store'
 import { pusherClient } from '@/lib/pusher'
 import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
+import { useLanguage } from '@/components/lisan/language-provider'
 
 export default function RoomPage() {
   return (
@@ -28,10 +30,11 @@ function RoomContent() {
   const router = useRouter()
   const { data: session } = useSession()
   const { setCallTimer } = useAppStore()
-  
+  const { t, textClass } = useLanguage()
+
   const roomId = params.roomId as string
   const autoJoin = searchParams.get('join') === 'true'
-  
+
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [room, setRoom] = useState<any>(null)
@@ -41,7 +44,6 @@ function RoomContent() {
   const [callEnded, setCallEnded] = useState(false)
   const joiningInProgress = useRef(false)
 
-  // Track current room to prevent duplicate notifications
   useEffect(() => {
     sessionStorage.setItem('currentRoomId', roomId)
     return () => {
@@ -49,7 +51,6 @@ function RoomContent() {
     }
   }, [roomId])
 
-  // Fetch room info
   useEffect(() => {
     if (!roomId || !session?.user?.id) return
 
@@ -67,19 +68,16 @@ function RoomContent() {
         setRoom(data.room)
         setLoading(false)
 
-        // Auto-join if already participant (e.g. caller)
         if (data.room.isCaller || data.room.isReceiver) {
           setHasJoined(true)
           fetchAgoraToken(data.room.channelName)
           return
         }
 
-        // Auto-join if navigated from notification with join flag
         if (autoJoin && data.room.status === 'waiting') {
-          console.log('Auto-joining room based on notification flag...')
           handleJoin()
         }
-      } catch (err) {
+      } catch {
         setError('Failed to load room')
         setLoading(false)
       }
@@ -88,14 +86,12 @@ function RoomContent() {
     fetchRoom()
   }, [roomId, session?.user?.id, autoJoin])
 
-  // Subscribe to Pusher events
   useEffect(() => {
     if (!roomId) return
 
     const channel = pusherClient.subscribe(`room-${roomId}`)
 
     channel.bind('receiver-joined', (data: any) => {
-      console.log('Receiver joined:', data)
       setRoom((prev: any) => ({
         ...prev,
         receiverId: data.receiverId,
@@ -115,7 +111,6 @@ function RoomContent() {
     }
   }, [roomId, router])
 
-  // Fetch Agora token
   const fetchAgoraToken = async (channelName: string) => {
     try {
       const res = await fetch('/api/agora-token', {
@@ -128,16 +123,14 @@ function RoomContent() {
       })
       const data = await res.json()
       setAgoraToken(data.token || '')
-    } catch (err) {
-      console.error('Failed to get token:', err)
+    } catch {
+      setAgoraToken('')
     }
   }
 
-  // Join call
   const handleJoin = async () => {
-    // Prevent double join - check both state and ref
     if (isJoining || hasJoined || joiningInProgress.current) return
-    
+
     joiningInProgress.current = true
     setIsJoining(true)
     try {
@@ -146,28 +139,28 @@ function RoomContent() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ roomId }),
       })
-      
+
+      const data = await res.json()
       if (!res.ok) {
-        const data = await res.json()
         setError(data.error || 'Failed to join')
+        setIsJoining(false)
+        joiningInProgress.current = false
         return
       }
 
-      const data = await res.json()
       setRoom(data.room)
       setHasJoined(true)
       setIsJoining(false)
       joiningInProgress.current = false
       setCallTimer(240)
       fetchAgoraToken(data.room.channelName)
-    } catch (err) {
+    } catch {
       setError('Failed to join call')
       setIsJoining(false)
       joiningInProgress.current = false
     }
   }
 
-  // End call
   const handleEndCall = async () => {
     try {
       await fetch('/api/calls/end', {
@@ -176,12 +169,9 @@ function RoomContent() {
         body: JSON.stringify({ roomId }),
       })
       router.push('/')
-    } catch (err) {
-      console.error('Error ending call:', err)
-    }
+    } catch {}
   }
 
-  // Loading state
   if (loading) {
     return (
       <div className="h-screen w-full flex items-center justify-center bg-black">
@@ -190,29 +180,26 @@ function RoomContent() {
     )
   }
 
-  // Error state
   if (error) {
     return (
       <div className="h-screen w-full flex flex-col items-center justify-center bg-black text-white p-4">
-        <p className="text-lg mb-4">{error}</p>
+        <p className={cn('text-lg mb-4', textClass)}>{error}</p>
         <Button onClick={() => router.push('/')} variant="secondary">
-          Go Home
+          {t('calls.goHome')}
         </Button>
       </div>
     )
   }
 
-  // Call ended
   if (callEnded) {
     return (
       <div className="h-screen w-full flex flex-col items-center justify-center bg-black text-white">
-        <p className="text-xl">Call Ended</p>
-        <p className="text-sm text-gray-400 mt-2">Redirecting...</p>
+        <p className={cn('text-xl', textClass)}>{t('calls.callEnded')}</p>
+        <p className={cn('text-sm text-gray-400 mt-2', textClass)}>{t('calls.redirecting')}</p>
       </div>
     )
   }
 
-  // Waiting room - show Join/Cancel buttons
   if (!hasJoined && room?.isWaiting) {
     return (
       <div className="h-screen w-full flex flex-col items-center justify-center bg-gradient-to-b from-green-900 to-black text-white p-6">
@@ -224,10 +211,10 @@ function RoomContent() {
           <div className="w-24 h-24 rounded-full bg-white/10 flex items-center justify-center mx-auto mb-6">
             <Phone className="w-12 h-12 text-green-400 animate-pulse" />
           </div>
-          
-          <p className="text-xl font-medium mb-2">Incoming Call</p>
-          <p className="text-2xl font-bold mb-8">
-            {room.caller?.name || 'Unknown'} is calling...
+
+          <p className={cn('text-xl font-medium mb-2', textClass)}>{t('calls.incomingCall')}</p>
+          <p className={cn('text-2xl font-bold mb-8', textClass)}>
+            {room.caller?.name || 'Unknown'}
           </p>
 
           <div className="flex gap-6">
@@ -239,7 +226,7 @@ function RoomContent() {
               <div className="w-16 h-16 rounded-full bg-red-500 flex items-center justify-center">
                 <PhoneOff className="w-8 h-8" />
               </div>
-              <span className="text-sm">Decline</span>
+              <span className={cn('text-sm', textClass)}>{t('calls.decline')}</span>
             </motion.button>
 
             <motion.button
@@ -255,7 +242,7 @@ function RoomContent() {
                   <Phone className="w-8 h-8" />
                 )}
               </div>
-              <span className="text-sm">{isJoining ? 'Joining...' : 'Join'}</span>
+              <span className={cn('text-sm', textClass)}>{isJoining ? t('calls.joining') : t('calls.join')}</span>
             </motion.button>
           </div>
         </motion.div>
@@ -263,10 +250,8 @@ function RoomContent() {
     )
   }
 
-  // Active call - full screen video
   return (
     <div className="h-screen w-full bg-black relative overflow-hidden">
-      {/* Agora Video Call */}
       {process.env.NEXT_PUBLIC_AGORA_APP_ID && room?.channelName && agoraToken ? (
         <AgoraVideoCall
           appId={process.env.NEXT_PUBLIC_AGORA_APP_ID}
@@ -278,11 +263,11 @@ function RoomContent() {
         />
       ) : (
         <div className="flex flex-col items-center justify-center h-full text-white">
-          <p className="text-xl mb-4">Video Call Setup</p>
-          <p className="text-gray-400 mb-6">Connecting to {room?.caller?.name}...</p>
+          <p className={cn('text-xl mb-4', textClass)}>{t('calls.joinCall')}</p>
+          <p className={cn('text-gray-400 mb-6', textClass)}>{t('calls.connectingTo')} {room?.caller?.name}...</p>
           <Button variant="destructive" onClick={handleEndCall}>
             <PhoneOff className="w-5 h-5 mr-2" />
-            End Call
+            {t('calls.endCall')}
           </Button>
         </div>
       )}

@@ -139,6 +139,15 @@
   line-height: 1.6;
 }
 
+html[dir='rtl'] body {
+  text-align: right;
+}
+
+html[dir='rtl'] .ltr-safe {
+  direction: ltr;
+  text-align: left;
+}
+
 /* Custom scrollbar */
 .custom-scrollbar::-webkit-scrollbar {
   width: 4px;

@@ -9,9 +9,11 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { useLanguage } from '@/components/lisan/language-provider'
 
 export default function RegisterPage() {
   const router = useRouter()
+  const { t, textClass } = useLanguage()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -26,13 +28,13 @@ export default function RegisterPage() {
     setError('')
 
     if (password !== confirmPassword) {
-      setError('পাসওয়ার্ড মিলছে না')
+      setError(t('auth.passwordMismatch'))
       setIsLoading(false)
       return
     }
 
     if (password.length < 6) {
-      setError('পাসওয়ার্ড কমপক্ষে ৬ অক্ষর হতে হবে')
+      setError(t('auth.passwordShort'))
       setIsLoading(false)
       return
     }
@@ -47,12 +49,12 @@ export default function RegisterPage() {
       const data = await response.json()
 
       if (!response.ok) {
-        setError(data.error || 'রেজিস্ট্রেশন ব্যর্থ')
+        setError(data.error || t('auth.registerFailed'))
       } else {
         router.push('/login?registered=true')
       }
-    } catch (err) {
-      setError('কিছু ভুল হয়েছে')
+    } catch {
+      setError(t('auth.genericError'))
     } finally {
       setIsLoading(false)
     }
@@ -71,9 +73,9 @@ export default function RegisterPage() {
             <div className="mx-auto w-16 h-16 rounded-full gradient-islamic flex items-center justify-center mb-4">
               <UserPlus className="w-8 h-8 text-white" />
             </div>
-            <CardTitle className="text-2xl font-bold bengali-text">রেজিস্টার করুন</CardTitle>
-            <CardDescription className="bengali-text">
-              নতুন অ্যাকাউন্ট তৈরি করুন
+            <CardTitle className={`text-2xl font-bold ${textClass}`}>{t('auth.registerTitle')}</CardTitle>
+            <CardDescription className={textClass}>
+              {t('auth.registerDescription')}
             </CardDescription>
           </CardHeader>
 
@@ -81,28 +83,28 @@ export default function RegisterPage() {
             <form onSubmit={handleSubmit} className="space-y-4">
               {error && (
                 <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
-                  <p className="text-sm text-destructive bengali-text text-center">{error}</p>
+                  <p className={`text-sm text-destructive text-center ${textClass}`}>{error}</p>
                 </div>
               )}
 
               <div className="space-y-2">
-                <Label htmlFor="name" className="bengali-text">নাম</Label>
+                <Label htmlFor="name" className={textClass}>{t('auth.name')}</Label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
                     id="name"
                     type="text"
-                    placeholder="আপনার নাম"
+                    placeholder={t('auth.yourName')}
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="pl-10"
+                    className={`pl-10 ${textClass}`}
                     required
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="email" className="bengali-text">ইমেইল</Label>
+                <Label htmlFor="email" className={textClass}>{t('auth.email')}</Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
@@ -111,14 +113,14 @@ export default function RegisterPage() {
                     placeholder="your@email.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="pl-10"
+                    className="pl-10 ltr-safe"
                     required
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password" className="bengali-text">পাসওয়ার্ড</Label>
+                <Label htmlFor="password" className={textClass}>{t('auth.password')}</Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
@@ -127,7 +129,7 @@ export default function RegisterPage() {
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10 pr-10"
+                    className="pl-10 pr-10 ltr-safe"
                     required
                   />
                   <button
@@ -141,7 +143,7 @@ export default function RegisterPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword" className="bengali-text">পাসওয়ার্ড নিশ্চিত করুন</Label>
+                <Label htmlFor="confirmPassword" className={textClass}>{t('auth.confirmPassword')}</Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
@@ -150,7 +152,7 @@ export default function RegisterPage() {
                     placeholder="••••••••"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="pl-10"
+                    className="pl-10 ltr-safe"
                     required
                   />
                 </div>
@@ -168,16 +170,16 @@ export default function RegisterPage() {
                     className="w-5 h-5 border-2 border-white border-t-transparent rounded-full"
                   />
                 ) : (
-                  <span className="bengali-text">রেজিস্টার করুন</span>
+                  <span className={textClass}>{t('auth.registerTitle')}</span>
                 )}
               </Button>
             </form>
 
             <div className="mt-6 text-center">
-              <p className="text-sm text-muted-foreground bengali-text">
-                ইতিমধ্যে অ্যাকাউন্ট আছে?{' '}
+              <p className={`text-sm text-muted-foreground ${textClass}`}>
+                {t('auth.haveAccount')}{' '}
                 <Link href="/login" className="text-primary hover:underline font-medium">
-                  লগইন করুন
+                  {t('auth.loginTitle')}
                 </Link>
               </p>
             </div>

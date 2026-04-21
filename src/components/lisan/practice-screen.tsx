@@ -1,29 +1,27 @@
 'use client'
 
 import { motion, AnimatePresence } from 'framer-motion'
-import { useEffect, useCallback, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { Video, Users, Loader2, User, Search } from 'lucide-react'
+import { Video, Users, Loader2, User, ChevronRight, Brain } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useAppStore } from '@/lib/store'
 import { AgoraVideoCall } from './agora-video-call'
 import { usePusherMatching } from '@/hooks/usePusherMatching'
 import { QuizView } from './quiz-view'
-import { Brain, Trophy, ChevronRight, Play } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import { cn } from '@/lib/utils'
+import { useLanguage } from './language-provider'
 
 function PracticeSkeleton() {
   return (
     <div className="flex flex-col h-full bg-background overflow-hidden">
-      {/* Header Skeleton */}
       <div className="px-4 pt-6 md:pt-10 pb-4 max-w-4xl mx-auto w-full">
         <Skeleton className="h-8 w-32 mb-2" />
         <Skeleton className="h-4 w-48" />
       </div>
-
-      {/* Cards Skeleton */}
       <div className="flex-1 px-4 max-w-4xl mx-auto w-full py-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Skeleton className="h-48 rounded-xl" />
@@ -35,10 +33,10 @@ function PracticeSkeleton() {
 }
 
 export function PracticeScreen() {
-  const { 
-    practiceState, 
-    setPracticeState, 
-    callTimer, 
+  const {
+    practiceState,
+    setPracticeState,
+    callTimer,
     setCallTimer,
     quizState,
     startQuiz,
@@ -46,9 +44,12 @@ export function PracticeScreen() {
     isLoading
   } = useAppStore()
   const { data: session } = useSession()
+  const { t, textClass } = useLanguage()
   const userId = session?.user?.id || 'guest'
   const [agoraToken, setAgoraToken] = useState('')
-  
+  const [creatingCall, setCreatingCall] = useState(false)
+  const router = useRouter()
+
   const {
     isConnected: isPusherConnected,
     isWaiting,
@@ -62,7 +63,6 @@ export function PracticeScreen() {
     partnerLeft,
   } = usePusherMatching()
 
-  // Countdown timer during call
   useEffect(() => {
     if (practiceState !== 'incall') return
     const interval = setInterval(() => {
@@ -71,12 +71,8 @@ export function PracticeScreen() {
     return () => clearInterval(interval)
   }, [practiceState, callTimer, setCallTimer])
 
-  // Handle match found - fetch token and start call
   useEffect(() => {
     if (isMatched && matchData && practiceState === 'matching') {
-      console.log('🎯 Match found! Fetching Agora token...', matchData)
-      
-      // Fetch Agora token for the channel
       fetch('/api/agora-token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -85,31 +81,20 @@ export function PracticeScreen() {
           role: 'publisher'
         })
       })
-      .then(res => res.json())
-      .then(data => {
-        if (data.token) {
-          setAgoraToken(data.token)
+        .then(res => res.json())
+        .then(data => {
+          setAgoraToken(data.token || '')
           setPracticeState('incall')
           setCallTimer(240)
-        } else {
-          console.error('Failed to get Agora token:', data.error)
-          // Try without token for testing
+        })
+        .catch(() => {
           setAgoraToken('')
           setPracticeState('incall')
           setCallTimer(240)
-        }
-      })
-      .catch(err => {
-        console.error('Error fetching token:', err)
-        // Proceed without token for testing
-        setAgoraToken('')
-        setPracticeState('incall')
-        setCallTimer(240)
-      })
+        })
     }
-  }, [isMatched, matchData, practiceState, setPracticeState, setCallTimer, userId])
+  }, [isMatched, matchData, practiceState, setPracticeState, setCallTimer])
 
-  // Handle partner leaving
   useEffect(() => {
     if (partnerLeft) {
       setPracticeState('idle')
@@ -117,20 +102,15 @@ export function PracticeScreen() {
     }
   }, [partnerLeft, setPracticeState, setCallTimer])
 
-  const [creatingCall, setCreatingCall] = useState(false)
-  const router = useRouter()
-
-  // Create a new call room (WhatsApp style)
   const handleCreateCall = async () => {
     if (!session?.user) {
-      alert('Please login to make a call')
+      alert(t('practice.loginToCall'))
       return
     }
 
     setCreatingCall(true)
     try {
-      const channelName = `call_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-      
+      const channelName = `call_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`
       const res = await fetch('/api/calls/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -140,13 +120,8 @@ export function PracticeScreen() {
       const data = await res.json()
 
       if (data.success) {
-        // Navigate to the room
         router.push(`/room/${data.room.roomId}`)
-      } else {
-        console.error('Failed to create call:', data.error)
       }
-    } catch (err) {
-      console.error('Error creating call:', err)
     } finally {
       setCreatingCall(false)
     }
@@ -154,7 +129,7 @@ export function PracticeScreen() {
 
   const startMatching = () => {
     setPracticeState('matching')
-    findPartner(userId, 'Guest')
+    findPartner(userId, session?.user?.name || t('practice.guest'))
   }
 
   const handleCancelMatching = () => {
@@ -170,14 +145,12 @@ export function PracticeScreen() {
     setCallTimer(240)
   }
 
-  // Show skeleton while loading (after all hooks)
   if (isLoading || vocabulary.length === 0) {
     return <PracticeSkeleton />
   }
 
   return (
     <div className="flex flex-col h-full bg-background overflow-hidden">
-      {/* Quiz Overlay */}
       {quizState !== 'idle' ? (
         <QuizView />
       ) : (
@@ -188,33 +161,30 @@ export function PracticeScreen() {
                 <Video className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h1 className="text-xl md:text-3xl font-black bengali-text">লাইভ প্র্যাকটিস</h1>
-                <p className="text-xs md:text-sm text-muted-foreground bengali-text">সরাসরি ভিডিও কলে পার্টনারের সাথে কথা বলুন</p>
+                <h1 className={cn('text-xl md:text-3xl font-black', textClass)}>{t('practice.title')}</h1>
+                <p className={cn('text-xs md:text-sm text-muted-foreground', textClass)}>{t('practice.subtitle')}</p>
               </div>
             </div>
 
-            {/* Error Message */}
             {matchingError && (
               <div className="mt-3 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
-                <p className="text-sm text-destructive bengali-text flex items-center gap-2">
-                  <span>⚠️</span>
+                <p className={cn('text-sm text-destructive flex items-center gap-2', textClass)}>
+                  <span>!</span>
                   {matchingError}
                 </p>
               </div>
             )}
 
-            {/* Connection Status */}
             <div className="mt-2 flex items-center gap-2">
               <div className={`w-2 h-2 rounded-full ${isPusherConnected ? 'bg-green-500' : 'bg-red-500'}`} />
               <span className="text-[10px] text-muted-foreground">
-                {isPusherConnected ? 'Live matching ready' : 'Live matching offline'}
+                {isPusherConnected ? t('practice.liveReady') : t('practice.liveOffline')}
               </span>
             </div>
           </div>
 
           <div className="flex-1 px-4 max-w-4xl mx-auto w-full overflow-y-auto custom-scrollbar pb-24 md:pb-10">
             <AnimatePresence mode="wait">
-              {/* IDLE STATE - Video Call Focused */}
               {practiceState === 'idle' && (
                 <motion.div
                   key="idle"
@@ -223,20 +193,17 @@ export function PracticeScreen() {
                   exit={{ opacity: 0, y: -10 }}
                   className="flex flex-col gap-6 py-6"
                 >
-                  {/* 🎥 MAIN FEATURE: Video Call - Full Width Hero */}
                   <motion.div
                     whileHover={{ scale: 1.01 }}
                     whileTap={{ scale: 0.99 }}
                     onClick={handleCreateCall}
                     className="group relative overflow-hidden bg-gradient-to-br from-emerald-600 via-teal-600 to-cyan-700 rounded-2xl shadow-2xl p-8 cursor-pointer min-h-[280px] flex flex-col justify-between"
                   >
-                    {/* Background Pattern */}
                     <div className="absolute inset-0 opacity-20">
                       <div className="absolute top-10 right-10 w-64 h-64 bg-white/20 rounded-full blur-3xl" />
                       <div className="absolute bottom-10 left-10 w-48 h-48 bg-yellow-400/20 rounded-full blur-3xl" />
                     </div>
-                    
-                    {/* Animated pulse rings */}
+
                     <div className="absolute top-1/2 right-8 -translate-y-1/2">
                       <div className="relative w-24 h-24">
                         <div className="absolute inset-0 rounded-full bg-white/30 animate-ping" style={{ animationDuration: '2s' }} />
@@ -250,43 +217,36 @@ export function PracticeScreen() {
                     <div className="relative z-10">
                       <Badge className="w-fit mb-4 bg-white/20 text-white hover:bg-white/30 border-0 backdrop-blur-sm text-sm px-3 py-1">
                         <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse mr-2" />
-                        লাইভ ভিডিও কল
+                        {t('practice.liveCall')}
                       </Badge>
-                      <h3 className="text-3xl md:text-4xl font-black text-white bengali-text mb-2">
-                        পার্টনারের সাথে কথা বলুন
+                      <h3 className={cn('text-3xl md:text-4xl font-black text-white mb-2', textClass)}>
+                        {t('practice.heroTitle')}
                       </h3>
-                      <p className="text-lg text-white/80 bengali-text max-w-md">
-                        ৩ মিনিটের লাইভ ভিডিও কলে সরাসরি কথোপকথনের মাধ্যমে আপনার আরবি উন্নতি করুন
+                      <p className={cn('text-lg text-white/80 max-w-md', textClass)}>
+                        {t('practice.heroDescription')}
                       </p>
                     </div>
 
                     <div className="relative z-10 flex items-center justify-between mt-6">
                       <div className="hidden md:flex items-center gap-4">
-                        <div className="flex -space-x-3">
-                          {[1,2,3,4].map(i => (
-                            <div key={i} className="w-10 h-10 rounded-full border-2 border-emerald-600 bg-white flex items-center justify-center text-sm shadow-lg">
-                              👤
-                            </div>
-                          ))}
-                        </div>
-                        <span className="text-white/90 text-sm bengali-text">
-                          <span className="font-bold text-white">১২৪</span> জন অনলাইন
+                        <span className={cn('text-white/90 text-sm', textClass)}>
+                          124 {t('practice.onlineNow')}
                         </span>
                       </div>
                       <div className="flex items-center gap-2 bg-white text-emerald-700 px-6 py-3 rounded-xl font-bold shadow-lg group-hover:shadow-xl transition-all">
-                        <span className="bengali-text text-lg">কল শুরু করুন</span>
+                        <span className={cn('text-lg', textClass)}>
+                          {creatingCall ? t('calls.joining') : t('practice.startCall')}
+                        </span>
                         <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                       </div>
                     </div>
                   </motion.div>
 
-                  {/* Secondary Options Grid */}
                   <div className="grid grid-cols-2 gap-4">
-                    {/* Solo Quiz - Compact */}
                     <motion.div
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
-                      onClick={() => startQuiz({ title: 'দৈনিক প্র্যাকটিস' })}
+                      onClick={() => startQuiz({ title: t('practice.dailyPracticeQuiz') })}
                       className="group bg-card rounded-xl border border-border p-5 cursor-pointer hover:border-primary/50 transition-colors"
                     >
                       <div className="flex items-center gap-4">
@@ -294,13 +254,12 @@ export function PracticeScreen() {
                           <Brain className="w-6 h-6 text-primary" />
                         </div>
                         <div>
-                          <h4 className="font-bold bengali-text">সোলো প্র্যাকটিস</h4>
-                          <p className="text-xs text-muted-foreground bengali-text">কুইজ দিয়ে শিখুন</p>
+                          <h4 className={cn('font-bold', textClass)}>{t('practice.soloPractice')}</h4>
+                          <p className={cn('text-xs text-muted-foreground', textClass)}>{t('practice.soloPracticeDescription')}</p>
                         </div>
                       </div>
                     </motion.div>
 
-                    {/* Find Partner - Compact */}
                     <motion.div
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
@@ -312,8 +271,8 @@ export function PracticeScreen() {
                           <Users className="w-6 h-6 text-emerald-600" />
                         </div>
                         <div>
-                          <h4 className="font-bold bengali-text">পার্টনার খুঁজুন</h4>
-                          <p className="text-xs text-muted-foreground bengali-text">ম্যাচিং সিস্টেম</p>
+                          <h4 className={cn('font-bold', textClass)}>{t('practice.findPartner')}</h4>
+                          <p className={cn('text-xs text-muted-foreground', textClass)}>{t('practice.findPartnerDescription')}</p>
                         </div>
                       </div>
                     </motion.div>
@@ -321,7 +280,6 @@ export function PracticeScreen() {
                 </motion.div>
               )}
 
-              {/* MATCHING STATE */}
               {practiceState === 'matching' && !isMatched && (
                 <motion.div
                   key="matching"
@@ -342,28 +300,27 @@ export function PracticeScreen() {
                   <motion.h2
                     animate={{ opacity: [1, 0.5, 1] }}
                     transition={{ repeat: Infinity, duration: 2 }}
-                    className="text-lg font-semibold bengali-text mb-2"
+                    className={cn('text-lg font-semibold mb-2', textClass)}
                   >
-                    {isWaiting ? 'পার্টনারের জন্য অপেক্ষা...' : 'পার্টনার খোঁজা হচ্ছে...'}
+                    {isWaiting ? t('practice.waiting') : t('practice.searching')}
                   </motion.h2>
-                  
+
                   {isWaiting && (
-                    <p className="text-sm text-muted-foreground bengali-text text-center">
-                      সারিবদ্ধ অবস্থান: {queuePosition}
+                    <p className={cn('text-sm text-muted-foreground text-center', textClass)}>
+                      {t('practice.queuePosition')}: {queuePosition}
                     </p>
                   )}
 
                   <Button
                     variant="ghost"
                     onClick={handleCancelMatching}
-                    className="mt-8 text-muted-foreground bengali-text border border-border rounded-xl"
+                    className={cn('mt-8 text-muted-foreground border border-border rounded-xl', textClass)}
                   >
-                    বাতিল করুন
+                    {t('practice.cancel')}
                   </Button>
                 </motion.div>
               )}
 
-              {/* MATCHED STATE */}
               {practiceState === 'matching' && isMatched && matchData && (
                 <motion.div
                   key="matched"
@@ -374,19 +331,18 @@ export function PracticeScreen() {
                   <div className="w-24 h-24 rounded-full bg-emerald-500 flex items-center justify-center mb-4 shadow-lg">
                     <User className="w-12 h-12 text-white" />
                   </div>
-                  
-                  <h2 className="text-xl font-bold text-emerald-500 bengali-text mb-2">
-                    পার্টনার পাওয়া গেছে!
+
+                  <h2 className={cn('text-xl font-bold text-emerald-500 mb-2', textClass)}>
+                    {t('practice.matched')}
                   </h2>
-                  <p className="text-sm text-muted-foreground text-center mb-8">
-                    {matchData.partnerName} এর সাথে কানেক্ট করা হচ্ছে...
+                  <p className={cn('text-sm text-muted-foreground text-center mb-8', textClass)}>
+                    {matchData.partnerName} {t('practice.connectingTo')}
                   </p>
-                  
+
                   <Loader2 className="w-8 h-8 animate-spin text-primary" />
                 </motion.div>
               )}
 
-              {/* VIDEO CALL STATE */}
               {practiceState === 'incall' && matchData && (
                 <motion.div
                   key="incall"
@@ -398,10 +354,10 @@ export function PracticeScreen() {
                     <div className="flex flex-col items-center justify-center h-full p-4">
                       <div className="p-4 bg-white/10 rounded-xl text-center text-white">
                         <p className="font-medium mb-2">
-                          {!process.env.NEXT_PUBLIC_AGORA_APP_ID ? '⚠️ Configuration Error' : '⏳ Connecting...'}
+                          {!process.env.NEXT_PUBLIC_AGORA_APP_ID ? t('practice.configError') : t('practice.connecting')}
                         </p>
                         <p className="text-xs opacity-70">
-                          {agoraToken ? 'Starting call...' : 'Fetching Agora token...'}
+                          {agoraToken ? t('practice.startingCall') : t('practice.fetchingToken')}
                         </p>
                       </div>
                     </div>
