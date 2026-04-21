@@ -318,10 +318,14 @@ export function HomeScreen() {
               </div>
             </div>
 
-            <div className="mt-8 flex items-center justify-center lg:justify-start gap-2 py-3 px-6 bg-primary/10 rounded-lg w-full lg:w-fit cursor-pointer hover:bg-primary/20 transition-all group">
+            <button
+              type="button"
+              onClick={() => router.push('/leaderboard')}
+              className="mt-8 flex w-full items-center justify-center gap-2 rounded-lg bg-primary/10 px-6 py-3 transition-all hover:bg-primary/20 lg:w-fit lg:justify-start group"
+            >
               <Trophy className="w-4 h-4 text-primary group-hover:rotate-12 transition-transform" />
               <span className={cn('text-xs font-bold text-primary capitalize tracking-wide', textClass)}>{t('home.leaderboard')}</span>
-            </div>
+            </button>
           </div>
         </motion.div>
       </div>

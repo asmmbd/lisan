@@ -182,6 +182,12 @@ export const messages: Record<Language, Messages> = {
       availableWords: '{count}টি শব্দ উপলব্ধ',
       startLevelQuiz: 'এই লেভেল শুরু করুন',
     },
+    leaderboard: {
+      backHome: 'হোমে ফিরুন',
+      subtitle: 'সবচেয়ে বেশি XP ও স্ট্রিক থাকা শিক্ষার্থীদের তালিকা।',
+      yourPosition: 'আপনার অবস্থান',
+      empty: 'এখনো কোনো লিডারবোর্ড ডাটা নেই।',
+    },
     calls: {
       incoming: 'আপনাকে কল করা হচ্ছে...',
       incomingCall: 'ইনকামিং কল',
@@ -372,6 +378,12 @@ export const messages: Record<Language, Messages> = {
       advancedDetails: 'للتذكر السريع والفهم الأعمق.',
       availableWords: '{count} كلمة متاحة',
       startLevelQuiz: 'ابدأ هذا المستوى',
+    },
+    leaderboard: {
+      backHome: 'العودة إلى الرئيسية',
+      subtitle: 'ترتيب أعلى المتعلمين حسب XP وسلسلة الأيام.',
+      yourPosition: 'مكانك',
+      empty: 'لا توجد بيانات لوحة الصدارة بعد.',
     },
     calls: {
       incoming: 'يتصل بك الآن...',
