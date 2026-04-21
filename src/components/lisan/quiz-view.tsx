@@ -31,6 +31,10 @@ export function QuizView() {
 
   const currentQuestion = quizQuestions[quizCurrentIndex]
   const progress = ((quizCurrentIndex + 1) / quizQuestions.length) * 100
+  const questionTextClass = currentQuestion?.direction === 'ar_to_bn'
+    ? 'arabic-text text-5xl'
+    : cn('text-3xl', textClass)
+  const optionTextClass = currentQuestion?.direction === 'bn_to_ar' ? 'arabic-text text-xl' : cn('font-medium', textClass)
 
   useEffect(() => {
     if (quizState === 'completed' && !studiedToday) {
@@ -121,11 +125,15 @@ export function QuizView() {
       >
         <div className="bg-card rounded-xl border border-border p-8 shadow-sm text-center mb-8 relative overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-1 gradient-islamic" />
-          <p className={cn('text-xs text-muted-foreground mb-4 uppercase tracking-widest', textClass)}>{t('quiz.questionTitle')}</p>
-          <h2 className="arabic-text text-5xl font-bold text-foreground mb-2">
-            {currentQuestion.arabic}
+          <p className={cn('text-xs text-muted-foreground mb-4 uppercase tracking-widest', textClass)}>
+            {t(currentQuestion.promptText || 'quiz.questionTitle')}
+          </p>
+          <h2 className={cn('font-bold text-foreground mb-2', questionTextClass)}>
+            {currentQuestion.questionText}
           </h2>
-          <p className="text-primary italic font-medium">{currentQuestion.pronunciation}</p>
+          {currentQuestion.helperText && (
+            <p className="text-primary italic font-medium">{currentQuestion.helperText}</p>
+          )}
         </div>
 
         <div className="grid grid-cols-1 gap-3">
@@ -154,7 +162,7 @@ export function QuizView() {
                 whileTap={!isAnswered ? { scale: 0.98 } : {}}
               >
                 <div className="flex items-center justify-between w-full">
-                  <span className={cn('font-medium', textClass)}>{option}</span>
+                  <span className={optionTextClass}>{option}</span>
                   {isAnswered && isCorrectOption && <CheckCircle2 className="w-5 h-5 text-emerald-500" />}
                   {isAnswered && isWrongSelection && <XCircle className="w-5 h-5 text-destructive" />}
                 </div>

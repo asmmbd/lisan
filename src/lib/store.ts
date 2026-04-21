@@ -8,6 +8,24 @@ interface Note {
   createdAt: string
 }
 
+type QuizDirection = 'ar_to_bn' | 'bn_to_ar'
+
+interface QuizQuestion {
+  id: string
+  arabic: string
+  bengali: string
+  pronunciation: string
+  example?: string
+  exampleTranslation?: string
+  categorySlug?: string
+  options: string[]
+  correctAnswer: string
+  direction: QuizDirection
+  promptText: string
+  questionText: string
+  helperText?: string
+}
+
 interface AppState {
   showOnboarding: boolean
   setShowOnboarding: (show: boolean) => void
@@ -45,7 +63,7 @@ interface AppState {
   quizState: 'idle' | 'running' | 'completed'
   quizCurrentIndex: number
   quizScore: number
-  quizQuestions: any[]
+  quizQuestions: QuizQuestion[]
   quizSettings: { category?: string; setId?: string; title?: string } | null
   startQuiz: (settings: { category?: string; setId?: string; title?: string }) => void
   submitAnswer: (isCorrect: boolean) => void
@@ -223,19 +241,39 @@ export const useAppStore = create<AppState>((set, get) => ({
       // Actually, we can just shuffle and take 10
     }
 
-    // Shuffle and take 10
-    const questions = filtered.sort(() => Math.random() - 0.5).slice(0, 10).map(word => {
-      // Get 3 wrong options
-      const otherWords = vocabulary.filter(v => v.id !== word.id)
-      const wrongOptions = otherWords.sort(() => Math.random() - 0.5).slice(0, 3).map(v => v.bengali)
-      const options = [word.bengali, ...wrongOptions].sort(() => Math.random() - 0.5)
-      
-      return {
-        ...word,
-        options,
-        correctAnswer: word.bengali
-      }
-    })
+    const pickWrongOptions = (words: any[], currentWord: any, field: 'arabic' | 'bengali') => {
+      const uniqueValues = words
+        .filter((candidate) => candidate.id !== currentWord.id && candidate[field] && candidate[field] !== currentWord[field])
+        .sort(() => Math.random() - 0.5)
+        .map((candidate) => candidate[field])
+
+      return Array.from(new Set(uniqueValues)).slice(0, 3)
+    }
+
+    const questions: QuizQuestion[] = filtered
+      .sort(() => Math.random() - 0.5)
+      .slice(0, 10)
+      .map((word, index) => {
+        const direction: QuizDirection = index % 2 === 0 ? 'ar_to_bn' : 'bn_to_ar'
+        const answerField = direction === 'ar_to_bn' ? 'bengali' : 'arabic'
+        const questionText = direction === 'ar_to_bn' ? word.arabic : word.bengali
+        const helperText = direction === 'ar_to_bn' ? word.pronunciation : undefined
+        const promptText = direction === 'ar_to_bn'
+          ? 'quiz.questionArabicToBangla'
+          : 'quiz.questionBanglaToArabic'
+        const wrongOptions = pickWrongOptions(vocabulary, word, answerField)
+        const options = [word[answerField], ...wrongOptions].sort(() => Math.random() - 0.5)
+
+        return {
+          ...word,
+          options,
+          correctAnswer: word[answerField],
+          direction,
+          promptText,
+          questionText,
+          helperText,
+        }
+      })
 
     set({ 
       quizState: 'running', 
