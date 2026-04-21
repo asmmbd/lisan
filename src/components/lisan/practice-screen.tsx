@@ -183,8 +183,15 @@ export function PracticeScreen() {
       ) : (
         <>
           <div className="px-4 pt-6 md:pt-10 pb-4 max-w-4xl mx-auto w-full">
-            <h1 className="text-xl md:text-3xl font-black bengali-text text-center md:text-left">প্র্যাকটিস</h1>
-            <p className="text-sm md:text-base text-muted-foreground bengali-text text-center md:text-left mt-1">আপনার আরবি দক্ষতা যাচাই করুন</p>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg">
+                <Video className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h1 className="text-xl md:text-3xl font-black bengali-text">লাইভ প্র্যাকটিস</h1>
+                <p className="text-xs md:text-sm text-muted-foreground bengali-text">সরাসরি ভিডিও কলে পার্টনারের সাথে কথা বলুন</p>
+              </div>
+            </div>
 
             {/* Error Message */}
             {matchingError && (
@@ -207,81 +214,110 @@ export function PracticeScreen() {
 
           <div className="flex-1 px-4 max-w-4xl mx-auto w-full overflow-y-auto custom-scrollbar pb-24 md:pb-10">
             <AnimatePresence mode="wait">
-              {/* IDLE STATE */}
+              {/* IDLE STATE - Video Call Focused */}
               {practiceState === 'idle' && (
                 <motion.div
                   key="idle"
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
-                  className="grid grid-cols-1 md:grid-cols-2 gap-6 py-6"
+                  className="flex flex-col gap-6 py-6"
                 >
-                  {/* Solo Practice Card */}
+                  {/* 🎥 MAIN FEATURE: Video Call - Full Width Hero */}
                   <motion.div
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => startQuiz({ title: 'দৈনিক প্র্যাকটিস' })}
-                    className="group relative overflow-hidden bg-card rounded-xl border border-border shadow-md p-6 cursor-pointer"
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.99 }}
+                    onClick={handleCreateCall}
+                    className="group relative overflow-hidden bg-gradient-to-br from-emerald-600 via-teal-600 to-cyan-700 rounded-2xl shadow-2xl p-8 cursor-pointer min-h-[280px] flex flex-col justify-between"
                   >
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full -mr-16 -mt-16 transition-transform group-hover:scale-110" />
-                    <div className="flex items-start justify-between relative z-10">
-                      <div className="flex flex-col gap-1">
-                        <Badge className="w-fit mb-2 bg-primary/20 text-primary hover:bg-primary/20 border-0">মোড: সোলো</Badge>
-                        <h3 className="text-xl font-bold bengali-text">ইন্টারেক্টিভ কুইজ</h3>
-                        <p className="text-sm text-muted-foreground bengali-text">নতুন শব্দ শিখুন এবং দক্ষতা যাচাই করুন</p>
-                      </div>
-                      <div className="w-14 h-14 rounded-xl gradient-islamic flex items-center justify-center shadow-lg transform rotate-3 transition-transform group-hover:rotate-0">
-                        <Brain className="w-8 h-8 text-white" />
-                      </div>
+                    {/* Background Pattern */}
+                    <div className="absolute inset-0 opacity-20">
+                      <div className="absolute top-10 right-10 w-64 h-64 bg-white/20 rounded-full blur-3xl" />
+                      <div className="absolute bottom-10 left-10 w-48 h-48 bg-yellow-400/20 rounded-full blur-3xl" />
                     </div>
-                    <div className="mt-6 flex items-center justify-between relative z-10">
-                       <div className="flex -space-x-2">
-                          {[1,2,3].map(i => (
-                            <div key={i} className="w-8 h-8 rounded-full border-2 border-background bg-secondary flex items-center justify-center text-[10px]">
-                                {i === 1 ? '🇦' : i === 2 ? '🇧' : '🇨'}
-                            </div>
-                          ))}
-                        <div className="w-8 h-8 rounded-full border-2 border-background bg-primary/20 flex items-center justify-center text-[8px] font-bold text-primary">
-                          +{vocabulary.length > 3 ? vocabulary.length - 3 : 0}
+                    
+                    {/* Animated pulse rings */}
+                    <div className="absolute top-1/2 right-8 -translate-y-1/2">
+                      <div className="relative w-24 h-24">
+                        <div className="absolute inset-0 rounded-full bg-white/30 animate-ping" style={{ animationDuration: '2s' }} />
+                        <div className="absolute inset-2 rounded-full bg-white/20 animate-ping" style={{ animationDuration: '2s', animationDelay: '0.5s' }} />
+                        <div className="relative w-24 h-24 rounded-full bg-white/90 flex items-center justify-center shadow-xl">
+                          <Video className="w-12 h-12 text-emerald-600" />
                         </div>
                       </div>
-                      <div className="flex items-center gap-2 text-primary font-bold">
-                        <span className="bengali-text">শুরু করুন</span>
-                        <Play className="w-4 h-4 fill-current" />
+                    </div>
+
+                    <div className="relative z-10">
+                      <Badge className="w-fit mb-4 bg-white/20 text-white hover:bg-white/30 border-0 backdrop-blur-sm text-sm px-3 py-1">
+                        <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse mr-2" />
+                        লাইভ ভিডিও কল
+                      </Badge>
+                      <h3 className="text-3xl md:text-4xl font-black text-white bengali-text mb-2">
+                        পার্টনারের সাথে কথা বলুন
+                      </h3>
+                      <p className="text-lg text-white/80 bengali-text max-w-md">
+                        ৩ মিনিটের লাইভ ভিডিও কলে সরাসরি কথোপকথনের মাধ্যমে আপনার আরবি উন্নতি করুন
+                      </p>
+                    </div>
+
+                    <div className="relative z-10 flex items-center justify-between mt-6">
+                      <div className="flex items-center gap-4">
+                        <div className="flex -space-x-3">
+                          {[1,2,3,4].map(i => (
+                            <div key={i} className="w-10 h-10 rounded-full border-2 border-emerald-600 bg-white flex items-center justify-center text-sm shadow-lg">
+                              👤
+                            </div>
+                          ))}
+                        </div>
+                        <span className="text-white/90 text-sm bengali-text">
+                          <span className="font-bold text-white">১২৪</span> জন অনলাইন
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 bg-white text-emerald-700 px-6 py-3 rounded-xl font-bold shadow-lg group-hover:shadow-xl transition-all">
+                        <span className="bengali-text text-lg">কল শুরু করুন</span>
+                        <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                       </div>
                     </div>
                   </motion.div>
 
-                  {/* No divider on desktop grid */}
-                  <div className="md:hidden relative flex items-center gap-4 px-4">
-                    <div className="flex-1 h-[1px] bg-border" />
-                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest bengali-text">অথবা</span>
-                    <div className="flex-1 h-[1px] bg-border" />
+                  {/* Secondary Options Grid */}
+                  <div className="grid grid-cols-2 gap-4">
+                    {/* Solo Quiz - Compact */}
+                    <motion.div
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => startQuiz({ title: 'দৈনিক প্র্যাকটিস' })}
+                      className="group bg-card rounded-xl border border-border p-5 cursor-pointer hover:border-primary/50 transition-colors"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                          <Brain className="w-6 h-6 text-primary" />
+                        </div>
+                        <div>
+                          <h4 className="font-bold bengali-text">সোলো প্র্যাকটিস</h4>
+                          <p className="text-xs text-muted-foreground bengali-text">কুইজ দিয়ে শিখুন</p>
+                        </div>
+                      </div>
+                    </motion.div>
+
+                    {/* Find Partner - Compact */}
+                    <motion.div
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={startMatching}
+                      className="group bg-card rounded-xl border border-border p-5 cursor-pointer hover:border-emerald-500/50 transition-colors"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+                          <Users className="w-6 h-6 text-emerald-600" />
+                        </div>
+                        <div>
+                          <h4 className="font-bold bengali-text">পার্টনার খুঁজুন</h4>
+                          <p className="text-xs text-muted-foreground bengali-text">ম্যাচিং সিস্টেম</p>
+                        </div>
+                      </div>
+                    </motion.div>
                   </div>
-
-                  {/* Live Call Card */}
-                  <motion.div
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={handleCreateCall}
-                    className="group relative overflow-hidden bg-secondary/30 rounded-xl border border-border/50 shadow-sm p-6 cursor-pointer"
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex flex-col gap-1">
-                         <Badge className="w-fit mb-2 bg-islamic-gold/20 text-islamic-gold hover:bg-islamic-gold/20 border-0">মোড: লাইভ</Badge>
-                        <h3 className="text-xl font-bold bengali-text">পার্টনারের সাথে কথা বলুন</h3>
-                        <p className="text-sm text-muted-foreground bengali-text">সরাসরি কথোপকথনের মাধ্যমে উন্নতি করুন</p>
-                      </div>
-                      <div className="w-14 h-14 rounded-xl bg-white dark:bg-card flex items-center justify-center shadow-md border border-border transition-transform group-hover:scale-105">
-                        <Video className="w-8 h-8 text-primary" />
-                      </div>
-                    </div>
-                    <div className="mt-8 flex items-center gap-2 text-primary text-sm font-semibold">
-                      <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                      <span className="bengali-text">এখনই কল করুন</span>
-                      <ChevronRight className="w-4 h-4" />
-                    </div>
-                  </motion.div>
                 </motion.div>
               )}
 
