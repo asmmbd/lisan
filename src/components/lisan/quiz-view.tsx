@@ -32,10 +32,10 @@ export function QuizView() {
   const currentQuestion = quizQuestions[quizCurrentIndex]
   const progress = ((quizCurrentIndex + 1) / quizQuestions.length) * 100
   const questionTextClass = currentQuestion?.direction === 'ar_to_bn'
-    ? 'arabic-text text-5xl'
-    : cn('text-3xl', textClass)
+    ? 'arabic-text text-4xl md:text-5xl'
+    : cn('text-2xl md:text-3xl', textClass)
   const optionTextClass = currentQuestion?.direction === 'bn_to_ar'
-    ? 'arabic-text text-xl'
+    ? 'arabic-text text-lg md:text-xl'
     : cn('font-medium', textClass)
 
   useEffect(() => {
@@ -69,43 +69,44 @@ export function QuizView() {
 
   if (quizState === 'completed') {
     const perfectScore = quizScore === quizQuestions.length
+
     return (
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        className="mx-auto w-full max-w-3xl p-4 md:p-6"
+        className="mx-auto w-full max-w-2xl p-4 md:p-6"
       >
-        <div className="rounded-3xl border border-border bg-card/95 backdrop-blur shadow-2xl overflow-hidden">
-          <div className="flex items-center justify-between border-b border-border px-4 py-3 md:px-6">
+        <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+          <div className="flex items-center justify-between border-b border-border px-4 py-3 md:px-5">
             <button
               onClick={handleCloseQuiz}
-              className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm text-muted-foreground hover:bg-secondary"
+              className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-secondary/70"
             >
-              <ChevronLeft className="w-4 h-4" />
+              <ChevronLeft className="h-4 w-4" />
               <span className={textClass}>{t('quiz.back')}</span>
             </button>
             <button
               onClick={handleCloseQuiz}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground hover:bg-secondary"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary/70"
               aria-label={t('quiz.close')}
             >
-              <X className="w-4 h-4" />
+              <X className="h-4 w-4" />
             </button>
           </div>
 
-          <div className="flex flex-col items-center justify-center p-6 text-center md:p-10">
+          <div className="flex flex-col items-center justify-center p-6 text-center md:p-8">
             {perfectScore && <ConfettiCelebration />}
 
-            <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center mb-6">
-              <span className="text-5xl">{perfectScore ? '🏆' : '👏'}</span>
+            <div className="mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-primary/10">
+              <CheckCircle2 className="h-9 w-9 text-primary" />
             </div>
 
-            <h2 className={cn('text-2xl font-bold mb-2', textClass)}>{t('quiz.completed')}</h2>
-            <p className={cn('text-muted-foreground mb-6', textClass)}>
+            <h2 className={cn('mb-2 text-xl font-bold', textClass)}>{t('quiz.completed')}</h2>
+            <p className={cn('mb-6 text-sm text-muted-foreground', textClass)}>
               {t('quiz.scoreText', { total: formatNumber(quizQuestions.length), score: formatNumber(quizScore) })}
             </p>
 
-            <div className="grid grid-cols-2 gap-3 w-full max-w-xs">
+            <div className="grid w-full max-w-sm grid-cols-2 gap-3">
               <Button
                 onClick={() => {
                   const settings = quizSettings || {}
@@ -113,15 +114,17 @@ export function QuizView() {
                   startQuiz(settings)
                 }}
                 variant="outline"
-                className={cn('rounded-xl gap-2', textClass)}
+                className={cn('h-11 gap-2 rounded-xl', textClass)}
               >
-                <RotateCcw className="w-4 h-4" /> {t('quiz.playAgain')}
+                <RotateCcw className="h-4 w-4" />
+                {t('quiz.playAgain')}
               </Button>
               <Button
                 onClick={handleCloseQuiz}
-                className={cn('rounded-xl gap-2', textClass)}
+                className={cn('h-11 gap-2 rounded-xl', textClass)}
               >
-                <Home className="w-4 h-4" /> {t('quiz.home')}
+                <Home className="h-4 w-4" />
+                {t('quiz.home')}
               </Button>
             </div>
           </div>
@@ -133,29 +136,29 @@ export function QuizView() {
   if (!currentQuestion) return null
 
   return (
-    <div className="mx-auto w-full max-w-3xl p-4 md:p-6">
-      <div className="rounded-3xl border border-border bg-card/95 backdrop-blur shadow-2xl overflow-hidden">
-        <div className="flex items-center justify-between border-b border-border px-4 py-3 md:px-6">
+    <div className="mx-auto w-full max-w-2xl p-4 md:p-6">
+      <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+        <div className="flex items-center justify-between border-b border-border px-4 py-3 md:px-5">
           <button
             onClick={handleCloseQuiz}
-            className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm text-muted-foreground hover:bg-secondary"
+            className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-secondary/70"
           >
-            <ChevronLeft className="w-4 h-4" />
+            <ChevronLeft className="h-4 w-4" />
             <span className={textClass}>{t('quiz.back')}</span>
           </button>
           <button
             onClick={handleCloseQuiz}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground hover:bg-secondary"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary/70"
             aria-label={t('quiz.close')}
           >
-            <X className="w-4 h-4" />
+            <X className="h-4 w-4" />
           </button>
         </div>
 
-        <div className="p-4 md:p-6">
-          <div className="mb-8">
-            <div className="flex items-center justify-between mb-2">
-              <span className={cn('text-xs font-semibold text-primary uppercase tracking-wider', textClass)}>
+        <div className="p-4 md:p-5">
+          <div className="mb-6">
+            <div className="mb-2 flex items-center justify-between">
+              <span className={cn('text-xs font-semibold uppercase tracking-wider text-primary', textClass)}>
                 {quizSettings?.title || t('quiz.vocabularyQuiz')}
               </span>
               <span className="text-xs font-medium text-muted-foreground">
@@ -167,21 +170,20 @@ export function QuizView() {
 
           <motion.div
             key={quizCurrentIndex}
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            className="flex-1 flex flex-col pt-2"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            className="flex flex-1 flex-col pt-1"
           >
-            <div className="bg-background rounded-2xl border border-border p-6 md:p-8 shadow-sm text-center mb-6 relative overflow-hidden">
-              <div className="absolute top-0 left-0 w-full h-1 gradient-islamic" />
-              <p className={cn('text-xs text-muted-foreground mb-4 uppercase tracking-widest', textClass)}>
+            <div className="mb-5 rounded-2xl border border-border bg-background px-5 py-6 text-center md:px-6 md:py-7">
+              <p className={cn('mb-3 text-[11px] uppercase tracking-[0.24em] text-muted-foreground', textClass)}>
                 {t(currentQuestion.promptText || 'quiz.questionTitle')}
               </p>
-              <h2 className={cn('font-bold text-foreground mb-2', questionTextClass)}>
+              <h2 className={cn('mb-2 font-bold text-foreground', questionTextClass)}>
                 {currentQuestion.questionText}
               </h2>
               {currentQuestion.helperText && (
-                <p className="text-primary italic font-medium">{currentQuestion.helperText}</p>
+                <p className="text-sm font-medium text-primary">{currentQuestion.helperText}</p>
               )}
             </div>
 
@@ -191,15 +193,15 @@ export function QuizView() {
                 const isCorrectOption = isAnswered && option === currentQuestion.correctAnswer
                 const isWrongSelection = isAnswered && isSelected && !isCorrect
 
-                let btnClass = 'min-h-16 text-lg justify-start px-5 py-4 rounded-2xl border-2 transition-all duration-200 '
+                let btnClass = 'min-h-14 rounded-xl border px-4 py-4 text-left text-base transition-colors duration-200 '
                 if (!isAnswered) {
-                  btnClass += 'border-border hover:border-primary hover:bg-primary/5 active:scale-95'
+                  btnClass += 'border-border bg-background hover:border-primary/40 hover:bg-secondary/40'
                 } else if (isCorrectOption) {
-                  btnClass += 'border-emerald-500 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400'
+                  btnClass += 'border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
                 } else if (isWrongSelection) {
-                  btnClass += 'border-destructive bg-destructive/5 text-destructive'
+                  btnClass += 'border-destructive/40 bg-destructive/10 text-destructive'
                 } else {
-                  btnClass += 'border-border opacity-50'
+                  btnClass += 'border-border bg-background opacity-55'
                 }
 
                 return (
@@ -208,12 +210,12 @@ export function QuizView() {
                     disabled={isAnswered}
                     onClick={() => handleOptionClick(option)}
                     className={btnClass}
-                    whileTap={!isAnswered ? { scale: 0.98 } : {}}
+                    whileTap={!isAnswered ? { scale: 0.99 } : {}}
                   >
-                    <div className="flex items-center justify-between w-full gap-3">
+                    <div className="flex w-full items-center justify-between gap-3">
                       <span className={optionTextClass}>{option}</span>
-                      {isAnswered && isCorrectOption && <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />}
-                      {isAnswered && isWrongSelection && <XCircle className="w-5 h-5 text-destructive shrink-0" />}
+                      {isAnswered && isCorrectOption && <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-500" />}
+                      {isAnswered && isWrongSelection && <XCircle className="h-5 w-5 shrink-0 text-destructive" />}
                     </div>
                   </motion.button>
                 )
@@ -221,7 +223,7 @@ export function QuizView() {
             </div>
           </motion.div>
 
-          <div className="mt-6">
+          <div className="mt-5">
             <AnimatePresence>
               {isAnswered && (
                 <motion.div
@@ -229,16 +231,16 @@ export function QuizView() {
                   animate={{ height: 'auto', opacity: 1 }}
                   exit={{ height: 0, opacity: 0 }}
                 >
-                  <div className={`p-4 rounded-2xl mb-2 flex flex-col gap-4 md:flex-row md:items-center md:justify-between ${
+                  <div className={`mb-2 flex flex-col gap-4 rounded-2xl border p-4 md:flex-row md:items-center md:justify-between ${
                     isCorrect
-                      ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400'
-                      : 'bg-destructive/10 border border-destructive/20 text-destructive'
+                      ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
+                      : 'border-destructive/20 bg-destructive/10 text-destructive'
                   }`}>
                     <div className="flex items-center gap-3">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                        isCorrect ? 'bg-emerald-500' : 'bg-destructive'
+                      <div className={`flex h-10 w-10 items-center justify-center rounded-full ${
+                        isCorrect ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-300' : 'bg-destructive/15 text-destructive'
                       }`}>
-                        {isCorrect ? <CheckCircle2 className="text-white w-6 h-6" /> : <XCircle className="text-white w-6 h-6" />}
+                        {isCorrect ? <CheckCircle2 className="h-5 w-5" /> : <XCircle className="h-5 w-5" />}
                       </div>
                       <div>
                         <p className={cn('font-bold', textClass)}>{isCorrect ? t('quiz.great') : t('quiz.wrong')}</p>
@@ -249,10 +251,10 @@ export function QuizView() {
                     </div>
                     <Button
                       onClick={handleNext}
-                      className={`${isCorrect ? 'bg-emerald-500 hover:bg-emerald-600' : 'bg-destructive hover:bg-destructive/90'} text-white rounded-xl px-6 h-12 shadow-lg`}
+                      className={`${isCorrect ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-destructive hover:bg-destructive/90'} h-11 rounded-xl px-6 text-white shadow-none`}
                     >
                       <span className={cn('mr-2', textClass)}>{t('common.next')}</span>
-                      <ArrowRight className="w-4 h-4" />
+                      <ArrowRight className="h-4 w-4" />
                     </Button>
                   </div>
                 </motion.div>
