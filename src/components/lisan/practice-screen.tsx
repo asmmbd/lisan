@@ -4,11 +4,12 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { Video, Users, Loader2, User, ChevronRight, Brain } from 'lucide-react'
+import { Video, Users, Loader2, User, ChevronRight, Brain, Bot } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useAppStore } from '@/lib/store'
 import { AgoraVideoCall } from './agora-video-call'
+import { AIAudioCall } from './ai-audio-call'
 import { usePusherMatching } from '@/hooks/usePusherMatching'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
@@ -45,6 +46,7 @@ export function PracticeScreen() {
   const userId = session?.user?.id || 'guest'
   const [agoraToken, setAgoraToken] = useState('')
   const [creatingCall, setCreatingCall] = useState(false)
+  const [showAICall, setShowAICall] = useState(false)
   const router = useRouter()
 
   const {
@@ -270,7 +272,47 @@ export function PracticeScreen() {
                         </div>
                       </div>
                     </motion.div>
+
+                    {/* AI Audio Call */}
+                    <motion.div
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => setShowAICall(true)}
+                      className="group bg-card rounded-xl border border-border p-5 cursor-pointer hover:border-[#c9a96e]/50 transition-colors col-span-2 md:col-span-1"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#0a1a12] to-[#1a3a22] flex items-center justify-center">
+                          <Bot className="w-6 h-6 text-[#c9a96e]" />
+                        </div>
+                        <div>
+                          <h4 className={cn('font-bold', textClass)}>AI সাথে কথা বলুন</h4>
+                          <p className={cn('text-xs text-muted-foreground', textClass)}>আরবি প্র্যাকটিস করুন</p>
+                        </div>
+                      </div>
+                    </motion.div>
                   </div>
+                </motion.div>
+              )}
+
+              {/* AI Audio Call State */}
+              {showAICall && (
+                <motion.div
+                  key="ai-call"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 20 }}
+                  className="flex flex-col h-full"
+                >
+                  <div className="flex items-center justify-between mb-4">
+                    <Button
+                      variant="ghost"
+                      onClick={() => setShowAICall(false)}
+                      className="text-muted-foreground"
+                    >
+                      ← ফিরে যান
+                    </Button>
+                  </div>
+                  <AIAudioCall />
                 </motion.div>
               )}
 
