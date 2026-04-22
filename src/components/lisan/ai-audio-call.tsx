@@ -393,23 +393,19 @@ export function AIAudioCall() {
   // Idle state
   if (phase === 'idle') {
     return (
-      <div className="min-h-[500px] bg-gradient-to-br from-[#0a1a12] to-[#0d2418] rounded-2xl p-8 flex flex-col items-center justify-center">
-        <motion.div
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          className="text-center w-full max-w-md"
-        >
-          <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#c9a96e] to-[#a08050] flex items-center justify-center mx-auto mb-6 shadow-lg shadow-[#c9a96e]/20">
-            <Bot className="w-10 h-10 text-[#0a1a12]" />
+      <div className="min-h-[400px] bg-card rounded-xl border border-border p-8 flex flex-col items-center justify-center">
+        <div className="text-center w-full max-w-md">
+          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6">
+            <Bot className="w-8 h-8 text-primary" />
           </div>
-          <h3 className="text-2xl font-bold text-white bengali-text mb-2">AI সাথে প্র্যাকটিস করুন</h3>
-          <p className="text-white/60 bengali-text mb-6">
+          <h3 className="text-2xl font-bold mb-2 bengali-text">AI সাথে প্র্যাকটিস করুন</h3>
+          <p className="text-muted-foreground mb-6">
             আরবিতে কথা বলুন, AI আপনাকে সংশোধন করবে
           </p>
 
           {/* Mode Selection */}
           <div className="mb-6">
-            <p className="text-white/80 text-sm mb-3 bengali-text">কথোপকথনের ধরন বেছে নিন:</p>
+            <p className="text-sm mb-3 bengali-text text-muted-foreground">কথোপকথনের ধরন:</p>
             <div className="grid grid-cols-2 gap-2">
               {(Object.keys(MODES) as ConversationMode[]).map((mode) => (
                 <button
@@ -417,8 +413,8 @@ export function AIAudioCall() {
                   onClick={() => setConversationMode(mode)}
                   className={`p-3 rounded-xl text-sm transition-all ${
                     conversationMode === mode
-                      ? 'bg-[#c9a96e] text-[#0a1a12] font-bold'
-                      : 'bg-[#c9a96e]/20 text-white/70 hover:bg-[#c9a96e]/30'
+                      ? 'bg-primary text-primary-foreground font-bold'
+                      : 'bg-muted text-muted-foreground hover:bg-muted/80'
                   }`}
                 >
                   {MODES[mode].label}
@@ -427,29 +423,14 @@ export function AIAudioCall() {
             </div>
           </div>
 
-          {/* Hints */}
-          {showHints && (
-            <div className="bg-[#c9a96e]/10 rounded-xl p-4 mb-6 text-left">
-              <div className="flex items-center gap-2 mb-2">
-                <Sparkles className="w-4 h-4 text-[#c9a96e]" />
-                <p className="text-[#c9a96e] text-sm font-bold">টিপস:</p>
-              </div>
-              <ul className="text-white/70 text-xs space-y-1 bengali-text">
-                <li>• মাইক্রোফোন চাপুন ধরে রাখুন</li>
-                <li>• আরবিতে স্পষ্টভাবে কথা বলুন</li>
-                <li>• AI আপনাকে সংশোধন করবে</li>
-              </ul>
-            </div>
-          )}
-
           <button
             onClick={startCall}
-            className="w-full px-8 py-4 bg-gradient-to-r from-[#c9a96e] to-[#a08050] text-[#0a1a12] font-bold rounded-xl hover:shadow-lg hover:shadow-[#c9a96e]/30 transition-all bengali-text flex items-center justify-center gap-2"
+            className="w-full px-8 py-4 bg-primary text-primary-foreground font-bold rounded-xl hover:opacity-90 transition-all bengali-text flex items-center justify-center gap-2"
           >
             <Mic className="w-5 h-5" />
             কল শুরু করুন
           </button>
-        </motion.div>
+        </div>
       </div>
     )
   }
@@ -457,20 +438,12 @@ export function AIAudioCall() {
   // Calling state
   if (phase === 'calling') {
     return (
-      <div className="min-h-[400px] bg-gradient-to-br from-[#0a1a12] to-[#0d2418] rounded-2xl p-8 flex flex-col items-center justify-center">
-        <motion.div
-          animate={{ scale: [1, 1.1, 1] }}
-          transition={{ duration: 1.5, repeat: Infinity }}
-          className="w-20 h-20 rounded-full bg-[#c9a96e]/20 flex items-center justify-center mb-6"
-        >
-          <div className="w-16 h-16 rounded-full bg-[#c9a96e]/40 flex items-center justify-center">
-            <div className="w-10 h-10 rounded-full bg-[#c9a96e] flex items-center justify-center">
-              <Bot className="w-6 h-6 text-[#0a1a12]" />
-            </div>
-          </div>
-        </motion.div>
-        <p className="text-white bengali-text text-lg">কানেক্ট হচ্ছে...</p>
-        <p className="text-white/50 text-sm mt-2">AI Tutor</p>
+      <div className="min-h-[400px] bg-card rounded-xl border border-border p-8 flex flex-col items-center justify-center">
+        <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-6">
+          <Bot className="w-8 h-8 text-primary animate-pulse" />
+        </div>
+        <p className="bengali-text text-lg">কানেক্ট হচ্ছে...</p>
+        <p className="text-muted-foreground text-sm mt-2">AI Tutor</p>
       </div>
     )
   }
@@ -478,28 +451,28 @@ export function AIAudioCall() {
   // Ended state
   if (phase === 'ended') {
     return (
-      <div className="min-h-[400px] bg-gradient-to-br from-[#0a1a12] to-[#0d2418] rounded-2xl p-8 flex flex-col items-center justify-center">
-        <p className="text-white bengali-text text-xl mb-2">কল শেষ</p>
-        <p className="text-white/50 text-sm">ধন্যবাদ!</p>
+      <div className="min-h-[400px] bg-card rounded-xl border border-border p-8 flex flex-col items-center justify-center">
+        <p className="bengali-text text-xl mb-2">কল শেষ</p>
+        <p className="text-muted-foreground text-sm">ধন্যবাদ!</p>
       </div>
     )
   }
 
   // Active call UI
   return (
-    <div className="min-h-[500px] bg-gradient-to-br from-[#0a1a12] to-[#0d2418] rounded-2xl overflow-hidden flex flex-col">
+    <div className="min-h-[500px] bg-card rounded-xl border border-border overflow-hidden flex flex-col">
       {/* Header */}
-      <div className="px-4 py-3 bg-[#0a1a12]/80 backdrop-blur-sm border-b border-[#c9a96e]/20">
+      <div className="px-4 py-3 border-b border-border">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-[#c9a96e]/20 flex items-center justify-center">
-              <Bot className="w-5 h-5 text-[#c9a96e]" />
+            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+              <Bot className="w-5 h-5 text-primary" />
             </div>
             <div>
-              <p className="text-white font-medium text-sm">AI Tutor</p>
+              <p className="font-medium text-sm">AI Tutor</p>
               <div className="flex items-center gap-2">
-                <div className={`w-1.5 h-1.5 rounded-full ${phase === 'active' ? 'bg-green-400' : 'bg-yellow-400 animate-pulse'}`} />
-                <p className="text-white/50 text-xs">
+                <div className={`w-1.5 h-1.5 rounded-full ${phase === 'active' ? 'bg-green-500' : 'bg-yellow-500 animate-pulse'}`} />
+                <p className="text-muted-foreground text-xs">
                   {phase === 'active' ? 'শোনার অপেক্ষায়' : phase === 'processing' ? 'ভাবছে...' : 'বলছে...'}
                 </p>
               </div>
@@ -512,24 +485,24 @@ export function AIAudioCall() {
                 setMessages([])
                 setCallDuration(0)
               }}
-              className="p-2 bg-[#c9a96e]/20 text-[#c9a96e] rounded-full hover:bg-[#c9a96e]/30 transition-colors"
+              className="p-2 bg-muted text-muted-foreground rounded-full hover:bg-muted/80 transition-colors"
               title="নতুন কল"
             >
               <RotateCcw className="w-4 h-4" />
             </button>
-            <div className="flex items-center gap-1.5 text-[#c9a96e]">
+            <div className="flex items-center gap-1.5 text-muted-foreground">
               <Clock className="w-4 h-4" />
               <span className="text-sm font-mono">{formatTime(callDuration)}</span>
             </div>
             <button
               onClick={toggleMute}
-              className={`p-2 rounded-full transition-colors ${isMuted ? 'bg-red-500/20 text-red-400' : 'bg-[#c9a96e]/20 text-[#c9a96e]'}`}
+              className={`p-2 rounded-full transition-colors ${isMuted ? 'bg-red-500/10 text-red-500' : 'bg-muted text-muted-foreground hover:bg-muted/80'}`}
             >
               {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
             </button>
             <button
               onClick={endCall}
-              className="p-2 bg-red-500/20 text-red-400 rounded-full hover:bg-red-500/30 transition-colors"
+              className="p-2 bg-red-500/10 text-red-500 rounded-full hover:bg-red-500/20 transition-colors"
             >
               <PhoneOff className="w-4 h-4" />
             </button>
@@ -544,8 +517,8 @@ export function AIAudioCall() {
               onClick={() => setConversationMode(mode)}
               className={`px-3 py-1 rounded-full text-xs whitespace-nowrap transition-all ${
                 conversationMode === mode
-                  ? 'bg-[#c9a96e] text-[#0a1a12] font-bold'
-                  : 'bg-[#c9a96e]/20 text-white/70 hover:bg-[#c9a96e]/30'
+                  ? 'bg-primary text-primary-foreground font-bold'
+                  : 'bg-muted text-muted-foreground hover:bg-muted/80'
               }`}
             >
               {MODES[mode].label}
@@ -565,18 +538,18 @@ export function AIAudioCall() {
               className={`flex gap-2 ${msg.role === 'user' ? 'flex-row' : 'flex-row-reverse'}`}
             >
               <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                msg.role === 'user' ? 'bg-[#c9a96e]/20' : 'bg-[#c9a96e]'
+                msg.role === 'user' ? 'bg-primary/10' : 'bg-primary'
               }`}>
                 {msg.role === 'user' ? (
-                  <User className="w-4 h-4 text-[#c9a96e]" />
+                  <User className="w-4 h-4 text-primary" />
                 ) : (
-                  <Bot className="w-4 h-4 text-[#0a1a12]" />
+                  <Bot className="w-4 h-4 text-primary-foreground" />
                 )}
               </div>
               <div className={`max-w-[80%] p-3 rounded-2xl ${
-                msg.role === 'user' 
-                  ? 'bg-[#c9a96e]/20 text-white rounded-tl-none' 
-                  : 'bg-[#c9a96e] text-[#0a1a12] rounded-tr-none'
+                msg.role === 'user'
+                  ? 'bg-muted text-foreground rounded-tl-none'
+                  : 'bg-primary text-primary-foreground rounded-tr-none'
               }`}>
                 <p className="text-sm leading-relaxed" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
                   {msg.content}
@@ -593,13 +566,13 @@ export function AIAudioCall() {
             animate={{ opacity: 1 }}
             className="flex gap-2 flex-row"
           >
-            <div className="w-8 h-8 rounded-full bg-[#c9a96e]/20 flex items-center justify-center flex-shrink-0">
-              <User className="w-4 h-4 text-[#c9a96e]" />
+            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+              <User className="w-4 h-4 text-primary" />
             </div>
-            <div className="max-w-[80%] p-3 rounded-2xl bg-[#c9a96e]/10 text-white/70 rounded-tl-none border border-[#c9a96e]/30">
+            <div className="max-w-[80%] p-3 rounded-2xl bg-muted/50 text-muted-foreground rounded-tl-none border border-border">
               <p className="text-sm">
                 {transcript}
-                <span className="text-white/40">{interimTranscript}</span>
+                <span className="text-muted-foreground/50">{interimTranscript}</span>
               </p>
             </div>
           </motion.div>
@@ -608,14 +581,14 @@ export function AIAudioCall() {
         {/* AI Processing indicator */}
         {phase === 'processing' && (
           <div className="flex gap-2 flex-row-reverse">
-            <div className="w-8 h-8 rounded-full bg-[#c9a96e] flex items-center justify-center flex-shrink-0">
-              <Bot className="w-4 h-4 text-[#0a1a12]" />
+            <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+              <Bot className="w-4 h-4 text-primary-foreground" />
             </div>
-            <div className="p-3 rounded-2xl bg-[#c9a96e] rounded-tr-none">
+            <div className="p-3 rounded-2xl bg-primary rounded-tr-none">
               <div className="flex gap-1">
-                <motion.div className="w-2 h-2 bg-[#0a1a12] rounded-full" animate={{ y: [0, -4, 0] }} transition={{ duration: 0.5, repeat: Infinity }} />
-                <motion.div className="w-2 h-2 bg-[#0a1a12] rounded-full" animate={{ y: [0, -4, 0] }} transition={{ duration: 0.5, repeat: Infinity, delay: 0.1 }} />
-                <motion.div className="w-2 h-2 bg-[#0a1a12] rounded-full" animate={{ y: [0, -4, 0] }} transition={{ duration: 0.5, repeat: Infinity, delay: 0.2 }} />
+                <motion.div className="w-2 h-2 bg-primary-foreground rounded-full" animate={{ y: [0, -4, 0] }} transition={{ duration: 0.5, repeat: Infinity }} />
+                <motion.div className="w-2 h-2 bg-primary-foreground rounded-full" animate={{ y: [0, -4, 0] }} transition={{ duration: 0.5, repeat: Infinity, delay: 0.1 }} />
+                <motion.div className="w-2 h-2 bg-primary-foreground rounded-full" animate={{ y: [0, -4, 0] }} transition={{ duration: 0.5, repeat: Infinity, delay: 0.2 }} />
               </div>
             </div>
           </div>
@@ -627,15 +600,15 @@ export function AIAudioCall() {
       {/* Error */}
       {error && (
         <div className="px-4 py-2 bg-red-500/10 border-t border-red-500/20">
-          <p className="text-red-400 text-sm bengali-text text-center">{error}</p>
+          <p className="text-red-500 text-sm bengali-text text-center">{error}</p>
         </div>
       )}
 
       {/* Push to Talk Button */}
-      <div className="p-4 bg-[#0a1a12]/80 backdrop-blur-sm border-t border-[#c9a96e]/20">
+      <div className="p-4 border-t border-border">
         <div className="flex flex-col items-center gap-3">
           {/* Status text */}
-          <p className="text-white/60 text-xs bengali-text">
+          <p className="text-muted-foreground text-xs bengali-text">
             {isRecording ? 'শোনা হচ্ছে...' : isAiSpeaking ? 'AI বলছে...' : 'বলতে চাপুন ধরে রাখুন'}
           </p>
 
@@ -644,7 +617,7 @@ export function AIAudioCall() {
             {isAiSpeaking && (
               <button
                 onClick={stopAiSpeech}
-                className="p-3 bg-red-500/20 text-red-400 rounded-full hover:bg-red-500/30 transition-colors"
+                className="p-3 bg-muted text-muted-foreground rounded-full hover:bg-muted/80 transition-colors"
                 title="AI থামান"
               >
                 <VolumeX className="w-5 h-5" />
@@ -664,23 +637,23 @@ export function AIAudioCall() {
               transition={{ duration: 0.5, repeat: isRecording ? Infinity : 0 }}
               className={`w-20 h-20 rounded-full flex items-center justify-center transition-all ${
                 isRecording
-                  ? 'bg-red-500 shadow-lg shadow-red-500/30'
+                  ? 'bg-red-500 text-white'
                   : phase === 'active' && !isAiSpeaking
-                  ? 'bg-gradient-to-r from-[#c9a96e] to-[#a08050] shadow-lg shadow-[#c9a96e]/30'
-                  : 'bg-[#c9a96e]/30 cursor-not-allowed'
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-muted text-muted-foreground cursor-not-allowed'
               }`}
             >
               {isRecording ? (
                 renderWaveform()
               ) : (
-                <Mic className="w-8 h-8 text-[#0a1a12]" />
+                <Mic className="w-8 h-8" />
               )}
             </motion.button>
 
             {/* Phrase Helper */}
             <button
               onClick={() => setShowHints(!showHints)}
-              className="p-3 bg-[#c9a96e]/20 text-[#c9a96e] rounded-full hover:bg-[#c9a96e]/30 transition-colors"
+              className="p-3 bg-muted text-muted-foreground rounded-full hover:bg-muted/80 transition-colors"
               title="সাহায্য"
             >
               <BookOpen className="w-5 h-5" />
@@ -692,7 +665,7 @@ export function AIAudioCall() {
             <motion.p
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="text-red-400 text-xs bengali-text"
+              className="text-red-500 text-xs bengali-text"
             >
               🔴 রেকর্ডিং...
             </motion.p>
@@ -703,9 +676,9 @@ export function AIAudioCall() {
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="w-full bg-[#c9a96e]/10 rounded-xl p-3"
+              className="w-full bg-muted rounded-xl p-3"
             >
-              <p className="text-[#c9a96e] text-xs font-bold mb-2">দ্রুত বাক্য:</p>
+              <p className="text-muted-foreground text-xs font-bold mb-2">দ্রুত বাক্য:</p>
               <div className="flex flex-wrap gap-2">
                 {conversationMode === 'greetings' && [
                   { ar: 'مرحباً', bn: 'আসসালামু আলাইকুম' },
@@ -719,7 +692,7 @@ export function AIAudioCall() {
                       setTranscript(phrase.ar)
                       callClaude(phrase.ar)
                     }}
-                    className="px-3 py-1.5 bg-[#c9a96e]/20 text-white/80 rounded-lg text-xs hover:bg-[#c9a96e]/30 transition-colors"
+                    className="px-3 py-1.5 bg-background border border-border rounded-lg text-xs hover:bg-muted transition-colors"
                   >
                     {phrase.ar}
                   </button>
@@ -736,7 +709,7 @@ export function AIAudioCall() {
                       setTranscript(phrase.ar)
                       callClaude(phrase.ar)
                     }}
-                    className="px-3 py-1.5 bg-[#c9a96e]/20 text-white/80 rounded-lg text-xs hover:bg-[#c9a96e]/30 transition-colors"
+                    className="px-3 py-1.5 bg-background border border-border rounded-lg text-xs hover:bg-muted transition-colors"
                   >
                     {phrase.ar}
                   </button>
@@ -753,7 +726,7 @@ export function AIAudioCall() {
                       setTranscript(phrase.ar)
                       callClaude(phrase.ar)
                     }}
-                    className="px-3 py-1.5 bg-[#c9a96e]/20 text-white/80 rounded-lg text-xs hover:bg-[#c9a96e]/30 transition-colors"
+                    className="px-3 py-1.5 bg-background border border-border rounded-lg text-xs hover:bg-muted transition-colors"
                   >
                     {phrase.ar}
                   </button>
@@ -770,7 +743,7 @@ export function AIAudioCall() {
                       setTranscript(phrase.ar)
                       callClaude(phrase.ar)
                     }}
-                    className="px-3 py-1.5 bg-[#c9a96e]/20 text-white/80 rounded-lg text-xs hover:bg-[#c9a96e]/30 transition-colors"
+                    className="px-3 py-1.5 bg-background border border-border rounded-lg text-xs hover:bg-muted transition-colors"
                   >
                     {phrase.ar}
                   </button>
