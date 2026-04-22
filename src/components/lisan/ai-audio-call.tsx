@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Mic, PhoneOff, Volume2, VolumeX, Bot, User, Clock, AlertCircle } from 'lucide-react'
+import { Mic, PhoneOff, Volume2, VolumeX, Bot, User, Clock, AlertCircle, RotateCcw, Sparkles, BookOpen } from 'lucide-react'
 
 // Phase types
 type Phase = 'idle' | 'calling' | 'active' | 'processing' | 'speaking' | 'ended'
@@ -11,6 +11,27 @@ interface Message {
   role: 'user' | 'assistant'
   content: string
   timestamp: number
+}
+
+type ConversationMode = 'general' | 'greetings' | 'numbers' | 'daily'
+
+const MODES: Record<ConversationMode, { label: string; prompt: string }> = {
+  general: {
+    label: 'সাধারণ কথোপকথন',
+    prompt: 'أنت معلم عربي ودود يساعد الطلاب على ممارسة اللغة العربية في محادثات عامة. تحدث عن الحياة اليومية، الأصدقاء، الأسرة، والاهتمامات.'
+  },
+  greetings: {
+    label: 'সালাম ও অভিবাদন',
+    prompt: 'أنت معلم عربي يركز على تعليم التحيات والتعارف. علم الطالب كيف يقول مرحباً، كيف حالك، أنا بخير، وشكراً.'
+  },
+  numbers: {
+    label: 'সংখ্যা ও গণনা',
+    prompt: 'أنت معلم عربي يركز على تعليم الأرقام. استخدم الأرقام في المحادثات، وساعد الطالب على عد الأشياء.'
+  },
+  daily: {
+    label: 'দৈনন্দিন জীবন',
+    prompt: 'أنت معلم عربي يساعد على ممارسة اللغة في سياق الحياة اليومية - الصباح، الطعام، العمل، المدرسة، والنوم.'
+  }
 }
 
 // System prompt for Arabic tutor
@@ -23,6 +44,7 @@ const ARABIC_TUTOR_PROMPT = `أنت معلم عربي ودود يساعد الط
 - عندما يرتكب خطأ، صححه بلطف
 - استخدم كلمات بسيطة
 - كن صبوراً ومتشجعاً
+- إذا طلب الطالب الترجمة، أعطها باللغة البنغالية بين قوسين
 
 مثال للرد:
 "أحسنت! جملتك جيدة. لكن قل 'أنا أحب' بدلاً من 'أنا حب'. حاول مرة أخرى!"`
@@ -38,6 +60,9 @@ export function AIAudioCall() {
   const [callDuration, setCallDuration] = useState(0)
   const [isMuted, setIsMuted] = useState(false)
   const [browserSupported, setBrowserSupported] = useState(true)
+  const [conversationMode, setConversationMode] = useState<ConversationMode>('general')
+  const [showHints, setShowHints] = useState(true)
+  const [showTranslation, setShowTranslation] = useState(false)
 
   const recognitionRef = useRef<any>(null)
   const synthRef = useRef<SpeechSynthesis | null>(null)
@@ -192,6 +217,9 @@ export function AIAudioCall() {
     try {
       setPhase('processing')
 
+      const modePrompt = MODES[conversationMode].prompt
+      const fullSystemPrompt = `${ARABIC_TUTOR_PROMPT}\n\n${modePrompt}`
+
       const response = await fetch('/api/ai-chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -203,7 +231,7 @@ export function AIAudioCall() {
             })),
             { role: 'user', content: userMessage },
           ],
-          system: ARABIC_TUTOR_PROMPT,
+          system: fullSystemPrompt,
         }),
       })
 
@@ -229,7 +257,7 @@ export function AIAudioCall() {
       setError('AI সার্ভিসে সমস্যা। আবার চেষ্টা করুন।')
       setPhase('active')
     }
-  }, [messages, speak])
+  }, [messages, speak, conversationMode])
 
   // Start call
   const startCall = useCallback(() => {
@@ -365,23 +393,60 @@ export function AIAudioCall() {
   // Idle state
   if (phase === 'idle') {
     return (
-      <div className="min-h-[400px] bg-gradient-to-br from-[#0a1a12] to-[#0d2418] rounded-2xl p-8 flex flex-col items-center justify-center">
+      <div className="min-h-[500px] bg-gradient-to-br from-[#0a1a12] to-[#0d2418] rounded-2xl p-8 flex flex-col items-center justify-center">
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          className="text-center"
+          className="text-center w-full max-w-md"
         >
           <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#c9a96e] to-[#a08050] flex items-center justify-center mx-auto mb-6 shadow-lg shadow-[#c9a96e]/20">
             <Bot className="w-10 h-10 text-[#0a1a12]" />
           </div>
           <h3 className="text-2xl font-bold text-white bengali-text mb-2">AI সাথে প্র্যাকটিস করুন</h3>
-          <p className="text-white/60 bengali-text mb-6 max-w-xs mx-auto">
+          <p className="text-white/60 bengali-text mb-6">
             আরবিতে কথা বলুন, AI আপনাকে সংশোধন করবে
           </p>
+
+          {/* Mode Selection */}
+          <div className="mb-6">
+            <p className="text-white/80 text-sm mb-3 bengali-text">কথোপকথনের ধরন বেছে নিন:</p>
+            <div className="grid grid-cols-2 gap-2">
+              {(Object.keys(MODES) as ConversationMode[]).map((mode) => (
+                <button
+                  key={mode}
+                  onClick={() => setConversationMode(mode)}
+                  className={`p-3 rounded-xl text-sm transition-all ${
+                    conversationMode === mode
+                      ? 'bg-[#c9a96e] text-[#0a1a12] font-bold'
+                      : 'bg-[#c9a96e]/20 text-white/70 hover:bg-[#c9a96e]/30'
+                  }`}
+                >
+                  {MODES[mode].label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Hints */}
+          {showHints && (
+            <div className="bg-[#c9a96e]/10 rounded-xl p-4 mb-6 text-left">
+              <div className="flex items-center gap-2 mb-2">
+                <Sparkles className="w-4 h-4 text-[#c9a96e]" />
+                <p className="text-[#c9a96e] text-sm font-bold">টিপস:</p>
+              </div>
+              <ul className="text-white/70 text-xs space-y-1 bengali-text">
+                <li>• মাইক্রোফোন চাপুন ধরে রাখুন</li>
+                <li>• আরবিতে স্পষ্টভাবে কথা বলুন</li>
+                <li>• AI আপনাকে সংশোধন করবে</li>
+              </ul>
+            </div>
+          )}
+
           <button
             onClick={startCall}
-            className="px-8 py-4 bg-gradient-to-r from-[#c9a96e] to-[#a08050] text-[#0a1a12] font-bold rounded-xl hover:shadow-lg hover:shadow-[#c9a96e]/30 transition-all bengali-text"
+            className="w-full px-8 py-4 bg-gradient-to-r from-[#c9a96e] to-[#a08050] text-[#0a1a12] font-bold rounded-xl hover:shadow-lg hover:shadow-[#c9a96e]/30 transition-all bengali-text flex items-center justify-center gap-2"
           >
+            <Mic className="w-5 h-5" />
             কল শুরু করুন
           </button>
         </motion.div>
@@ -424,38 +489,68 @@ export function AIAudioCall() {
   return (
     <div className="min-h-[500px] bg-gradient-to-br from-[#0a1a12] to-[#0d2418] rounded-2xl overflow-hidden flex flex-col">
       {/* Header */}
-      <div className="px-4 py-3 bg-[#0a1a12]/80 backdrop-blur-sm border-b border-[#c9a96e]/20 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-[#c9a96e]/20 flex items-center justify-center">
-            <Bot className="w-5 h-5 text-[#c9a96e]" />
-          </div>
-          <div>
-            <p className="text-white font-medium text-sm">AI Tutor</p>
-            <div className="flex items-center gap-2">
-              <div className={`w-1.5 h-1.5 rounded-full ${phase === 'active' ? 'bg-green-400' : 'bg-yellow-400 animate-pulse'}`} />
-              <p className="text-white/50 text-xs">
-                {phase === 'active' ? 'শোনার অপেক্ষায়' : phase === 'processing' ? 'ভাবছে...' : 'বলছে...'}
-              </p>
+      <div className="px-4 py-3 bg-[#0a1a12]/80 backdrop-blur-sm border-b border-[#c9a96e]/20">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-[#c9a96e]/20 flex items-center justify-center">
+              <Bot className="w-5 h-5 text-[#c9a96e]" />
+            </div>
+            <div>
+              <p className="text-white font-medium text-sm">AI Tutor</p>
+              <div className="flex items-center gap-2">
+                <div className={`w-1.5 h-1.5 rounded-full ${phase === 'active' ? 'bg-green-400' : 'bg-yellow-400 animate-pulse'}`} />
+                <p className="text-white/50 text-xs">
+                  {phase === 'active' ? 'শোনার অপেক্ষায়' : phase === 'processing' ? 'ভাবছে...' : 'বলছে...'}
+                </p>
+              </div>
             </div>
           </div>
-        </div>
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5 text-[#c9a96e]">
-            <Clock className="w-4 h-4" />
-            <span className="text-sm font-mono">{formatTime(callDuration)}</span>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                setPhase('idle')
+                setMessages([])
+                setCallDuration(0)
+              }}
+              className="p-2 bg-[#c9a96e]/20 text-[#c9a96e] rounded-full hover:bg-[#c9a96e]/30 transition-colors"
+              title="নতুন কল"
+            >
+              <RotateCcw className="w-4 h-4" />
+            </button>
+            <div className="flex items-center gap-1.5 text-[#c9a96e]">
+              <Clock className="w-4 h-4" />
+              <span className="text-sm font-mono">{formatTime(callDuration)}</span>
+            </div>
+            <button
+              onClick={toggleMute}
+              className={`p-2 rounded-full transition-colors ${isMuted ? 'bg-red-500/20 text-red-400' : 'bg-[#c9a96e]/20 text-[#c9a96e]'}`}
+            >
+              {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+            </button>
+            <button
+              onClick={endCall}
+              className="p-2 bg-red-500/20 text-red-400 rounded-full hover:bg-red-500/30 transition-colors"
+            >
+              <PhoneOff className="w-4 h-4" />
+            </button>
           </div>
-          <button
-            onClick={toggleMute}
-            className={`p-2 rounded-full transition-colors ${isMuted ? 'bg-red-500/20 text-red-400' : 'bg-[#c9a96e]/20 text-[#c9a96e]'}`}
-          >
-            {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-          </button>
-          <button
-            onClick={endCall}
-            className="p-2 bg-red-500/20 text-red-400 rounded-full hover:bg-red-500/30 transition-colors"
-          >
-            <PhoneOff className="w-4 h-4" />
-          </button>
+        </div>
+
+        {/* Mode Switcher */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1">
+          {(Object.keys(MODES) as ConversationMode[]).map((mode) => (
+            <button
+              key={mode}
+              onClick={() => setConversationMode(mode)}
+              className={`px-3 py-1 rounded-full text-xs whitespace-nowrap transition-all ${
+                conversationMode === mode
+                  ? 'bg-[#c9a96e] text-[#0a1a12] font-bold'
+                  : 'bg-[#c9a96e]/20 text-white/70 hover:bg-[#c9a96e]/30'
+              }`}
+            >
+              {MODES[mode].label}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -582,8 +677,14 @@ export function AIAudioCall() {
               )}
             </motion.button>
 
-            {/* Placeholder for spacing */}
-            {isAiSpeaking && <div className="w-12" />}
+            {/* Phrase Helper */}
+            <button
+              onClick={() => setShowHints(!showHints)}
+              className="p-3 bg-[#c9a96e]/20 text-[#c9a96e] rounded-full hover:bg-[#c9a96e]/30 transition-colors"
+              title="সাহায্য"
+            >
+              <BookOpen className="w-5 h-5" />
+            </button>
           </div>
 
           {/* Recording indicator */}
@@ -595,6 +696,87 @@ export function AIAudioCall() {
             >
               🔴 রেকর্ডিং...
             </motion.p>
+          )}
+
+          {/* Quick Phrases */}
+          {showHints && phase === 'active' && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="w-full bg-[#c9a96e]/10 rounded-xl p-3"
+            >
+              <p className="text-[#c9a96e] text-xs font-bold mb-2">দ্রুত বাক্য:</p>
+              <div className="flex flex-wrap gap-2">
+                {conversationMode === 'greetings' && [
+                  { ar: 'مرحباً', bn: 'আসসালামু আলাইকুম' },
+                  { ar: 'كيف حالك؟', bn: 'আপনি কেমন আছেন?' },
+                  { ar: 'أنا بخير', bn: 'আমি ভালো আছি' },
+                  { ar: 'شكراً', bn: 'ধন্যবাদ' },
+                ].map((phrase, i) => (
+                  <button
+                    key={i}
+                    onClick={() => {
+                      setTranscript(phrase.ar)
+                      callClaude(phrase.ar)
+                    }}
+                    className="px-3 py-1.5 bg-[#c9a96e]/20 text-white/80 rounded-lg text-xs hover:bg-[#c9a96e]/30 transition-colors"
+                  >
+                    {phrase.ar}
+                  </button>
+                ))}
+                {conversationMode === 'numbers' && [
+                  { ar: 'واحد', bn: 'এক' },
+                  { ar: 'اثنان', bn: 'দুই' },
+                  { ar: 'ثلاثة', bn: 'তিন' },
+                  { ar: 'أربعة', bn: 'চার' },
+                ].map((phrase, i) => (
+                  <button
+                    key={i}
+                    onClick={() => {
+                      setTranscript(phrase.ar)
+                      callClaude(phrase.ar)
+                    }}
+                    className="px-3 py-1.5 bg-[#c9a96e]/20 text-white/80 rounded-lg text-xs hover:bg-[#c9a96e]/30 transition-colors"
+                  >
+                    {phrase.ar}
+                  </button>
+                ))}
+                {conversationMode === 'daily' && [
+                  { ar: 'صباح الخير', bn: 'শুভ সকাল' },
+                  { ar: 'مساء الخير', bn: 'শুভ সন্ধ্যা' },
+                  { ar: 'أنا جائع', bn: 'আমি ক্ষুধার্থ' },
+                  { ar: 'أريد أن آكل', bn: 'আমি খেতে চাই' },
+                ].map((phrase, i) => (
+                  <button
+                    key={i}
+                    onClick={() => {
+                      setTranscript(phrase.ar)
+                      callClaude(phrase.ar)
+                    }}
+                    className="px-3 py-1.5 bg-[#c9a96e]/20 text-white/80 rounded-lg text-xs hover:bg-[#c9a96e]/30 transition-colors"
+                  >
+                    {phrase.ar}
+                  </button>
+                ))}
+                {conversationMode === 'general' && [
+                  { ar: 'ما اسمك؟', bn: 'আপনার নাম কী?' },
+                  { ar: 'أين تعيش؟', bn: 'আপনি কোথায় থাকেন?' },
+                  { ar: 'أحب العربية', bn: 'আমি আরবি ভালোবাসি' },
+                  { ar: 'ساعدني', bn: 'আমাকে সাহায্য করুন' },
+                ].map((phrase, i) => (
+                  <button
+                    key={i}
+                    onClick={() => {
+                      setTranscript(phrase.ar)
+                      callClaude(phrase.ar)
+                    }}
+                    className="px-3 py-1.5 bg-[#c9a96e]/20 text-white/80 rounded-lg text-xs hover:bg-[#c9a96e]/30 transition-colors"
+                  >
+                    {phrase.ar}
+                  </button>
+                ))}
+              </div>
+            </motion.div>
           )}
         </div>
       </div>
