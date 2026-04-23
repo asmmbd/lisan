@@ -56,17 +56,33 @@ export function DictionaryScreen() {
     return () => clearTimeout(timer)
   }, [])
 
+  const [debouncedQuery, setDebouncedQuery] = useState('')
+  
+  // Debounce search query
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedQuery(searchQuery)
+    }, 300) // 300ms delay
+    return () => clearTimeout(timer)
+  }, [searchQuery])
+  
   const filteredWords = useMemo(() => {
-    if (!searchQuery.trim()) return []
-    const q = searchQuery.toLowerCase()
-    return (vocabulary as VocabularyWord[]).filter(
-      (w) =>
-        w.arabic.includes(q) ||
-        w.bengali.includes(q) ||
-        w.pronunciation.toLowerCase().includes(q) ||
-        w.categorySlug.includes(q)
-    )
-  }, [searchQuery, vocabulary])
+    if (!debouncedQuery.trim()) return []
+    const q = debouncedQuery.toLowerCase()
+    // Limit to first 100 matches for performance
+    const results: VocabularyWord[] = []
+    for (const w of vocabulary as VocabularyWord[]) {
+      if (
+        w.arabic.toLowerCase().includes(q) ||
+        w.bengali.toLowerCase().includes(q) ||
+        w.pronunciation.toLowerCase().includes(q)
+      ) {
+        results.push(w)
+        if (results.length >= 100) break // Stop at 100 matches
+      }
+    }
+    return results
+  }, [debouncedQuery, vocabulary])
 
   const handleSearch = (value: string) => {
     setSearchQuery(value)
@@ -112,7 +128,7 @@ export function DictionaryScreen() {
 
       <ScrollArea className="flex-1 px-4">
         <AnimatePresence mode="wait">
-          {isSearching && searchQuery ? (
+          {isSearching && debouncedQuery ? (
             <motion.div
               key="results"
               initial={{ opacity: 0 }}
@@ -125,7 +141,9 @@ export function DictionaryScreen() {
               ) : (
                 <div className="space-y-2">
                   <p className={cn('text-xs text-muted-foreground mb-2', textClass)}>
-                    {formatNumber(filteredWords.length)} {t('dictionary.resultsFound')}
+                    {(vocabulary as VocabularyWord[]).length > 100 && filteredWords.length >= 100 
+                      ? `100+ ${t('dictionary.resultsFound')} (showing first 100)`
+                      : `${formatNumber(filteredWords.length)} ${t('dictionary.resultsFound')}`}
                   </p>
                   {filteredWords.map((word, idx) => (
                     <WordListItem

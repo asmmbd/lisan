@@ -13,6 +13,7 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:reset": "prisma migrate reset",
+    "db:import-dictionary": "bun run scripts/import-dictionary.ts",
     "install:server": "cd server && bun install"
   },
   "dependencies": {
