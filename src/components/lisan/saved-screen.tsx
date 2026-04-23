@@ -35,9 +35,9 @@ function SavedSkeleton() {
 export function SavedScreen() {
   const [activeTab, setActiveTab] = useState('words')
   const { t, textClass } = useLanguage()
-  const { isLoading, vocabulary, savedWordIds } = useAppStore()
+  const { isLoading, savedWordIds } = useAppStore()
 
-  if (isLoading || (vocabulary.length === 0 && savedWordIds.length === 0)) {
+  if (isLoading) {
     return <SavedSkeleton />
   }
 

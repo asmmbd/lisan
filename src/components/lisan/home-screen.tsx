@@ -88,6 +88,7 @@ export function HomeScreen() {
     totalXP,
     studiedToday,
     fetchStreak,
+    fetchVocabularyForApp,
   } = useAppStore()
 
   const [dailyIndex, setDailyIndex] = useState(0)
@@ -118,10 +119,15 @@ export function HomeScreen() {
     }
   }, [session?.user?.id, fetchStreak])
 
+  // Load vocabulary for home screen (daily words)
+  useEffect(() => {
+    fetchVocabularyForApp()
+  }, [fetchVocabularyForApp])
+
   const dailyWords = vocabulary.slice(0, 5)
   const currentDaily = dailyWords[dailyIndex]
 
-  if (isLoading || (categories.length === 0 && vocabulary.length === 0)) {
+  if (isLoading && categories.length === 0) {
     return <HomeSkeleton />
   }
 
@@ -177,7 +183,7 @@ export function HomeScreen() {
               <span className="text-3xl mb-2 block transform transition-transform group-hover:scale-110">{cat.icon}</span>
               <span className={cn('text-xs font-bold leading-tight block', textClass)}>{cat.title}</span>
               <Badge variant="secondary" className="mt-1.5 bg-white/20 text-white border-0 text-[9px] px-1.5 py-0">
-                {formatNumber(vocabulary.filter(v => v.categorySlug === cat.slug).length)} {t('home.words')}
+                {formatNumber((cat as any).wordCount ?? vocabulary.filter((v: any) => v.categorySlug === cat.slug).length)} {t('home.words')}
               </Badge>
             </motion.button>
           ))}

@@ -60,6 +60,7 @@ interface AppState {
   updateProfile: (data: { name?: string; image?: string }) => Promise<{ id: string; name: string | null; email: string; image: string | null }>
   // Fetch all user data
   fetchUserData: () => Promise<void>
+  fetchVocabularyForApp: (category?: string) => Promise<void>
   // Quiz State
   quizState: 'idle' | 'running' | 'completed'
   quizCurrentIndex: number
@@ -371,13 +372,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     set({ isLoading: true, error: null })
     
     try {
-      // 1. Vocabulary (Public)
-      fetch('/api/vocabulary', { cache: 'no-store' })
-        .then(res => res.ok ? res.json() : null)
-        .then(data => data && set({ vocabulary: data.vocabulary || [] }))
-        .catch(e => console.error('Vocab fetch failed:', e))
-
-      // 2. Metadata (Public)
+      // 1. Metadata (Public) — vocabulary is loaded on-demand via search
       fetch('/api/categories', { cache: 'no-store' })
         .then(res => res.ok ? res.json() : null)
         .then(data => data && set({ 
@@ -386,7 +381,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         }))
         .catch(e => console.error('Metadata fetch failed:', e))
 
-      // 3. User Data (Auth Required)
+      // 2. User Data (Auth Required)
       fetch('/api/user/saved-words').then(res => res.ok ? res.json() : null)
         .then(data => data && set({ savedWordIds: data.savedWords || [] }))
         .catch(() => {})
@@ -402,9 +397,33 @@ export const useAppStore = create<AppState>((set, get) => ({
     } catch (err) {
       console.error('Error in fetchUserData:', err)
     } finally {
-      // We don't wait for all fetches to finish before setting loading false 
-      // in this async pattern, but that's okay for smoother UI.
       set({ isLoading: false })
+    }
+  },
+
+  // Lazy-load vocabulary for home/quiz/practice (max 500 words)
+  // Dictionary search uses server-side search instead of this
+  fetchVocabularyForApp: async (category?: string) => {
+    const { vocabulary } = get()
+    // Skip if already loaded a reasonable set
+    if (!category && vocabulary.length >= 100) return
+
+    try {
+      const params = new URLSearchParams()
+      if (category) params.set('category', category)
+      else {
+        // Load a broad sample for quiz/home by using a high limit
+        params.set('limit', '500')
+        // Use a dummy query that matches all — pass a special param instead
+        params.set('all', '1')
+      }
+
+      const res = await fetch(`/api/vocabulary/all?${params.toString()}`, { cache: 'no-store' })
+      if (!res.ok) return
+      const data = await res.json()
+      if (data.vocabulary) set({ vocabulary: data.vocabulary })
+    } catch (err) {
+      console.error('Error loading vocabulary for app:', err)
     }
   },
 }))

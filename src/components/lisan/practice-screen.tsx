@@ -38,7 +38,6 @@ export function PracticeScreen() {
     setPracticeState,
     callTimer,
     setCallTimer,
-    vocabulary,
     isLoading
   } = useAppStore()
   const { data: session } = useSession()
@@ -143,7 +142,7 @@ export function PracticeScreen() {
     setCallTimer(240)
   }
 
-  if (isLoading || vocabulary.length === 0) {
+  if (isLoading) {
     return <PracticeSkeleton />
   }
 

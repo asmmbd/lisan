@@ -1,8 +1,8 @@
 'use client'
 
 import { motion, AnimatePresence } from 'framer-motion'
-import { useState, useMemo, useEffect, useRef } from 'react'
-import { Search, Mic, X, Volume2, Bookmark, BookmarkCheck, ArrowLeft, ChevronRight } from 'lucide-react'
+import { useState, useEffect, useRef, useCallback } from 'react'
+import { Search, X, Volume2, Bookmark, BookmarkCheck, ArrowLeft, ChevronRight, Loader2 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -43,11 +43,20 @@ function DictionarySkeleton() {
 
 export function DictionaryScreen() {
   const { t, textClass, formatNumber } = useLanguage()
-  const { savedWordIds, toggleSaveWord, searchHistory, addToHistory, vocabulary, categories, isLoading } = useAppStore()
+  const { savedWordIds, toggleSaveWord, searchHistory, addToHistory, categories, isLoading } = useAppStore()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedWord, setSelectedWord] = useState<VocabularyWord | null>(null)
+
+  // Search state
+  const [searchResults, setSearchResults] = useState<VocabularyWord[]>([])
+  const [searchTotal, setSearchTotal] = useState(0)
   const [isSearching, setIsSearching] = useState(false)
+  const [hasSearched, setHasSearched] = useState(false)
+  const [activeCategory, setActiveCategory] = useState<string | null>(null)
+
   const searchInputRef = useRef<HTMLInputElement>(null)
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const abortRef = useRef<AbortController | null>(null)
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -56,37 +65,78 @@ export function DictionaryScreen() {
     return () => clearTimeout(timer)
   }, [])
 
-  const [debouncedQuery, setDebouncedQuery] = useState('')
-  
-  // Debounce search query
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedQuery(searchQuery)
-    }, 300) // 300ms delay
-    return () => clearTimeout(timer)
-  }, [searchQuery])
-  
-  const filteredWords = useMemo(() => {
-    if (!debouncedQuery.trim()) return []
-    const q = debouncedQuery.toLowerCase()
-    // Limit to first 100 matches for performance
-    const results: VocabularyWord[] = []
-    for (const w of vocabulary as VocabularyWord[]) {
-      if (
-        w.arabic.toLowerCase().includes(q) ||
-        w.bengali.toLowerCase().includes(q) ||
-        w.pronunciation.toLowerCase().includes(q)
-      ) {
-        results.push(w)
-        if (results.length >= 100) break // Stop at 100 matches
-      }
+  // Server-side search function
+  const doSearch = useCallback(async (q: string, category: string | null) => {
+    // Cancel previous request
+    if (abortRef.current) abortRef.current.abort()
+
+    if (!q.trim() && !category) {
+      setSearchResults([])
+      setSearchTotal(0)
+      setHasSearched(false)
+      setIsSearching(false)
+      return
     }
-    return results
-  }, [debouncedQuery, vocabulary])
+
+    abortRef.current = new AbortController()
+    setIsSearching(true)
+
+    try {
+      const params = new URLSearchParams()
+      if (q.trim()) params.set('q', q.trim())
+      if (category) params.set('category', category)
+      params.set('limit', '50')
+
+      const res = await fetch(`/api/vocabulary?${params.toString()}`, {
+        signal: abortRef.current.signal,
+        cache: 'no-store',
+      })
+
+      if (!res.ok) throw new Error('Search failed')
+      const data = await res.json()
+      setSearchResults(data.vocabulary || [])
+      setSearchTotal(data.total ?? data.vocabulary?.length ?? 0)
+      setHasSearched(true)
+    } catch (err: any) {
+      if (err.name !== 'AbortError') {
+        console.error('Search error:', err)
+      }
+    } finally {
+      setIsSearching(false)
+    }
+  }, [])
+
+  // Debounced search on query change
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => {
+      doSearch(searchQuery, activeCategory)
+    }, 400)
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current)
+    }
+  }, [searchQuery, activeCategory, doSearch])
 
   const handleSearch = (value: string) => {
     setSearchQuery(value)
-    setIsSearching(value.length > 0)
+    setActiveCategory(null)
+  }
+
+  const handleCategoryClick = (slug: string) => {
+    setSearchQuery('')
+    setActiveCategory(slug)
+  }
+
+  const handleClear = () => {
+    setSearchQuery('')
+    setActiveCategory(null)
+    setSearchResults([])
+    setHasSearched(false)
+  }
+
+  const handleHistoryClick = (term: string) => {
+    setSearchQuery(term)
+    setActiveCategory(null)
   }
 
   const handleSelectWord = (word: VocabularyWord) => {
@@ -94,14 +144,19 @@ export function DictionaryScreen() {
     addToHistory(word.arabic)
   }
 
-  if (isLoading || (categories.length === 0 && vocabulary.length === 0)) {
+  const showBrowse = !searchQuery.trim() && !activeCategory && !hasSearched
+  const showResults = searchQuery.trim() || activeCategory || hasSearched
+
+  if (isLoading && categories.length === 0) {
     return <DictionarySkeleton />
   }
 
   return (
     <div className="flex flex-col h-full">
       <div className="px-4 pt-6 md:pt-10 pb-4 max-w-2xl mx-auto w-full">
-        <h1 className={cn('text-xl md:text-3xl font-black mb-4 text-center md:text-left', textClass)}>{t('dictionary.title')}</h1>
+        <h1 className={cn('text-xl md:text-3xl font-black mb-4 text-center md:text-left', textClass)}>
+          {t('dictionary.title')}
+        </h1>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
@@ -112,23 +167,33 @@ export function DictionaryScreen() {
             autoFocus
             className={cn('pl-10 pr-10 h-11 rounded-xl bg-secondary/50 border-border', textClass)}
           />
-          {searchQuery && (
+          {(searchQuery || activeCategory) && (
             <button
-              onClick={() => { setSearchQuery(''); setIsSearching(false) }}
-              className="absolute right-12 top-1/2 -translate-y-1/2"
+              onClick={handleClear}
+              className="absolute right-3 top-1/2 -translate-y-1/2"
             >
               <X className="w-4 h-4 text-muted-foreground" />
             </button>
           )}
-          <button className="absolute right-3 top-1/2 -translate-y-1/2">
-            <Mic className="w-4 h-4 text-primary" />
-          </button>
         </div>
+
+        {/* Active category badge */}
+        {activeCategory && !searchQuery && (
+          <div className="mt-2 flex items-center gap-2">
+            <Badge variant="secondary" className={cn('gap-1', textClass)}>
+              {categories.find(c => c.slug === activeCategory)?.icon}{' '}
+              {categories.find(c => c.slug === activeCategory)?.title}
+              <button onClick={handleClear} className="ml-1">
+                <X className="w-3 h-3" />
+              </button>
+            </Badge>
+          </div>
+        )}
       </div>
 
       <ScrollArea className="flex-1 px-4">
         <AnimatePresence mode="wait">
-          {isSearching && debouncedQuery ? (
+          {showResults ? (
             <motion.div
               key="results"
               initial={{ opacity: 0 }}
@@ -136,16 +201,28 @@ export function DictionaryScreen() {
               exit={{ opacity: 0 }}
               className="py-2 pb-24"
             >
-              {filteredWords.length === 0 ? (
+              {/* Loading indicator */}
+              {isSearching && (
+                <div className="flex items-center gap-2 text-xs text-muted-foreground mb-3">
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                  <span className={textClass}>খুঁজছি...</span>
+                </div>
+              )}
+
+              {!isSearching && hasSearched && searchResults.length === 0 && (
                 <EmptySearchState />
-              ) : (
+              )}
+
+              {searchResults.length > 0 && (
                 <div className="space-y-2">
-                  <p className={cn('text-xs text-muted-foreground mb-2', textClass)}>
-                    {(vocabulary as VocabularyWord[]).length > 100 && filteredWords.length >= 100 
-                      ? `100+ ${t('dictionary.resultsFound')} (showing first 100)`
-                      : `${formatNumber(filteredWords.length)} ${t('dictionary.resultsFound')}`}
-                  </p>
-                  {filteredWords.map((word, idx) => (
+                  {!isSearching && (
+                    <p className={cn('text-xs text-muted-foreground mb-2', textClass)}>
+                      {searchTotal > 50
+                        ? `${formatNumber(50)}+ ${t('dictionary.resultsFound')}`
+                        : `${formatNumber(searchResults.length)} ${t('dictionary.resultsFound')}`}
+                    </p>
+                  )}
+                  {searchResults.map((word, idx) => (
                     <WordListItem
                       key={word.id}
                       word={word}
@@ -166,19 +243,21 @@ export function DictionaryScreen() {
               exit={{ opacity: 0 }}
               className="py-2 pb-24"
             >
-              <h3 className={cn('text-sm font-bold text-muted-foreground mb-4 tracking-wide uppercase', textClass)}>{t('dictionary.browse')}</h3>
+              <h3 className={cn('text-sm font-bold text-muted-foreground mb-4 tracking-wide uppercase', textClass)}>
+                {t('dictionary.browse')}
+              </h3>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 mb-10">
                 {categories.map((cat) => (
                   <button
                     key={cat.id}
-                    onClick={() => { setSearchQuery(cat.slug); setIsSearching(true) }}
+                    onClick={() => handleCategoryClick(cat.slug)}
                     className="flex items-center gap-3 bg-card rounded-xl p-3 border border-border hover:shadow-sm transition-shadow"
                   >
                     <span className="text-xl">{cat.icon}</span>
                     <div className="text-left">
                       <p className={cn('text-sm font-medium', textClass)}>{cat.title}</p>
                       <p className={cn('text-[10px] text-muted-foreground', textClass)}>
-                        {formatNumber(vocabulary.filter((v: any) => v.categorySlug === cat.slug).length)} {t('home.words')}
+                        {cat.wordCount ? `${formatNumber(cat.wordCount)} ${t('home.words')}` : t('home.words')}
                       </p>
                     </div>
                   </button>
@@ -188,7 +267,9 @@ export function DictionaryScreen() {
               {searchHistory.length > 0 && (
                 <>
                   <div className="flex items-center justify-between mb-3">
-                    <h3 className={cn('text-sm font-semibold text-muted-foreground', textClass)}>{t('dictionary.recentSearches')}</h3>
+                    <h3 className={cn('text-sm font-semibold text-muted-foreground', textClass)}>
+                      {t('dictionary.recentSearches')}
+                    </h3>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {searchHistory.map((term, idx) => (
@@ -196,7 +277,7 @@ export function DictionaryScreen() {
                         key={idx}
                         variant="secondary"
                         className={cn('cursor-pointer hover:bg-secondary/80', textClass)}
-                        onClick={() => handleSearch(term)}
+                        onClick={() => handleHistoryClick(term)}
                       >
                         {term}
                       </Badge>
@@ -252,9 +333,9 @@ function WordListItem({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
+      initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.05 }}
+      transition={{ delay: Math.min(index * 0.03, 0.3) }}
       className="flex items-center gap-3 bg-card rounded-xl p-3 border border-border hover:shadow-sm transition-shadow cursor-pointer"
       onClick={onSelect}
     >

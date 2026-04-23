@@ -27,11 +27,12 @@ const levelAccentStyles: Record<QuizLevel, string> = {
 export default function PracticeQuizPage() {
   const router = useRouter()
   const { t, textClass, formatNumber } = useLanguage()
-  const { fetchUserData, isLoading, vocabulary, quizState, startQuiz } = useAppStore()
+  const { fetchUserData, fetchVocabularyForApp, isLoading, vocabulary, quizState, startQuiz } = useAppStore()
 
   useEffect(() => {
     fetchUserData()
-  }, [fetchUserData])
+    fetchVocabularyForApp()
+  }, [fetchUserData, fetchVocabularyForApp])
 
   if (quizState !== 'idle') {
     return <QuizView />
