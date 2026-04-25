@@ -159,7 +159,7 @@ export function HomeScreen() {
               {t('common.points')}: {formatNumber(totalXP)}
             </p>
           </div>
-          <Avatar className="w-10 h-10 md:w-12 md:h-12 rounded-xl border border-primary/20 bg-primary/10 shadow-sm">
+          <Avatar className="w-10 h-10 rounded-xl border border-primary/20 bg-primary/10 shadow-sm">
             {user?.image ? <AvatarImage src={user.image} alt={user.name || ''} /> : null}
             <AvatarFallback className="bg-primary/10 text-primary">
               {user?.name?.charAt(0) || <User className="w-5 h-5 text-primary" />}

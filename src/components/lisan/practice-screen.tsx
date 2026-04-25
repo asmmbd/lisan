@@ -4,13 +4,14 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { Video, Users, Loader2, User, ChevronRight, Brain, Bot } from 'lucide-react'
+import { Video, Users, Loader2, User, ChevronRight, Brain, Bot, PhoneOff } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useAppStore } from '@/lib/store'
 import { AgoraVideoCall } from './agora-video-call'
 import { AIAudioCall } from './ai-audio-call'
 import { usePusherMatching } from '@/hooks/usePusherMatching'
+import { pusherClient } from '@/lib/pusher'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { useLanguage } from './language-provider'
@@ -45,6 +46,8 @@ export function PracticeScreen() {
   const userId = session?.user?.id || 'guest'
   const [agoraToken, setAgoraToken] = useState('')
   const [creatingCall, setCreatingCall] = useState(false)
+  const [createdRoom, setCreatedRoom] = useState<any>(null)
+  const [isWaitingForReceiver, setIsWaitingForReceiver] = useState(false)
   const router = useRouter()
 
   const {
@@ -117,11 +120,28 @@ export function PracticeScreen() {
       const data = await res.json()
 
       if (data.success) {
-        router.push(`/room/${data.room.roomId}`)
+        // Don't navigate immediately - wait for receiver
+        setCreatedRoom(data.room)
+        setIsWaitingForReceiver(true)
+        
+        // Subscribe to Pusher channel for this room
+        const channel = pusherClient.subscribe(`room-${data.room.roomId}`)
+        channel.bind('receiver-joined', (joinData: any) => {
+          // Receiver joined - navigate to room
+          router.push(`/room/${data.room.roomId}`)
+        })
       }
     } finally {
       setCreatingCall(false)
     }
+  }
+
+  const handleCancelWaiting = () => {
+    if (createdRoom) {
+      pusherClient.unsubscribe(`room-${createdRoom.roomId}`)
+    }
+    setCreatedRoom(null)
+    setIsWaitingForReceiver(false)
   }
 
   const startMatching = () => {
@@ -187,10 +207,49 @@ export function PracticeScreen() {
                   exit={{ opacity: 0, y: -10 }}
                   className="flex flex-col gap-6 py-6"
                 >
+                  {isWaitingForReceiver ? (
+                    // Waiting for receiver UI
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="relative overflow-hidden bg-gradient-to-br from-emerald-600 via-teal-600 to-cyan-700 rounded-2xl shadow-2xl p-8 min-h-[280px] flex flex-col items-center justify-center text-center"
+                    >
+                      <div className="absolute inset-0 opacity-20">
+                        <div className="absolute top-10 right-10 w-64 h-64 bg-white/20 rounded-full blur-3xl animate-pulse" />
+                        <div className="absolute bottom-10 left-10 w-48 h-48 bg-yellow-400/20 rounded-full blur-3xl animate-pulse" />
+                      </div>
+                      
+                      <div className="relative z-10">
+                        <div className="w-24 h-24 rounded-full bg-white/90 flex items-center justify-center shadow-xl mx-auto mb-6">
+                          <Loader2 className="w-12 h-12 text-emerald-600 animate-spin" />
+                        </div>
+                        <h3 className={cn('text-2xl md:text-3xl font-black text-white mb-2', textClass)}>
+                          অপেক্ষা করা হচ্ছে...
+                        </h3>
+                        <p className={cn('text-lg text-white/80 mb-4', textClass)}>
+                          কেউ কলে join করলে দুইজনকে রুমে নিয়ে যাওয়া হবে
+                        </p>
+                        {createdRoom && (
+                          <p className="text-white/60 text-sm font-mono mb-6">
+                            Room: {createdRoom.roomId}
+                          </p>
+                        )}
+                        <Button
+                          onClick={handleCancelWaiting}
+                          variant="secondary"
+                          className="bg-white/20 text-white hover:bg-white/30 border-0"
+                        >
+                          <PhoneOff className="w-4 h-4 mr-2" />
+                          ক্যানসেল করুন
+                        </Button>
+                      </div>
+                    </motion.div>
+                  ) : (
+                  <>
                   <motion.div
                     whileHover={{ scale: 1.01 }}
                     whileTap={{ scale: 0.99 }}
-                    onClick={() => router.push('/practice/ai-call')}
+                    onClick={handleCreateCall}
                     className="group relative overflow-hidden bg-gradient-to-br from-emerald-600 via-teal-600 to-cyan-700 rounded-2xl shadow-2xl p-8 cursor-pointer min-h-[280px] flex flex-col justify-between"
                   >
                     <div className="absolute inset-0 opacity-20">
@@ -273,6 +332,8 @@ export function PracticeScreen() {
                       </div>
                     </motion.div>
                   </div>
+                </>
+                )}
                 </motion.div>
               )}
 

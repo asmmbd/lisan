@@ -1,6 +1,7 @@
 'use client'
 
-import { BookOpen, Video, Bookmark, User, Home } from 'lucide-react'
+import { Video, Bookmark, User } from 'lucide-react'
+import { Home2 , Book1} from 'iconsax-reactjs'
 import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
@@ -12,8 +13,8 @@ export function BottomNav() {
   const { t, textClass } = useLanguage()
 
   const tabs = [
-    { id: 'home', label: t('nav.home'), icon: Home, href: '/' },
-    { id: 'dictionary', label: t('nav.dictionary'), icon: BookOpen, href: '/dictionary' },
+    { id: 'home', label: t('nav.home'), icon: Home2, href: '/' },
+    { id: 'dictionary', label: t('nav.dictionary'), icon: Book1, href: '/dictionary' },
     { id: 'practice', label: t('nav.practice'), icon: Video, href: '/practice' },
     { id: 'saved', label: t('nav.saved'), icon: Bookmark, href: '/saved' },
     { id: 'profile', label: t('nav.profile'), icon: User, href: '/profile' },
