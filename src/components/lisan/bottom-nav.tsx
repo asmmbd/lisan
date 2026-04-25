@@ -1,7 +1,6 @@
 'use client'
 
-import { Video, Bookmark, User } from 'lucide-react'
-import { Home2 , Book1} from 'iconsax-reactjs'
+import { Home2 , Book1, ProfileCircle, Zoom, ArchiveBook } from 'iconsax-reactjs'
 import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
@@ -15,9 +14,9 @@ export function BottomNav() {
   const tabs = [
     { id: 'home', label: t('nav.home'), icon: Home2, href: '/' },
     { id: 'dictionary', label: t('nav.dictionary'), icon: Book1, href: '/dictionary' },
-    { id: 'practice', label: t('nav.practice'), icon: Video, href: '/practice' },
-    { id: 'saved', label: t('nav.saved'), icon: Bookmark, href: '/saved' },
-    { id: 'profile', label: t('nav.profile'), icon: User, href: '/profile' },
+    { id: 'practice', label: t('nav.practice'), icon: Zoom, href: '/practice' },
+    { id: 'saved', label: t('nav.saved'), icon: ArchiveBook, href: '/saved' },
+    { id: 'profile', label: t('nav.profile'), icon: ProfileCircle, href: '/profile' },
   ]
 
   return (
@@ -42,7 +41,7 @@ export function BottomNav() {
                   transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                 />
               )}
-              <Icon className={cn('w-5 h-5', isActive && 'stroke-[2.5px]')} />
+              <Icon variant={isActive ? 'Bold' : 'Linear'} className={cn('w-5 h-5', isActive && 'stroke-[2.5px]')} />
               <span className={cn('text-[10px] font-medium', textClass, isActive && 'font-semibold')}>
                 {tab.label}
               </span>
