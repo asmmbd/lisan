@@ -275,7 +275,7 @@ export function PracticeScreen() {
 
           <div className="flex-1 px-4 max-w-4xl mx-auto w-full overflow-y-auto custom-scrollbar pb-24 md:pb-10">
             <AnimatePresence mode="wait">
-              {practiceState === 'idle' && (
+                {practiceState === 'idle' && (
                 <motion.div
                   key="idle"
                   initial={{ opacity: 0, y: 10 }}
@@ -283,44 +283,6 @@ export function PracticeScreen() {
                   exit={{ opacity: 0, y: -10 }}
                   className="flex flex-col gap-6 py-6"
                 >
-                  {isWaitingForReceiver ? (
-                    // Waiting for receiver UI
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      className="relative overflow-hidden bg-gradient-to-br from-emerald-600 via-teal-600 to-cyan-700 rounded-2xl shadow-2xl p-8 min-h-[280px] flex flex-col items-center justify-center text-center"
-                    >
-                      <div className="absolute inset-0 opacity-20">
-                        <div className="absolute top-10 right-10 w-64 h-64 bg-white/20 rounded-full blur-3xl animate-pulse" />
-                        <div className="absolute bottom-10 left-10 w-48 h-48 bg-yellow-400/20 rounded-full blur-3xl animate-pulse" />
-                      </div>
-                      
-                      <div className="relative z-10">
-                        <div className="w-24 h-24 rounded-full bg-white/90 flex items-center justify-center shadow-xl mx-auto mb-6">
-                          <Loader2 className="w-12 h-12 text-emerald-600 animate-spin" />
-                        </div>
-                        <h3 className={cn('text-2xl md:text-3xl font-black text-white mb-2', textClass)}>
-                          অপেক্ষা করা হচ্ছে...
-                        </h3>
-                        <p className={cn('text-lg text-white/80 mb-4', textClass)}>
-                          কেউ কলে join করলে দুইজনকে রুমে নিয়ে যাওয়া হবে
-                        </p>
-                        {createdRoom && (
-                          <p className="text-white/60 text-sm font-mono mb-6">
-                            Room: {createdRoom.roomId}
-                          </p>
-                        )}
-                        <Button
-                          onClick={handleCancelWaiting}
-                          variant="secondary"
-                          className="bg-white/20 text-white hover:bg-white/30 border-0"
-                        >
-                          <PhoneOff className="w-4 h-4 mr-2" />
-                          ক্যানসেল করুন
-                        </Button>
-                      </div>
-                    </motion.div>
-                  ) : (
                   <>
                   {/* Duolingo-style Video Call Section */}
                   <div className="flex flex-col items-center justify-center min-h-[60vh] py-8">
@@ -384,17 +346,17 @@ export function PracticeScreen() {
                       <motion.button
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
-                        onClick={handleCreateCall}
-                        disabled={creatingCall}
+                        onClick={startMatching}
+                        disabled={isWaiting}
                         className="flex items-center justify-center gap-2 w-full py-3 px-6 rounded-xl bg-[#1CB0F6] text-white font-bold shadow-lg hover:bg-[#1899D6] transition-colors disabled:opacity-70"
                       >
-                        {creatingCall ? (
+                        {isWaiting ? (
                           <Loader2 className="w-5 h-5 animate-spin" />
                         ) : (
                           <Video className="w-5 h-5" />
                         )}
                         <span className={textClass}>
-                          {creatingCall ? t('calls.joining') : t('practice.findPartnerBtn')}
+                          {isWaiting ? t('practice.searching') : t('practice.findPartnerBtn')}
                         </span>
                       </motion.button>
                     </div>
@@ -423,7 +385,6 @@ export function PracticeScreen() {
                     </div>
                   </div>
                 </>
-                )}
                 </motion.div>
               )}
 
@@ -538,6 +499,10 @@ export function PracticeScreen() {
                         initial={{ width: '0%' }}
                         animate={{ width: '100%' }}
                         transition={{ duration: 2, ease: 'easeInOut' }}
+                        onAnimationComplete={() => {
+                          // Navigate to room after progress bar fills
+                          router.push(`/room/${matchData.matchId}`)
+                        }}
                       />
                     </div>
                   </div>
