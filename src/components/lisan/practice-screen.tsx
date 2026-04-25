@@ -15,18 +15,40 @@ import { pusherClient } from '@/lib/pusher'
 import { cn } from '@/lib/utils'
 import { useLanguage } from './language-provider'
 
-// Earth Globe Illustration Component
+// Earth Globe Illustration Component with rotation animation
 function EarthGlobe({ className }: { className?: string }) {
   return (
-    <svg
+    <motion.svg
       viewBox="0 0 200 200"
       className={cn('w-full h-full', className)}
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      animate={{ rotate: 360 }}
+      transition={{
+        duration: 20,
+        repeat: Infinity,
+        ease: "linear"
+      }}
     >
-      {/* Outer circles */}
-      <circle cx="100" cy="100" r="85" fill="#7DD3C0" opacity="0.3" />
-      <circle cx="100" cy="100" r="70" fill="#5CC9B0" opacity="0.4" />
+      {/* Outer circles with pulse */}
+      <motion.circle 
+        cx="100" 
+        cy="100" 
+        r="85" 
+        fill="#7DD3C0" 
+        opacity="0.3"
+        animate={{ scale: [1, 1.05, 1] }}
+        transition={{ duration: 3, repeat: Infinity }}
+      />
+      <motion.circle 
+        cx="100" 
+        cy="100" 
+        r="70" 
+        fill="#5CC9B0" 
+        opacity="0.4"
+        animate={{ scale: [1, 1.03, 1] }}
+        transition={{ duration: 2.5, repeat: Infinity, delay: 0.5 }}
+      />
       
       {/* Main globe */}
       <circle cx="100" cy="100" r="55" fill="#4DB6A4" />
@@ -49,9 +71,17 @@ function EarthGlobe({ className }: { className?: string }) {
         fill="#2D8B7A"
       />
       
-      {/* Inner glow */}
-      <circle cx="85" cy="85" r="20" fill="#6BC9B8" opacity="0.5" />
-    </svg>
+      {/* Inner glow with pulse */}
+      <motion.circle 
+        cx="85" 
+        cy="85" 
+        r="20" 
+        fill="#6BC9B8" 
+        opacity="0.5"
+        animate={{ opacity: [0.3, 0.6, 0.3] }}
+        transition={{ duration: 2, repeat: Infinity }}
+      />
+    </motion.svg>
   )
 }
 
@@ -241,7 +271,7 @@ export function PracticeScreen() {
   return (
     <div className="flex flex-col h-full bg-background overflow-hidden">
       <>
-          <div className="px-4 pt-6 md:pt-10 pb-4 max-w-4xl mx-auto w-full">
+          {/* <div className="px-4 pt-6 md:pt-10 pb-4 max-w-4xl mx-auto w-full">
             <div className="flex items-center gap-3 mb-2">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg">
                 <Video className="w-5 h-5 text-white" />
@@ -267,7 +297,7 @@ export function PracticeScreen() {
                 {isPusherConnected ? t('practice.liveReady') : t('practice.liveOffline')}
               </span>
             </div>
-          </div>
+          </div> */}
 
           <div className="flex-1 px-4 max-w-4xl mx-auto w-full overflow-y-auto custom-scrollbar pb-24 md:pb-10">
             <AnimatePresence mode="wait">
@@ -340,7 +370,7 @@ export function PracticeScreen() {
                     {/* Camera Toggle */}
                     <div className="flex items-center gap-3 mb-6">
                       <span className={cn('text-sm text-muted-foreground', textClass)}>
-                        Camera:
+                        {t('practice.camera')}:
                       </span>
                       <button
                         onClick={() => setCameraEnabled(!cameraEnabled)}
@@ -360,7 +390,7 @@ export function PracticeScreen() {
                         'text-sm font-medium',
                         cameraEnabled ? 'text-[#1CB0F6]' : 'text-muted-foreground'
                       )}>
-                        {cameraEnabled ? 'ON' : 'OFF'}
+                        {cameraEnabled ? t('practice.cameraOn') : t('practice.cameraOff')}
                       </span>
                     </div>
 
@@ -369,21 +399,21 @@ export function PracticeScreen() {
                       'text-center text-foreground/80 text-base md:text-lg mb-8 max-w-xs',
                       textClass
                     )}>
-                      Find a speaking partner for a 3 minute conversation
+                      {t('practice.findSpeakingPartner')}
                     </p>
 
                     {/* Action Buttons */}
                     <div className="flex flex-col gap-3 w-full max-w-xs">
                       {/* Secondary Button - Conversation Topics */}
-                      <motion.button
+                      {/* <motion.button
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         onClick={() => router.push('/practice/topics')}
                         className="flex items-center justify-center gap-2 w-full py-3 px-6 rounded-xl bg-[#37464F] text-white font-semibold shadow-lg hover:bg-[#2D3A42] transition-colors"
                       >
                         <Lightbulb className="w-5 h-5" />
-                        <span className={textClass}>Try a conversation topic</span>
-                      </motion.button>
+                        <span className={textClass}>{t('practice.tryConversationTopic')}</span>
+                      </motion.button> */}
 
                       {/* Primary Button - Find Partner */}
                       <motion.button
@@ -399,7 +429,7 @@ export function PracticeScreen() {
                           <Video className="w-5 h-5" />
                         )}
                         <span className={textClass}>
-                          {creatingCall ? t('calls.joining') : 'Find Partner'}
+                          {creatingCall ? t('calls.joining') : t('practice.findPartnerBtn')}
                         </span>
                       </motion.button>
                     </div>
@@ -413,7 +443,7 @@ export function PracticeScreen() {
                         className="flex items-center gap-2 px-4 py-2 rounded-lg bg-secondary/50 text-secondary-foreground hover:bg-secondary transition-colors"
                       >
                         <Brain className="w-4 h-4" />
-                        <span className={cn('text-sm', textClass)}>Solo Practice</span>
+                        <span className={cn('text-sm', textClass)}>{t('practice.soloPracticeBtn')}</span>
                       </motion.button>
 
                       <motion.button
@@ -423,7 +453,7 @@ export function PracticeScreen() {
                         className="flex items-center gap-2 px-4 py-2 rounded-lg bg-secondary/50 text-secondary-foreground hover:bg-secondary transition-colors"
                       >
                         <Bot className="w-4 h-4" />
-                        <span className={cn('text-sm', textClass)}>AI Practice</span>
+                        <span className={cn('text-sm', textClass)}>{t('practice.aiPracticeBtn')}</span>
                       </motion.button>
                     </div>
                   </div>
