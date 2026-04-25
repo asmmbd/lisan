@@ -190,7 +190,7 @@ export function PracticeScreen() {
                   <motion.div
                     whileHover={{ scale: 1.01 }}
                     whileTap={{ scale: 0.99 }}
-                    onClick={handleCreateCall}
+                    onClick={() => router.push('/practice/ai-call')}
                     className="group relative overflow-hidden bg-gradient-to-br from-emerald-600 via-teal-600 to-cyan-700 rounded-2xl shadow-2xl p-8 cursor-pointer min-h-[280px] flex flex-col justify-between"
                   >
                     <div className="absolute inset-0 opacity-20">

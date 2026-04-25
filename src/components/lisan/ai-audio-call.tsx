@@ -1,8 +1,9 @@
 'use client'
 
 import { useEffect, useRef, useState, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Mic, PhoneOff, Volume2, VolumeX, Bot, User, Clock, AlertCircle, RotateCcw, Sparkles, BookOpen } from 'lucide-react'
+import { Mic, PhoneOff, Volume2, VolumeX, Bot, User, Clock, AlertCircle, RotateCcw, Sparkles, BookOpen, Loader2 } from 'lucide-react'
 
 // Phase types
 type Phase = 'idle' | 'calling' | 'active' | 'processing' | 'speaking' | 'ended'
@@ -50,7 +51,9 @@ const ARABIC_TUTOR_PROMPT = `أنت معلم عربي ودود يساعد الط
 "أحسنت! جملتك جيدة. لكن قل 'أنا أحب' بدلاً من 'أنا حب'. حاول مرة أخرى!"`
 
 export function AIAudioCall() {
+  const router = useRouter()
   const [phase, setPhase] = useState<Phase>('idle')
+  const [isCreatingRoom, setIsCreatingRoom] = useState(false)
   const [messages, setMessages] = useState<Message[]>([])
   const [transcript, setTranscript] = useState('')
   const [interimTranscript, setInterimTranscript] = useState('')
@@ -281,6 +284,33 @@ export function AIAudioCall() {
     }, 1500)
   }, [browserSupported, speak])
 
+  // Create Daily room and navigate
+  const createRoomAndNavigate = useCallback(async () => {
+    setIsCreatingRoom(true)
+    try {
+      const channelName = `call_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`
+      const res = await fetch('/api/calls/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ channelName }),
+      })
+
+      const data = await res.json()
+
+      if (data.success) {
+        router.push(`/room/${data.room.roomId}`)
+      } else {
+        console.error('Failed to create room:', data.error)
+        setError('রুম তৈরি করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।')
+        setIsCreatingRoom(false)
+      }
+    } catch (err) {
+      console.error('Error creating room:', err)
+      setError('রুম তৈরি করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।')
+      setIsCreatingRoom(false)
+    }
+  }, [router])
+
   // End call
   const endCall = useCallback(() => {
     // Stop recording
@@ -295,14 +325,10 @@ export function AIAudioCall() {
     setIsRecording(false)
     setTranscript('')
     setInterimTranscript('')
-
-    // Reset after delay
-    setTimeout(() => {
-      setPhase('idle')
-      setMessages([])
-      setCallDuration(0)
-    }, 2000)
-  }, [stopAiSpeech])
+    
+    // Automatically create room after ending call
+    createRoomAndNavigate()
+  }, [stopAiSpeech, createRoomAndNavigate])
 
   // Push to talk handlers
   const startRecording = useCallback(() => {
@@ -452,8 +478,18 @@ export function AIAudioCall() {
   if (phase === 'ended') {
     return (
       <div className="min-h-[400px] bg-card rounded-xl border border-border p-8 flex flex-col items-center justify-center">
-        <p className="bengali-text text-xl mb-2">কল শেষ</p>
-        <p className="text-muted-foreground text-sm">ধন্যবাদ!</p>
+        {isCreatingRoom ? (
+          <>
+            <Loader2 className="w-12 h-12 text-primary animate-spin mb-4" />
+            <p className="bengali-text text-xl mb-2">রুম তৈরি হচ্ছে...</p>
+            <p className="text-muted-foreground text-sm">অপেক্ষা করুন</p>
+          </>
+        ) : (
+          <>
+            <p className="bengali-text text-xl mb-2">কল শেষ</p>
+            <p className="text-muted-foreground text-sm">ধন্যবাদ!</p>
+          </>
+        )}
       </div>
     )
   }
