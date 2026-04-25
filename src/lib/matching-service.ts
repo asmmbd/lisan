@@ -97,6 +97,17 @@ export async function tryMatch(userId: string): Promise<ActiveMatch | null> {
     }
   })
 
+  // Create Room for the match (so room page works)
+  await prisma.room.create({
+    data: {
+      roomId: matchId,
+      callerId: currentUser.userId,
+      receiverId: waitingUser.userId,
+      channelName,
+      status: 'active',
+    }
+  })
+
   // Update both users status
   await prisma.matchingQueue.updateMany({
     where: {
@@ -105,9 +116,10 @@ export async function tryMatch(userId: string): Promise<ActiveMatch | null> {
     data: { status: 'matched' }
   })
 
-  // Notify both users via Pusher
+  // Notify both users via Pusher (with room info for navigation)
   await pusher.trigger(`private-user-${currentUser.userId}`, 'match-found', {
     matchId,
+    roomId: matchId,
     partnerId: waitingUser.userId,
     partnerName: waitingUser.userName,
     channelName,
@@ -117,6 +129,7 @@ export async function tryMatch(userId: string): Promise<ActiveMatch | null> {
 
   await pusher.trigger(`private-user-${waitingUser.userId}`, 'match-found', {
     matchId,
+    roomId: matchId,
     partnerId: currentUser.userId,
     partnerName: currentUser.userName,
     channelName,

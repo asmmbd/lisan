@@ -69,6 +69,17 @@ export async function POST(req: NextRequest) {
             }
           })
 
+          // Create Room for the match (so room page works)
+          await tx.room.create({
+            data: {
+              roomId: matchId,
+              callerId: userId,
+              receiverId: partner.userId,
+              channelName,
+              status: 'active',
+            }
+          })
+
           return { matched: true, partner, channelName, matchId }
         }
       }
@@ -98,6 +109,7 @@ export async function POST(req: NextRequest) {
       
       await pusher.trigger(partnerChannel, 'match-found', {
         matchId: result.matchId,
+        roomId: result.matchId,
         partnerId: userId,
         partnerName: userName,
         channelName: result.channelName,
@@ -111,6 +123,7 @@ export async function POST(req: NextRequest) {
         success: true,
         matched: true,
         matchId: result.matchId,
+        roomId: result.matchId,
         partnerId: result.partner.userId,
         partnerName: result.partner.userName,
         channelName: result.channelName,

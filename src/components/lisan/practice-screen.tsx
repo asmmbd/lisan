@@ -175,27 +175,14 @@ export function PracticeScreen() {
 
   useEffect(() => {
     if (isMatched && matchData && practiceState === 'matching') {
-      fetch('/api/agora-token', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          channel: matchData.channelName,
-          role: 'publisher'
-        })
-      })
-        .then(res => res.json())
-        .then(data => {
-          setAgoraToken(data.token || '')
-          setPracticeState('incall')
-          setCallTimer(240)
-        })
-        .catch(() => {
-          setAgoraToken('')
-          setPracticeState('incall')
-          setCallTimer(240)
-        })
+      // Match found - navigate to room page after showing connecting screen briefly
+      const timer = setTimeout(() => {
+        router.push(`/room/${matchData.matchId}?join=true`)
+      }, 2000) // Show connecting screen for 2 seconds
+
+      return () => clearTimeout(timer)
     }
-  }, [isMatched, matchData, practiceState, setPracticeState, setCallTimer])
+  }, [isMatched, matchData, practiceState, router])
 
   useEffect(() => {
     if (partnerLeft) {
