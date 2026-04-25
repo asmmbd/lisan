@@ -200,7 +200,7 @@ export function AgoraVideoCall({ appId, channel, token, onLeave, callTimer }: Ag
         {/* Remote Video (Full Screen) */}
         <div 
           ref={remoteVideoRef}
-          className="absolute inset-0 bg-slate-900"
+          className="absolute inset-0 bg-slate-900 z-0 [&>video]:w-full [&>video]:h-full [&>video]:object-cover"
         >
           {remoteUsers === 0 && !isConnecting && (
             <div className="absolute inset-0 flex items-center justify-center">
@@ -217,7 +217,7 @@ export function AgoraVideoCall({ appId, channel, token, onLeave, callTimer }: Ag
         {/* Local Video (Picture in Picture - Bottom Left) */}
         <div 
           ref={localVideoRef}
-          className="absolute bottom-4 left-4 w-24 h-32 bg-slate-800 rounded-2xl overflow-hidden border-2 border-white/50 shadow-lg z-10"
+          className="absolute bottom-24 left-4 w-24 h-32 bg-slate-800 rounded-2xl overflow-hidden border-2 border-white/50 shadow-lg z-20 [&>video]:w-full [&>video]:h-full [&>video]:object-cover"
         >
           {isCameraOff && (
             <div className="absolute inset-0 flex items-center justify-center bg-slate-800">
