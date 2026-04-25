@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useCallback, useState } from 'react'
-import { PhoneOff, Mic, MicOff, Video, VideoOff, Clock, User, Users, ArrowLeft, MoreVertical } from 'lucide-react'
+import { PhoneOff, Mic, MicOff, Video, VideoOff, Clock, User, Users, ArrowLeft, MoreVertical, Phone } from 'lucide-react'
 
 interface AgoraVideoCallProps {
   appId: string
@@ -171,9 +171,9 @@ export function AgoraVideoCall({ appId, channel, token, onLeave, callTimer }: Ag
   }
 
   return (
-    <div className="flex flex-col h-screen bg-[#1a237e]">
-      {/* Header Bar - Blue gradient */}
-      <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-b from-[#0d47a1] to-[#1565c0]">
+    <div className="flex flex-col h-screen bg-gradient-to-b from-[#0F9D58] to-[#0A7A43]">
+      {/* Header Bar */}
+      <div className="flex items-center justify-between px-4 py-3 bg-[#0A7A43]/50">
         {/* Back Button */}
         <button 
           onClick={handleLeave}
@@ -217,7 +217,7 @@ export function AgoraVideoCall({ appId, channel, token, onLeave, callTimer }: Ag
         {/* Local Video (Picture in Picture - Bottom Left) */}
         <div 
           ref={localVideoRef}
-          className="absolute bottom-20 left-4 w-28 h-36 bg-slate-800 rounded-2xl overflow-hidden border-2 border-white/50 shadow-lg z-20 [&>video]:w-full [&>video]:h-full [&>video]:object-cover"
+          className="absolute bottom-20 left-4 w-28 h-36 bg-[#0F9D58]/20 rounded-2xl overflow-hidden border-2 border-white/50 shadow-lg z-20 [&>video]:w-full [&>video]:h-full [&>video]:object-cover"
         >
           {isCameraOff && (
             <div className="absolute inset-0 flex items-center justify-center bg-slate-800">
@@ -258,33 +258,33 @@ export function AgoraVideoCall({ appId, channel, token, onLeave, callTimer }: Ag
       </div>
 
       {/* Call Controls - Bottom Bar */}
-      <div className="flex items-center justify-center gap-4 py-4 px-6 bg-gradient-to-t from-[#0d47a1] to-[#1565c0]">
-        {/* Camera On/Off */}
-        <button
-          onClick={toggleVideo}
-          className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${
-            isCameraOff ? 'bg-red-500 text-white' : 'bg-white/20 text-white hover:bg-white/30'
-          }`}
-        >
-          {isCameraOff ? <VideoOff className="w-5 h-5" /> : <Video className="w-5 h-5" />}
-        </button>
-
+      <div className="flex items-center justify-center gap-4 py-4 px-6 bg-gradient-to-t from-[#0A7A43] to-transparent">
         {/* Mute Mic */}
         <button
           onClick={toggleMute}
-          className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${
+          className={`w-14 h-14 rounded-full flex items-center justify-center transition-all ${
             isMuted ? 'bg-red-500 text-white' : 'bg-white/20 text-white hover:bg-white/30'
           }`}
         >
-          {isMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+          {isMuted ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
         </button>
 
-        {/* End Call - Red Button (Larger) */}
+        {/* Camera On/Off */}
+        <button
+          onClick={toggleVideo}
+          className={`w-14 h-14 rounded-full flex items-center justify-center transition-all ${
+            isCameraOff ? 'bg-red-500 text-white' : 'bg-white/20 text-white hover:bg-white/30'
+          }`}
+        >
+          {isCameraOff ? <VideoOff className="w-6 h-6" /> : <Video className="w-6 h-6" />}
+        </button>
+
+        {/* End Call - Red Button */}
         <button
           onClick={handleLeave}
-          className="w-14 h-14 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center shadow-lg transition-colors"
+          className="w-16 h-16 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center shadow-lg transition-colors"
         >
-          <PhoneOff className="w-6 h-6 text-white" />
+          <Phone className="w-7 h-7 text-white" />
         </button>
       </div>
     </div>

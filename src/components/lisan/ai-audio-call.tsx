@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useRouter } from 'next/navigation'
 import { Mic, PhoneOff, Volume2, VolumeX, Bot, User, Clock, AlertCircle, RotateCcw, Sparkles, BookOpen } from 'lucide-react'
 
 // Phase types
@@ -64,6 +65,7 @@ export function AIAudioCall() {
   const [showHints, setShowHints] = useState(false)
   const [showTranslation, setShowTranslation] = useState(false)
   const [hasStarted, setHasStarted] = useState(false)
+  const router = useRouter()
 
   const recognitionRef = useRef<any>(null)
   const synthRef = useRef<SpeechSynthesis | null>(null)
@@ -84,6 +86,11 @@ export function AIAudioCall() {
       return
     }
 
+    // Initialize speech synthesis first
+    if ('speechSynthesis' in window) {
+      synthRef.current = window.speechSynthesis
+    }
+
     // Auto-start the call after a brief delay
     const timer = setTimeout(() => {
       setHasStarted(true)
@@ -91,13 +98,6 @@ export function AIAudioCall() {
     }, 500)
 
     return () => clearTimeout(timer)
-  }, [])
-
-  // Initialize speech synthesis
-  useEffect(() => {
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      synthRef.current = window.speechSynthesis
-    }
   }, [])
 
   // Auto-scroll chat
@@ -305,7 +305,12 @@ export function AIAudioCall() {
     setIsRecording(false)
     setTranscript('')
     setInterimTranscript('')
-  }, [stopAiSpeech])
+    
+    // Navigate to practice page after ending
+    setTimeout(() => {
+      router.push('/practice')
+    }, 1500)
+  }, [router, stopAiSpeech])
 
   // Push to talk handlers
   const startRecording = useCallback(() => {
@@ -396,7 +401,7 @@ export function AIAudioCall() {
   // Initial loading/connecting state
   if (!hasStarted || phase === 'calling') {
     return (
-      <div className="h-screen w-full bg-gradient-to-b from-[#1a237e] to-[#0d47a1] flex flex-col items-center justify-center">
+      <div className="h-screen w-full bg-gradient-to-b from-[#0F9D58] to-[#0A7A43] flex flex-col items-center justify-center">
         {/* AI Avatar */}
         <div className="relative mb-8">
           <div className="w-32 h-32 rounded-full bg-white/10 flex items-center justify-center border-4 border-white/30">
@@ -438,18 +443,27 @@ export function AIAudioCall() {
   // Ended state
   if (phase === 'ended') {
     return (
-      <div className="min-h-[400px] bg-card rounded-xl border border-border p-8 flex flex-col items-center justify-center">
-        <p className="bengali-text text-xl mb-2">কল শেষ</p>
-        <p className="text-muted-foreground text-sm">ধন্যবাদ!</p>
+      <div className="h-screen w-full bg-gradient-to-b from-[#0F9D58] to-[#0A7A43] flex flex-col items-center justify-center">
+        <div className="w-20 h-20 rounded-full bg-white/10 flex items-center justify-center mb-6">
+          <PhoneOff className="w-10 h-10 text-white" />
+        </div>
+        <h2 className="text-2xl font-bold text-white mb-2">কল শেষ</h2>
+        <p className="text-white/70 mb-6">প্র্যাক্টিস পেজে ফিরে যাওয়া হচ্ছে...</p>
+        <button
+          onClick={() => router.push('/practice')}
+          className="px-6 py-3 bg-white/20 hover:bg-white/30 text-white rounded-xl transition-colors"
+        >
+          প্র্যাক্টিসে যান
+        </button>
       </div>
     )
   }
 
   // Active call UI - Modern fullscreen style like video call
   return (
-    <div className="h-screen w-full bg-gradient-to-b from-[#1a237e] to-[#0d47a1] flex flex-col">
+    <div className="h-screen w-full bg-gradient-to-b from-[#0F9D58] to-[#0A7A43] flex flex-col">
       {/* Header Bar */}
-      <div className="flex items-center justify-between px-4 py-3 bg-[#0d47a1]/50">
+      <div className="flex items-center justify-between px-4 py-3 bg-[#0A7A43]/50">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center border border-white/20">
             <Bot className="w-5 h-5 text-white" />
@@ -541,7 +555,7 @@ export function AIAudioCall() {
       )}
 
       {/* Bottom Controls */}
-      <div className="flex items-center justify-center gap-6 py-6 px-4 bg-gradient-to-t from-[#0d47a1] to-transparent">
+      <div className="flex items-center justify-center gap-6 py-6 px-4 bg-gradient-to-t from-[#0A7A43] to-transparent">
         {/* Mute Button */}
         <button
           onClick={toggleMute}
