@@ -1,6 +1,6 @@
 'use client'
 
-import { BookOpen, Video, Bookmark, User, Home, LogOut } from 'lucide-react'
+import { Home2 , Book1, ProfileCircle, Zoom, ArchiveBook, Logout } from 'iconsax-reactjs'
 import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
@@ -14,11 +14,11 @@ export function Sidebar() {
   const { t, textClass } = useLanguage()
 
   const tabs = [
-    { id: 'home', label: t('nav.home'), icon: Home, href: '/' },
-    { id: 'dictionary', label: t('nav.dictionary'), icon: BookOpen, href: '/dictionary' },
-    { id: 'practice', label: t('nav.practice'), icon: Video, href: '/practice' },
-    { id: 'saved', label: t('nav.saved'), icon: Bookmark, href: '/saved' },
-    { id: 'profile', label: t('nav.profile'), icon: User, href: '/profile' },
+    { id: 'home', label: t('nav.home'), icon: Home2, href: '/' },
+    { id: 'dictionary', label: t('nav.dictionary'), icon: Book1, href: '/dictionary' },
+    { id: 'practice', label: t('nav.practice'), icon: Zoom, href: '/practice' },
+    { id: 'saved', label: t('nav.saved'), icon: ArchiveBook, href: '/saved' },
+    { id: 'profile', label: t('nav.profile'), icon: ProfileCircle, href: '/profile' },
   ]
 
   return (
@@ -48,7 +48,7 @@ export function Sidebar() {
                   : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
               )}
             >
-              <Icon className={cn('w-5 h-5 transition-transform duration-300', isActive ? 'scale-110' : 'group-hover:scale-110')} />
+              <Icon variant={isActive ? 'Bold' : 'Linear'} className={cn('w-5 h-5 transition-transform duration-300', isActive ? 'scale-110' : 'group-hover:scale-110')} />
               <span className={cn('text-sm font-medium', textClass, isActive ? 'font-semibold' : 'opacity-80 group-hover:opacity-100')}>
                 {tab.label}
               </span>
@@ -69,7 +69,7 @@ export function Sidebar() {
           onClick={() => signOut()}
           className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all duration-300"
         >
-          <LogOut className="w-5 h-5" />
+          <Logout variant="Linear" className="w-5 h-5" />
           <span className={cn('text-sm font-medium', textClass)}>{t('nav.logout')}</span>
         </button>
       </div>
