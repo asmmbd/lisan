@@ -60,9 +60,10 @@ export function AIAudioCall() {
   const [callDuration, setCallDuration] = useState(0)
   const [isMuted, setIsMuted] = useState(false)
   const [browserSupported, setBrowserSupported] = useState(true)
-  const [conversationMode, setConversationMode] = useState<ConversationMode>('general')
-  const [showHints, setShowHints] = useState(true)
+  const conversationMode = 'general' // Fixed mode, no selection
+  const [showHints, setShowHints] = useState(false)
   const [showTranslation, setShowTranslation] = useState(false)
+  const [hasStarted, setHasStarted] = useState(false)
 
   const recognitionRef = useRef<any>(null)
   const synthRef = useRef<SpeechSynthesis | null>(null)
@@ -70,7 +71,7 @@ export function AIAudioCall() {
   const timerRef = useRef<NodeJS.Timeout | null>(null)
   const chatEndRef = useRef<HTMLDivElement>(null)
 
-  // Check browser support
+  // Check browser support and auto-start
   useEffect(() => {
     if (typeof window === 'undefined') return
 
@@ -80,7 +81,16 @@ export function AIAudioCall() {
     if (!hasSpeechRecognition || !hasSpeechSynthesis) {
       setBrowserSupported(false)
       setError('আপনার ব্রাউজারে voice recognition সাপোর্ট নেই। Chrome বা Edge ব্যবহার করুন।')
+      return
     }
+
+    // Auto-start the call after a brief delay
+    const timer = setTimeout(() => {
+      setHasStarted(true)
+      startCall()
+    }, 500)
+
+    return () => clearTimeout(timer)
   }, [])
 
   // Initialize speech synthesis
@@ -373,7 +383,7 @@ export function AIAudioCall() {
   // UI Components
   if (!browserSupported) {
     return (
-      <div className="min-h-[400px] flex items-center justify-center bg-[#0a1a12] rounded-2xl p-6">
+      <div className="h-screen flex items-center justify-center bg-[#0a1a12] p-6">
         <div className="text-center">
           <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
           <p className="text-white bengali-text text-lg mb-2">ব্রাউজার সাপোর্ট নেই</p>
@@ -383,60 +393,44 @@ export function AIAudioCall() {
     )
   }
 
-  // Idle state
-  if (phase === 'idle') {
+  // Initial loading/connecting state
+  if (!hasStarted || phase === 'calling') {
     return (
-      <div className="min-h-[400px] bg-card rounded-xl border border-border p-8 flex flex-col items-center justify-center">
-        <div className="text-center w-full max-w-md">
-          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6">
-            <Bot className="w-8 h-8 text-primary" />
+      <div className="h-screen w-full bg-gradient-to-b from-[#1a237e] to-[#0d47a1] flex flex-col items-center justify-center">
+        {/* AI Avatar */}
+        <div className="relative mb-8">
+          <div className="w-32 h-32 rounded-full bg-white/10 flex items-center justify-center border-4 border-white/30">
+            <Bot className="w-16 h-16 text-white" />
           </div>
-          <h3 className="text-2xl font-bold mb-2 bengali-text">AI সাথে প্র্যাকটিস করুন</h3>
-          <p className="text-muted-foreground mb-6">
-            আরবিতে কথা বলুন, AI আপনাকে সংশোধন করবে
-          </p>
-
-          {/* Mode Selection */}
-          <div className="mb-6">
-            <p className="text-sm mb-3 bengali-text text-muted-foreground">কথোপকথনের ধরন:</p>
-            <div className="grid grid-cols-2 gap-2">
-              {(Object.keys(MODES) as ConversationMode[]).map((mode) => (
-                <button
-                  key={mode}
-                  onClick={() => setConversationMode(mode)}
-                  className={`p-3 rounded-xl text-sm transition-all ${
-                    conversationMode === mode
-                      ? 'bg-primary text-primary-foreground font-bold'
-                      : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                  }`}
-                >
-                  {MODES[mode].label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <button
-            onClick={startCall}
-            className="w-full px-8 py-4 bg-primary text-primary-foreground font-bold rounded-xl hover:opacity-90 transition-all bengali-text flex items-center justify-center gap-2"
-          >
-            <Mic className="w-5 h-5" />
-            কল শুরু করুন
-          </button>
+          {/* Pulsing ring */}
+          <motion.div
+            className="absolute inset-0 rounded-full border-4 border-white/30"
+            animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0, 0.5] }}
+            transition={{ duration: 2, repeat: Infinity }}
+          />
         </div>
-      </div>
-    )
-  }
 
-  // Calling state
-  if (phase === 'calling') {
-    return (
-      <div className="min-h-[400px] bg-card rounded-xl border border-border p-8 flex flex-col items-center justify-center">
-        <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-6">
-          <Bot className="w-8 h-8 text-primary animate-pulse" />
+        <h2 className="text-2xl font-bold text-white mb-2">AI Tutor</h2>
+        <p className="text-white/70 text-lg">কানেক্ট হচ্ছে...</p>
+        
+        {/* Animated dots */}
+        <div className="flex gap-2 mt-4">
+          <motion.div
+            className="w-3 h-3 rounded-full bg-white"
+            animate={{ y: [0, -10, 0] }}
+            transition={{ duration: 0.6, repeat: Infinity }}
+          />
+          <motion.div
+            className="w-3 h-3 rounded-full bg-white"
+            animate={{ y: [0, -10, 0] }}
+            transition={{ duration: 0.6, repeat: Infinity, delay: 0.2 }}
+          />
+          <motion.div
+            className="w-3 h-3 rounded-full bg-white"
+            animate={{ y: [0, -10, 0] }}
+            transition={{ duration: 0.6, repeat: Infinity, delay: 0.4 }}
+          />
         </div>
-        <p className="bengali-text text-lg">কানেক্ট হচ্ছে...</p>
-        <p className="text-muted-foreground text-sm mt-2">AI Tutor</p>
       </div>
     )
   }
@@ -451,300 +445,146 @@ export function AIAudioCall() {
     )
   }
 
-  // Active call UI
+  // Active call UI - Modern fullscreen style like video call
   return (
-    <div className="min-h-[500px] bg-card rounded-xl border border-border overflow-hidden flex flex-col">
-      {/* Header */}
-      <div className="px-4 py-3 border-b border-border">
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-              <Bot className="w-5 h-5 text-primary" />
-            </div>
-            <div>
-              <p className="font-medium text-sm">AI Tutor</p>
-              <div className="flex items-center gap-2">
-                <div className={`w-1.5 h-1.5 rounded-full ${phase === 'active' ? 'bg-green-500' : 'bg-yellow-500 animate-pulse'}`} />
-                <p className="text-muted-foreground text-xs">
-                  {phase === 'active' ? 'শোনার অপেক্ষায়' : phase === 'processing' ? 'ভাবছে...' : 'বলছে...'}
-                </p>
-              </div>
-            </div>
+    <div className="h-screen w-full bg-gradient-to-b from-[#1a237e] to-[#0d47a1] flex flex-col">
+      {/* Header Bar */}
+      <div className="flex items-center justify-between px-4 py-3 bg-[#0d47a1]/50">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center border border-white/20">
+            <Bot className="w-5 h-5 text-white" />
           </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => {
-                setPhase('idle')
-                setMessages([])
-                setCallDuration(0)
-              }}
-              className="p-2 bg-muted text-muted-foreground rounded-full hover:bg-muted/80 transition-colors"
-              title="নতুন কল"
-            >
-              <RotateCcw className="w-4 h-4" />
-            </button>
-            <div className="flex items-center gap-1.5 text-muted-foreground">
-              <Clock className="w-4 h-4" />
-              <span className="text-sm font-mono">{formatTime(callDuration)}</span>
+          <div>
+            <p className="font-medium text-sm text-white">AI Tutor</p>
+            <div className="flex items-center gap-2">
+              <div className={`w-1.5 h-1.5 rounded-full ${phase === 'active' ? 'bg-green-400' : 'bg-yellow-400 animate-pulse'}`} />
+              <p className="text-white/70 text-xs">
+                {phase === 'active' ? 'শোনার অপেক্ষায়' : phase === 'processing' ? 'ভাবছে...' : 'বলছে...'}
+              </p>
             </div>
-            <button
-              onClick={toggleMute}
-              className={`p-2 rounded-full transition-colors ${isMuted ? 'bg-red-500/10 text-red-500' : 'bg-muted text-muted-foreground hover:bg-muted/80'}`}
-            >
-              {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-            </button>
-            <button
-              onClick={endCall}
-              className="p-2 bg-red-500/10 text-red-500 rounded-full hover:bg-red-500/20 transition-colors"
-            >
-              <PhoneOff className="w-4 h-4" />
-            </button>
           </div>
         </div>
-
-        {/* Mode Switcher */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1">
-          {(Object.keys(MODES) as ConversationMode[]).map((mode) => (
-            <button
-              key={mode}
-              onClick={() => setConversationMode(mode)}
-              className={`px-3 py-1 rounded-full text-xs whitespace-nowrap transition-all ${
-                conversationMode === mode
-                  ? 'bg-primary text-primary-foreground font-bold'
-                  : 'bg-muted text-muted-foreground hover:bg-muted/80'
-              }`}
-            >
-              {MODES[mode].label}
-            </button>
-          ))}
+        
+        {/* Timer */}
+        <div className="flex items-center gap-1.5 text-white/80 bg-white/10 px-3 py-1.5 rounded-full">
+          <Clock className="w-4 h-4" />
+          <span className="text-sm font-mono">{formatTime(callDuration)}</span>
         </div>
       </div>
 
-      {/* Chat Area */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-3" style={{ direction: 'rtl' }}>
-        <AnimatePresence>
-          {messages.map((msg, idx) => (
+      {/* Main Content Area - Centered Avatar */}
+      <div className="flex-1 flex flex-col items-center justify-center p-4">
+        {/* Large AI Avatar */}
+        <div className="relative mb-8">
+          <div className="w-40 h-40 rounded-full bg-white/10 flex items-center justify-center border-4 border-white/30">
+            <Bot className="w-20 h-20 text-white" />
+          </div>
+          {phase === 'speaking' && (
             <motion.div
-              key={idx}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className={`flex gap-2 ${msg.role === 'user' ? 'flex-row' : 'flex-row-reverse'}`}
-            >
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                msg.role === 'user' ? 'bg-primary/10' : 'bg-primary'
-              }`}>
-                {msg.role === 'user' ? (
-                  <User className="w-4 h-4 text-primary" />
-                ) : (
-                  <Bot className="w-4 h-4 text-primary-foreground" />
-                )}
-              </div>
-              <div className={`max-w-[80%] p-3 rounded-2xl ${
-                msg.role === 'user'
-                  ? 'bg-muted text-foreground rounded-tl-none'
-                  : 'bg-primary text-primary-foreground rounded-tr-none'
-              }`}>
-                <p className="text-sm leading-relaxed" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-                  {msg.content}
-                </p>
-              </div>
-            </motion.div>
-          ))}
-        </AnimatePresence>
+              className="absolute inset-0 rounded-full border-4 border-green-400/50"
+              animate={{ scale: [1, 1.1, 1], opacity: [0.5, 0, 0.5] }}
+              transition={{ duration: 1, repeat: Infinity }}
+            />
+          )}
+        </div>
 
-        {/* Live transcript */}
+        {/* Status Text */}
+        <h2 className="text-xl font-semibold text-white mb-2">
+          {phase === 'active' && !isAiSpeaking && !isRecording ? 'শোনার অপেক্ষায়' : ''}
+          {isRecording ? 'শোনা হচ্ছে...' : ''}
+          {isAiSpeaking ? 'AI বলছে...' : ''}
+          {phase === 'processing' ? 'ভাবছে...' : ''}
+        </h2>
+
+        {/* Live Transcript (when user is speaking) */}
         {(interimTranscript || transcript) && phase === 'active' && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="flex gap-2 flex-row"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-4 px-6 py-3 bg-white/10 rounded-2xl max-w-md text-center"
           >
-            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-              <User className="w-4 h-4 text-primary" />
-            </div>
-            <div className="max-w-[80%] p-3 rounded-2xl bg-muted/50 text-muted-foreground rounded-tl-none border border-border">
-              <p className="text-sm">
-                {transcript}
-                <span className="text-muted-foreground/50">{interimTranscript}</span>
-              </p>
-            </div>
+            <p className="text-white/90 text-lg" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+              {transcript}
+              <span className="text-white/50">{interimTranscript}</span>
+            </p>
           </motion.div>
         )}
 
-        {/* AI Processing indicator */}
-        {phase === 'processing' && (
-          <div className="flex gap-2 flex-row-reverse">
-            <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
-              <Bot className="w-4 h-4 text-primary-foreground" />
-            </div>
-            <div className="p-3 rounded-2xl bg-primary rounded-tr-none">
-              <div className="flex gap-1">
-                <motion.div className="w-2 h-2 bg-primary-foreground rounded-full" animate={{ y: [0, -4, 0] }} transition={{ duration: 0.5, repeat: Infinity }} />
-                <motion.div className="w-2 h-2 bg-primary-foreground rounded-full" animate={{ y: [0, -4, 0] }} transition={{ duration: 0.5, repeat: Infinity, delay: 0.1 }} />
-                <motion.div className="w-2 h-2 bg-primary-foreground rounded-full" animate={{ y: [0, -4, 0] }} transition={{ duration: 0.5, repeat: Infinity, delay: 0.2 }} />
-              </div>
-            </div>
-          </div>
+        {/* AI Message (when AI is speaking) */}
+        {isAiSpeaking && messages.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-4 px-6 py-3 bg-primary/20 rounded-2xl max-w-md text-center"
+          >
+            <p className="text-white text-lg" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+              {messages[messages.length - 1]?.content}
+            </p>
+          </motion.div>
         )}
 
-        <div ref={chatEndRef} />
+        {/* AI Processing */}
+        {phase === 'processing' && (
+          <div className="mt-4 flex gap-2">
+            <motion.div className="w-3 h-3 rounded-full bg-white" animate={{ y: [0, -8, 0] }} transition={{ duration: 0.5, repeat: Infinity }} />
+            <motion.div className="w-3 h-3 rounded-full bg-white" animate={{ y: [0, -8, 0] }} transition={{ duration: 0.5, repeat: Infinity, delay: 0.1 }} />
+            <motion.div className="w-3 h-3 rounded-full bg-white" animate={{ y: [0, -8, 0] }} transition={{ duration: 0.5, repeat: Infinity, delay: 0.2 }} />
+          </div>
+        )}
       </div>
 
-      {/* Error */}
+      {/* Error Toast */}
       {error && (
-        <div className="px-4 py-2 bg-red-500/10 border-t border-red-500/20">
-          <p className="text-red-500 text-sm bengali-text text-center">{error}</p>
+        <div className="absolute top-20 left-4 right-4 bg-red-500/90 text-white px-4 py-3 rounded-xl text-center">
+          <p className="text-sm bengali-text">{error}</p>
         </div>
       )}
 
-      {/* Push to Talk Button */}
-      <div className="p-4 border-t border-border">
-        <div className="flex flex-col items-center gap-3">
-          {/* Status text */}
-          <p className="text-muted-foreground text-xs bengali-text">
-            {isRecording ? 'শোনা হচ্ছে...' : isAiSpeaking ? 'AI বলছে...' : 'বলতে চাপুন ধরে রাখুন'}
-          </p>
+      {/* Bottom Controls */}
+      <div className="flex items-center justify-center gap-6 py-6 px-4 bg-gradient-to-t from-[#0d47a1] to-transparent">
+        {/* Mute Button */}
+        <button
+          onClick={toggleMute}
+          className={`w-14 h-14 rounded-full flex items-center justify-center transition-all ${
+            isMuted ? 'bg-red-500 text-white' : 'bg-white/20 text-white hover:bg-white/30'
+          }`}
+        >
+          {isMuted ? <VolumeX className="w-6 h-6" /> : <Volume2 className="w-6 h-6" />}
+        </button>
 
-          <div className="flex items-center gap-4">
-            {/* Cancel AI speech button */}
-            {isAiSpeaking && (
-              <button
-                onClick={stopAiSpeech}
-                className="p-3 bg-muted text-muted-foreground rounded-full hover:bg-muted/80 transition-colors"
-                title="AI থামান"
-              >
-                <VolumeX className="w-5 h-5" />
-              </button>
-            )}
-
-            {/* Main PTT Button */}
-            <motion.button
-              onMouseDown={startRecording}
-              onMouseUp={stopRecording}
-              onMouseLeave={isRecording ? stopRecording : undefined}
-              onTouchStart={handleTouchStart}
-              onTouchEnd={handleTouchEnd}
-              disabled={phase !== 'active' || isAiSpeaking}
-              whileTap={{ scale: 0.95 }}
-              animate={isRecording ? { scale: [1, 1.05, 1] } : {}}
-              transition={{ duration: 0.5, repeat: isRecording ? Infinity : 0 }}
-              className={`w-20 h-20 rounded-full flex items-center justify-center transition-all ${
-                isRecording
-                  ? 'bg-red-500 text-white'
-                  : phase === 'active' && !isAiSpeaking
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-muted text-muted-foreground cursor-not-allowed'
-              }`}
-            >
-              {isRecording ? (
-                renderWaveform()
-              ) : (
-                <Mic className="w-8 h-8" />
-              )}
-            </motion.button>
-
-            {/* Phrase Helper */}
-            <button
-              onClick={() => setShowHints(!showHints)}
-              className="p-3 bg-muted text-muted-foreground rounded-full hover:bg-muted/80 transition-colors"
-              title="সাহায্য"
-            >
-              <BookOpen className="w-5 h-5" />
-            </button>
-          </div>
-
-          {/* Recording indicator */}
-          {isRecording && (
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-red-500 text-xs bengali-text"
-            >
-              🔴 রেকর্ডিং...
-            </motion.p>
+        {/* Main PTT Button (Large) */}
+        <motion.button
+          onMouseDown={startRecording}
+          onMouseUp={stopRecording}
+          onMouseLeave={isRecording ? stopRecording : undefined}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+          disabled={phase !== 'active' || isAiSpeaking}
+          whileTap={{ scale: 0.95 }}
+          animate={isRecording ? { scale: [1, 1.05, 1] } : {}}
+          transition={{ duration: 0.5, repeat: isRecording ? Infinity : 0 }}
+          className={`w-20 h-20 rounded-full flex items-center justify-center transition-all shadow-lg ${
+            isRecording
+              ? 'bg-red-500 text-white'
+              : phase === 'active' && !isAiSpeaking
+              ? 'bg-white text-[#1a237e]'
+              : 'bg-white/30 text-white/50 cursor-not-allowed'
+          }`}
+        >
+          {isRecording ? (
+            renderWaveform()
+          ) : (
+            <Mic className="w-8 h-8" />
           )}
+        </motion.button>
 
-          {/* Quick Phrases */}
-          {showHints && phase === 'active' && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="w-full bg-muted rounded-xl p-3"
-            >
-              <p className="text-muted-foreground text-xs font-bold mb-2">দ্রুত বাক্য:</p>
-              <div className="flex flex-wrap gap-2">
-                {conversationMode === 'greetings' && [
-                  { ar: 'مرحباً', bn: 'আসসালামু আলাইকুম' },
-                  { ar: 'كيف حالك؟', bn: 'আপনি কেমন আছেন?' },
-                  { ar: 'أنا بخير', bn: 'আমি ভালো আছি' },
-                  { ar: 'شكراً', bn: 'ধন্যবাদ' },
-                ].map((phrase, i) => (
-                  <button
-                    key={i}
-                    onClick={() => {
-                      setTranscript(phrase.ar)
-                      callClaude(phrase.ar)
-                    }}
-                    className="px-3 py-1.5 bg-background border border-border rounded-lg text-xs hover:bg-muted transition-colors"
-                  >
-                    {phrase.ar}
-                  </button>
-                ))}
-                {conversationMode === 'numbers' && [
-                  { ar: 'واحد', bn: 'এক' },
-                  { ar: 'اثنان', bn: 'দুই' },
-                  { ar: 'ثلاثة', bn: 'তিন' },
-                  { ar: 'أربعة', bn: 'চার' },
-                ].map((phrase, i) => (
-                  <button
-                    key={i}
-                    onClick={() => {
-                      setTranscript(phrase.ar)
-                      callClaude(phrase.ar)
-                    }}
-                    className="px-3 py-1.5 bg-background border border-border rounded-lg text-xs hover:bg-muted transition-colors"
-                  >
-                    {phrase.ar}
-                  </button>
-                ))}
-                {conversationMode === 'daily' && [
-                  { ar: 'صباح الخير', bn: 'শুভ সকাল' },
-                  { ar: 'مساء الخير', bn: 'শুভ সন্ধ্যা' },
-                  { ar: 'أنا جائع', bn: 'আমি ক্ষুধার্থ' },
-                  { ar: 'أريد أن آكل', bn: 'আমি খেতে চাই' },
-                ].map((phrase, i) => (
-                  <button
-                    key={i}
-                    onClick={() => {
-                      setTranscript(phrase.ar)
-                      callClaude(phrase.ar)
-                    }}
-                    className="px-3 py-1.5 bg-background border border-border rounded-lg text-xs hover:bg-muted transition-colors"
-                  >
-                    {phrase.ar}
-                  </button>
-                ))}
-                {conversationMode === 'general' && [
-                  { ar: 'ما اسمك؟', bn: 'আপনার নাম কী?' },
-                  { ar: 'أين تعيش؟', bn: 'আপনি কোথায় থাকেন?' },
-                  { ar: 'أحب العربية', bn: 'আমি আরবি ভালোবাসি' },
-                  { ar: 'ساعدني', bn: 'আমাকে সাহায্য করুন' },
-                ].map((phrase, i) => (
-                  <button
-                    key={i}
-                    onClick={() => {
-                      setTranscript(phrase.ar)
-                      callClaude(phrase.ar)
-                    }}
-                    className="px-3 py-1.5 bg-background border border-border rounded-lg text-xs hover:bg-muted transition-colors"
-                  >
-                    {phrase.ar}
-                  </button>
-                ))}
-              </div>
-            </motion.div>
-          )}
-        </div>
+        {/* End Call Button */}
+        <button
+          onClick={endCall}
+          className="w-14 h-14 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center text-white transition-colors"
+        >
+          <PhoneOff className="w-6 h-6" />
+        </button>
       </div>
     </div>
   )
