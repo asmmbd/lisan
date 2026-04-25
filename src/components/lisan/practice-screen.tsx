@@ -96,10 +96,10 @@ function GlobeAvatar({
   name?: string 
 }) {
   const positionClasses = {
-    top: 'top-0 left-1/2 -translate-x-1/2 -translate-y-1/2',
-    right: 'right-0 top-1/2 translate-x-1/2 -translate-y-1/2',
-    left: 'left-0 top-1/2 -translate-x-1/2 -translate-y-1/2',
-    bottom: 'bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2'
+    top: '-top-2 left-1/2 -translate-x-1/2 -translate-y-1/2',
+    right: '-right-2 top-1/2 translate-x-1/2 -translate-y-1/2',
+    left: '-left-2 top-1/2 -translate-x-1/2 -translate-y-1/2',
+    bottom: '-bottom-2 left-1/2 -translate-x-1/2 translate-y-1/2'
   }
 
   return (
@@ -109,7 +109,7 @@ function GlobeAvatar({
           <img src={imageUrl} alt={name || 'User'} className="w-full h-full object-cover" />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-primary/10">
-            <User className="w-7 h-7 text-primary/60" />
+            <User className="w-5 h-5 text-primary/60" />
           </div>
         )}
       </div>
