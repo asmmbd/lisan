@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { Video, Users, Loader2, User, ChevronRight, Brain, Bot, PhoneOff } from 'lucide-react'
+import { Video, Users, Loader2, User, ChevronRight, Brain, Bot, PhoneOff, Lightbulb } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useAppStore } from '@/lib/store'
@@ -12,9 +12,80 @@ import { AgoraVideoCall } from './agora-video-call'
 import { AIAudioCall } from './ai-audio-call'
 import { usePusherMatching } from '@/hooks/usePusherMatching'
 import { pusherClient } from '@/lib/pusher'
-import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { useLanguage } from './language-provider'
+
+// Earth Globe Illustration Component
+function EarthGlobe({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 200 200"
+      className={cn('w-full h-full', className)}
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      {/* Outer circles */}
+      <circle cx="100" cy="100" r="85" fill="#7DD3C0" opacity="0.3" />
+      <circle cx="100" cy="100" r="70" fill="#5CC9B0" opacity="0.4" />
+      
+      {/* Main globe */}
+      <circle cx="100" cy="100" r="55" fill="#4DB6A4" />
+      
+      {/* Continents - stylized */}
+      <path
+        d="M70 75c8-5 18-3 24 2s8 12 4 18-12 10-20 8-16-12-12-20c2-4 4-8 4-8z"
+        fill="#2D8B7A"
+      />
+      <path
+        d="M115 65c6-2 12 2 14 8s-2 14-8 16-14-2-16-8 2-14 10-16z"
+        fill="#2D8B7A"
+      />
+      <path
+        d="M90 115c10-3 20 2 24 10s2 18-6 22-18 2-24-6 2-20 6-26z"
+        fill="#2D8B7A"
+      />
+      <path
+        d="M125 100c8-2 14 4 12 12s-10 12-16 8-10-10-6-16c2-2 6-4 10-4z"
+        fill="#2D8B7A"
+      />
+      
+      {/* Inner glow */}
+      <circle cx="85" cy="85" r="20" fill="#6BC9B8" opacity="0.5" />
+    </svg>
+  )
+}
+
+// Avatar on globe
+function GlobeAvatar({ 
+  position, 
+  imageUrl, 
+  name 
+}: { 
+  position: 'top' | 'right' | 'left' | 'bottom'
+  imageUrl?: string
+  name?: string 
+}) {
+  const positionClasses = {
+    top: 'top-0 left-1/2 -translate-x-1/2 -translate-y-1/2',
+    right: 'right-0 top-1/2 translate-x-1/2 -translate-y-1/2',
+    left: 'left-0 top-1/2 -translate-x-1/2 -translate-y-1/2',
+    bottom: 'bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2'
+  }
+
+  return (
+    <div className={cn('absolute', positionClasses[position])}>
+      <div className="w-14 h-14 rounded-full border-3 border-white shadow-lg overflow-hidden bg-gradient-to-br from-primary/20 to-primary/40">
+        {imageUrl ? (
+          <img src={imageUrl} alt={name || 'User'} className="w-full h-full object-cover" />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-primary/10">
+            <User className="w-7 h-7 text-primary/60" />
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
 
 function PracticeSkeleton() {
   return (
@@ -48,6 +119,7 @@ export function PracticeScreen() {
   const [creatingCall, setCreatingCall] = useState(false)
   const [createdRoom, setCreatedRoom] = useState<any>(null)
   const [isWaitingForReceiver, setIsWaitingForReceiver] = useState(false)
+  const [cameraEnabled, setCameraEnabled] = useState(true)
   const router = useRouter()
 
   const {
@@ -246,91 +318,114 @@ export function PracticeScreen() {
                     </motion.div>
                   ) : (
                   <>
-                  <motion.div
-                    whileHover={{ scale: 1.01 }}
-                    whileTap={{ scale: 0.99 }}
-                    onClick={handleCreateCall}
-                    className="group relative overflow-hidden bg-gradient-to-br from-emerald-600 via-teal-600 to-cyan-700 rounded-2xl shadow-2xl p-8 cursor-pointer min-h-[280px] flex flex-col justify-between"
-                  >
-                    <div className="absolute inset-0 opacity-20">
-                      <div className="absolute top-10 right-10 w-64 h-64 bg-white/20 rounded-full blur-3xl" />
-                      <div className="absolute bottom-10 left-10 w-48 h-48 bg-yellow-400/20 rounded-full blur-3xl" />
+                  {/* Duolingo-style Video Call Section */}
+                  <div className="flex flex-col items-center justify-center min-h-[60vh] py-8">
+                    {/* Earth Globe with Avatars */}
+                    <div className="relative w-48 h-48 md:w-56 md:h-56 mb-8">
+                      <motion.div
+                        initial={{ scale: 0.8, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ duration: 0.5 }}
+                        className="relative w-full h-full"
+                      >
+                        <EarthGlobe className="w-full h-full" />
+                        {/* Avatars positioned on globe */}
+                        <GlobeAvatar position="top" />
+                        <GlobeAvatar position="right" />
+                        <GlobeAvatar position="left" />
+                        <GlobeAvatar position="bottom" />
+                      </motion.div>
                     </div>
 
-                    <div className="absolute top-1/2 right-8 -translate-y-1/2">
-                      <div className="relative w-24 h-24">
-                        <div className="absolute inset-0 rounded-full bg-white/30 animate-ping" style={{ animationDuration: '2s' }} />
-                        <div className="absolute inset-2 rounded-full bg-white/20 animate-ping" style={{ animationDuration: '2s', animationDelay: '0.5s' }} />
-                        <div className="relative w-24 h-24 rounded-full bg-white/90 flex items-center justify-center shadow-xl">
-                          <Video className="w-12 h-12 text-emerald-600" />
-                        </div>
-                      </div>
+                    {/* Camera Toggle */}
+                    <div className="flex items-center gap-3 mb-6">
+                      <span className={cn('text-sm text-muted-foreground', textClass)}>
+                        Camera:
+                      </span>
+                      <button
+                        onClick={() => setCameraEnabled(!cameraEnabled)}
+                        className={cn(
+                          'relative w-12 h-6 rounded-full transition-colors duration-300',
+                          cameraEnabled ? 'bg-[#1CB0F6]' : 'bg-gray-300'
+                        )}
+                      >
+                        <span
+                          className={cn(
+                            'absolute top-1 w-4 h-4 rounded-full bg-white shadow-md transition-transform duration-300',
+                            cameraEnabled ? 'left-7' : 'left-1'
+                          )}
+                        />
+                      </button>
+                      <span className={cn(
+                        'text-sm font-medium',
+                        cameraEnabled ? 'text-[#1CB0F6]' : 'text-muted-foreground'
+                      )}>
+                        {cameraEnabled ? 'ON' : 'OFF'}
+                      </span>
                     </div>
 
-                    <div className="relative z-10">
-                      <Badge className="w-fit mb-4 bg-white/20 text-white hover:bg-white/30 border-0 backdrop-blur-sm text-sm px-3 py-1">
-                        <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse mr-2" />
-                        {t('practice.liveCall')}
-                      </Badge>
-                      <h3 className={cn('text-3xl md:text-4xl font-black text-white mb-2', textClass)}>
-                        {t('practice.heroTitle')}
-                      </h3>
-                      <p className={cn('text-lg text-white/80 max-w-md', textClass)}>
-                        {t('practice.heroDescription')}
-                      </p>
-                    </div>
+                    {/* Description Text */}
+                    <p className={cn(
+                      'text-center text-foreground/80 text-base md:text-lg mb-8 max-w-xs',
+                      textClass
+                    )}>
+                      Find a speaking partner for a 3 minute conversation
+                    </p>
 
-                    <div className="relative z-10 flex items-center justify-between mt-6">
-                      <div className="hidden md:flex items-center gap-4">
-                        <span className={cn('text-white/90 text-sm', textClass)}>
-                          124 {t('practice.onlineNow')}
+                    {/* Action Buttons */}
+                    <div className="flex flex-col gap-3 w-full max-w-xs">
+                      {/* Secondary Button - Conversation Topics */}
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => router.push('/practice/topics')}
+                        className="flex items-center justify-center gap-2 w-full py-3 px-6 rounded-xl bg-[#37464F] text-white font-semibold shadow-lg hover:bg-[#2D3A42] transition-colors"
+                      >
+                        <Lightbulb className="w-5 h-5" />
+                        <span className={textClass}>Try a conversation topic</span>
+                      </motion.button>
+
+                      {/* Primary Button - Find Partner */}
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={handleCreateCall}
+                        disabled={creatingCall}
+                        className="flex items-center justify-center gap-2 w-full py-3 px-6 rounded-xl bg-[#1CB0F6] text-white font-bold shadow-lg hover:bg-[#1899D6] transition-colors disabled:opacity-70"
+                      >
+                        {creatingCall ? (
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                        ) : (
+                          <Video className="w-5 h-5" />
+                        )}
+                        <span className={textClass}>
+                          {creatingCall ? t('calls.joining') : 'Find Partner'}
                         </span>
-                      </div>
-                      <div className="flex items-center gap-2 bg-white text-emerald-700 px-6 py-3 rounded-xl font-bold shadow-lg group-hover:shadow-xl transition-all">
-                        <span className={cn('text-lg', textClass)}>
-                          {creatingCall ? t('calls.joining') : t('practice.startCall')}
-                        </span>
-                        <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                      </div>
+                      </motion.button>
                     </div>
-                  </motion.div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <motion.div
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => router.push('/practice/quiz')}
-                      className="group bg-card rounded-xl border border-border p-5 cursor-pointer hover:border-primary/50 transition-colors col-span-2 md:col-span-1"
-                    >
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                          <Brain className="w-6 h-6 text-primary" />
-                        </div>
-                        <div>
-                          <h4 className={cn('font-bold', textClass)}>{t('practice.soloPractice')}</h4>
-                          <p className={cn('text-xs text-muted-foreground', textClass)}>{t('practice.soloPracticeDescription')}</p>
-                        </div>
-                      </div>
-                    </motion.div>
+                    {/* Alternative Options */}
+                    <div className="flex gap-4 mt-8">
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => router.push('/practice/quiz')}
+                        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-secondary/50 text-secondary-foreground hover:bg-secondary transition-colors"
+                      >
+                        <Brain className="w-4 h-4" />
+                        <span className={cn('text-sm', textClass)}>Solo Practice</span>
+                      </motion.button>
 
-
-                    {/* AI Audio Call */}
-                    <motion.div
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => router.push('/practice/ai-call')}
-                      className="group bg-card rounded-xl border border-border p-5 cursor-pointer hover:border-[#c9a96e]/50 transition-colors col-span-2 md:col-span-1"
-                    >
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#0a1a12] to-[#1a3a22] flex items-center justify-center">
-                          <Bot className="w-6 h-6 text-[#c9a96e]" />
-                        </div>
-                        <div>
-                          <h4 className={cn('font-bold', textClass)}>AI সাথে কথা বলুন</h4>
-                          <p className={cn('text-xs text-muted-foreground', textClass)}>আরবি প্র্যাকটিস করুন</p>
-                        </div>
-                      </div>
-                    </motion.div>
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => router.push('/practice/ai-call')}
+                        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-secondary/50 text-secondary-foreground hover:bg-secondary transition-colors"
+                      >
+                        <Bot className="w-4 h-4" />
+                        <span className={cn('text-sm', textClass)}>AI Practice</span>
+                      </motion.button>
+                    </div>
                   </div>
                 </>
                 )}
