@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useCallback, useState } from 'react'
-import { PhoneOff, Mic, MicOff, Video, VideoOff, Clock, User, Users, ArrowLeft, MoreVertical, Camera, RefreshCw, Share2, MessageSquare } from 'lucide-react'
+import { PhoneOff, Mic, MicOff, Video, VideoOff, Clock, User, Users, ArrowLeft, MoreVertical } from 'lucide-react'
 
 interface AgoraVideoCallProps {
   appId: string
@@ -259,14 +259,14 @@ export function AgoraVideoCall({ appId, channel, token, onLeave, callTimer }: Ag
 
       {/* Call Controls - Bottom Bar */}
       <div className="flex items-center justify-center gap-4 py-4 px-6 bg-gradient-to-t from-[#0d47a1] to-[#1565c0]">
-        {/* Camera Switch */}
-        <button className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 transition-colors">
-          <Camera className="w-5 h-5 text-white" />
-        </button>
-
-        {/* Flip Camera */}
-        <button className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 transition-colors">
-          <RefreshCw className="w-5 h-5 text-white" />
+        {/* Camera On/Off */}
+        <button
+          onClick={toggleVideo}
+          className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${
+            isCameraOff ? 'bg-red-500 text-white' : 'bg-white/20 text-white hover:bg-white/30'
+          }`}
+        >
+          {isCameraOff ? <VideoOff className="w-5 h-5" /> : <Video className="w-5 h-5" />}
         </button>
 
         {/* Mute Mic */}
@@ -277,11 +277,6 @@ export function AgoraVideoCall({ appId, channel, token, onLeave, callTimer }: Ag
           }`}
         >
           {isMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
-        </button>
-
-        {/* Share Screen */}
-        <button className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 transition-colors">
-          <Share2 className="w-5 h-5 text-white" />
         </button>
 
         {/* End Call - Red Button (Larger) */}
