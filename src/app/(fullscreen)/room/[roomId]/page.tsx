@@ -102,7 +102,7 @@ function RoomContent() {
 
     channel.bind('call-ended', () => {
       setCallEnded(true)
-      setTimeout(() => router.push('/'), 2000)
+      setTimeout(() => router.push('/practice'), 2000)
     })
 
     return () => {
@@ -168,7 +168,7 @@ function RoomContent() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ roomId }),
       })
-      router.push('/')
+      router.push('/practice')
     } catch {}
   }
 
@@ -184,8 +184,8 @@ function RoomContent() {
     return (
       <div className="h-screen w-full flex flex-col items-center justify-center bg-black text-white p-4">
         <p className={cn('text-lg mb-4', textClass)}>{error}</p>
-        <Button onClick={() => router.push('/')} variant="secondary">
-          {t('calls.goHome')}
+        <Button onClick={() => router.push('/practice')} variant="secondary">
+          {t('calls.goPractice')}
         </Button>
       </div>
     )
@@ -220,7 +220,7 @@ function RoomContent() {
           <div className="flex gap-6">
             <motion.button
               whileTap={{ scale: 0.95 }}
-              onClick={() => router.push('/')}
+              onClick={() => router.push('/practice')}
               className="flex flex-col items-center gap-2"
             >
               <div className="w-16 h-16 rounded-full bg-red-500 flex items-center justify-center">
