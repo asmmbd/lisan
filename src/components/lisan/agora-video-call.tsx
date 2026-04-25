@@ -171,7 +171,7 @@ export function AgoraVideoCall({ appId, channel, token, onLeave, callTimer }: Ag
   }
 
   return (
-    <div className="flex flex-col h-full bg-[#1a237e]">
+    <div className="flex flex-col h-screen bg-[#1a237e]">
       {/* Header Bar - Blue gradient */}
       <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-b from-[#0d47a1] to-[#1565c0]">
         {/* Back Button */}
@@ -217,7 +217,7 @@ export function AgoraVideoCall({ appId, channel, token, onLeave, callTimer }: Ag
         {/* Local Video (Picture in Picture - Bottom Left) */}
         <div 
           ref={localVideoRef}
-          className="absolute bottom-24 left-4 w-24 h-32 bg-slate-800 rounded-2xl overflow-hidden border-2 border-white/50 shadow-lg z-20 [&>video]:w-full [&>video]:h-full [&>video]:object-cover"
+          className="absolute bottom-20 left-4 w-28 h-36 bg-slate-800 rounded-2xl overflow-hidden border-2 border-white/50 shadow-lg z-20 [&>video]:w-full [&>video]:h-full [&>video]:object-cover"
         >
           {isCameraOff && (
             <div className="absolute inset-0 flex items-center justify-center bg-slate-800">

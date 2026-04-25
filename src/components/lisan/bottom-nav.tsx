@@ -11,6 +11,11 @@ export function BottomNav() {
   const pathname = usePathname()
   const { t, textClass } = useLanguage()
 
+  // Hide bottom nav on room pages (fullscreen video calls)
+  if (pathname?.startsWith('/room/')) {
+    return null
+  }
+
   const tabs = [
     { id: 'home', label: t('nav.home'), icon: Home2, href: '/' },
     { id: 'dictionary', label: t('nav.dictionary'), icon: Book1, href: '/dictionary' },
