@@ -6,6 +6,7 @@ import { Phone, PhoneOff } from 'lucide-react'
 import { pusherClient } from '@/lib/pusher'
 import { useRouter } from 'next/navigation'
 import { useLanguage } from './language-provider'
+import { useSession } from 'next-auth/react'
 
 interface IncomingCall {
   roomId: string
@@ -18,6 +19,7 @@ interface IncomingCall {
 export function CallNotification() {
   const router = useRouter()
   const { t } = useLanguage()
+  const { data: session } = useSession()
   const [incomingCall, setIncomingCall] = useState<IncomingCall | null>(null)
 
   useEffect(() => {
@@ -26,6 +28,11 @@ export function CallNotification() {
     channel.bind('incoming-call', (data: IncomingCall) => {
       const currentRoomId = sessionStorage.getItem('currentRoomId')
       if (currentRoomId === data.roomId) {
+        return
+      }
+
+      // Don't show notification if current user is the caller
+      if (session?.user?.id === data.callerId) {
         return
       }
 
@@ -40,7 +47,7 @@ export function CallNotification() {
       channel.unbind_all()
       pusherClient.unsubscribe('calls')
     }
-  }, [])
+  }, [session?.user?.id])
 
   const handleJoin = () => {
     if (incomingCall) {
@@ -65,7 +72,7 @@ export function CallNotification() {
             </div>
 
             <div className="flex-1">
-              <p className="text-white font-semibold">{incomingCall.callerName}</p>
+              <p className="text-white font-semibold">{t('calls.someoneCalling')}</p>
               <p className="text-green-100 text-sm">{t('calls.incoming')}</p>
             </div>
 

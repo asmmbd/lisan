@@ -300,7 +300,7 @@ export function PracticeScreen() {
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                       onClick={() => router.push('/practice/quiz')}
-                      className="group bg-card rounded-xl border border-border p-5 cursor-pointer hover:border-primary/50 transition-colors"
+                      className="group bg-card rounded-xl border border-border p-5 cursor-pointer hover:border-primary/50 transition-colors col-span-2 md:col-span-1"
                     >
                       <div className="flex items-center gap-4">
                         <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">

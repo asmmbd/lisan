@@ -197,6 +197,7 @@ export const messages: Record<Language, Messages> = {
     calls: {
       incoming: 'আপনাকে কল করা হচ্ছে...',
       incomingCall: 'ইনকামিং কল',
+      someoneCalling: 'কেউ কল করছে',
       join: 'রিসিভ',
       decline: 'প্রত্যাখ্যান',
       goHome: 'হোমে যান',
@@ -400,6 +401,7 @@ export const messages: Record<Language, Messages> = {
     calls: {
       incoming: 'يتصل بك الآن...',
       incomingCall: 'مكالمة واردة',
+      someoneCalling: 'يتصل بك أحدهم',
       join: 'قبول',
       decline: 'رفض',
       goHome: 'العودة للرئيسية',
