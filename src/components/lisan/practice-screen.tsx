@@ -149,6 +149,7 @@ export function PracticeScreen() {
   const [creatingCall, setCreatingCall] = useState(false)
   const [createdRoom, setCreatedRoom] = useState<any>(null)
   const [isWaitingForReceiver, setIsWaitingForReceiver] = useState(false)
+  const [isConnecting, setIsConnecting] = useState(false)
   const [cameraEnabled, setCameraEnabled] = useState(true)
   const router = useRouter()
 
@@ -209,15 +210,21 @@ export function PracticeScreen() {
       const data = await res.json()
 
       if (data.success) {
-        // Don't navigate immediately - wait for receiver
+        // Show Screen 1: Searching (পার্টনার খোঁজা হচ্ছে...)
+        setPracticeState('matching')
         setCreatedRoom(data.room)
         setIsWaitingForReceiver(true)
         
         // Subscribe to Pusher channel for this room
         const channel = pusherClient.subscribe(`room-${data.room.roomId}`)
         channel.bind('receiver-joined', (joinData: any) => {
-          // Receiver joined - navigate to room
-          router.push(`/room/${data.room.roomId}`)
+          // Screen 2: Connecting (কানেক্ট হচ্ছে...)
+          setIsConnecting(true)
+          
+          // Wait 2 seconds showing connecting screen, then navigate to room
+          setTimeout(() => {
+            router.push(`/room/${data.room.roomId}?join=true`)
+          }, 2000)
         })
       }
     } finally {
@@ -333,17 +340,17 @@ export function PracticeScreen() {
                       <motion.button
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
-                        onClick={startMatching}
-                        disabled={isWaiting}
+                        onClick={handleCreateCall}
+                        disabled={creatingCall || isWaitingForReceiver}
                         className="flex items-center justify-center gap-2 w-full py-3 px-6 rounded-xl bg-[#1CB0F6] text-white font-bold shadow-lg hover:bg-[#1899D6] transition-colors disabled:opacity-70"
                       >
-                        {isWaiting ? (
+                        {creatingCall || isWaitingForReceiver ? (
                           <Loader2 className="w-5 h-5 animate-spin" />
                         ) : (
                           <Video className="w-5 h-5" />
                         )}
                         <span className={textClass}>
-                          {isWaiting ? t('practice.searching') : t('practice.findPartnerBtn')}
+                          {creatingCall || isWaitingForReceiver ? t('practice.searching') : t('practice.findPartnerBtn')}
                         </span>
                       </motion.button>
                     </div>
@@ -375,7 +382,7 @@ export function PracticeScreen() {
                 </motion.div>
               )}
 
-              {practiceState === 'matching' && !isMatched && (
+              {practiceState === 'matching' && isWaitingForReceiver && !isConnecting && (
                 <motion.div
                   key="matching"
                   initial={{ opacity: 0 }}
@@ -448,9 +455,9 @@ export function PracticeScreen() {
                 </motion.div>
               )}
 
-              {practiceState === 'matching' && isMatched && matchData && (
+              {practiceState === 'matching' && isConnecting && createdRoom && (
                 <motion.div
-                  key="matched"
+                  key="connecting"
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   className="flex flex-col items-center justify-center h-full pb-20 px-4"
@@ -473,7 +480,7 @@ export function PracticeScreen() {
                         <User className="w-10 h-10 text-white" />
                       </div>
                       <span className={cn('text-sm font-medium mt-2 text-foreground', textClass)}>
-                        {matchData.partnerName}
+                        {t('practice.partner')}
                       </span>
                     </div>
                   </div>
@@ -488,7 +495,7 @@ export function PracticeScreen() {
                         transition={{ duration: 2, ease: 'easeInOut' }}
                         onAnimationComplete={() => {
                           // Navigate to room after progress bar fills
-                          router.push(`/room/${matchData.matchId}`)
+                          router.push(`/room/${createdRoom.roomId}?join=true`)
                         }}
                       />
                     </div>
