@@ -104,7 +104,7 @@ function GlobeAvatar({
 
   return (
     <div className={cn('absolute', positionClasses[position])}>
-      <div className="w-14 h-14 rounded-full border-3 border-white shadow-lg overflow-hidden bg-gradient-to-br from-primary/20 to-primary/40">
+      <div className="w-8 h-8 rounded-full border-3 border-white shadow-lg overflow-hidden bg-gradient-to-br from-primary/20 to-primary/40">
         {imageUrl ? (
           <img src={imageUrl} alt={name || 'User'} className="w-full h-full object-cover" />
         ) : (
