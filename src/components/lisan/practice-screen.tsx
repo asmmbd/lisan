@@ -96,10 +96,10 @@ function GlobeAvatar({
   name?: string 
 }) {
   const positionClasses = {
-    top: '-top-2 left-1/2 -translate-x-1/2 -translate-y-1/2',
-    right: '-right-2 top-1/2 translate-x-1/2 -translate-y-1/2',
-    left: '-left-2 top-1/2 -translate-x-1/2 -translate-y-1/2',
-    bottom: '-bottom-2 left-1/2 -translate-x-1/2 translate-y-1/2'
+    top: 'top-2 left-1/2 -translate-x-1/2 -translate-y-1/2',
+    right: 'right-2 top-1/2 translate-x-1/2 -translate-y-1/2',
+    left: 'left-2 top-1/2 -translate-x-1/2 -translate-y-1/2',
+    bottom: 'bottom-2 left-1/2 -translate-x-1/2 translate-y-1/2'
   }
 
   return (
