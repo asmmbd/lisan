@@ -254,22 +254,6 @@ export function PracticeScreen() {
                       </div>
                     </motion.div>
 
-                    <motion.div
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={startMatching}
-                      className="group bg-card rounded-xl border border-border p-5 cursor-pointer hover:border-emerald-500/50 transition-colors"
-                    >
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center">
-                          <Users className="w-6 h-6 text-emerald-600" />
-                        </div>
-                        <div>
-                          <h4 className={cn('font-bold', textClass)}>{t('practice.findPartner')}</h4>
-                          <p className={cn('text-xs text-muted-foreground', textClass)}>{t('practice.findPartnerDescription')}</p>
-                        </div>
-                      </div>
-                    </motion.div>
 
                     {/* AI Audio Call */}
                     <motion.div
