@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useCallback, useState } from 'react'
-import { PhoneOff, Mic, MicOff, Video, VideoOff, Clock, User, Users } from 'lucide-react'
+import { PhoneOff, Mic, MicOff, Video, VideoOff, Clock, User, Users, ArrowLeft, MoreVertical, Camera, RefreshCw, Share2, MessageSquare } from 'lucide-react'
 
 interface AgoraVideoCallProps {
   appId: string
@@ -171,11 +171,33 @@ export function AgoraVideoCall({ appId, channel, token, onLeave, callTimer }: Ag
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-[#1a237e]">
+      {/* Header Bar - Blue gradient */}
+      <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-b from-[#0d47a1] to-[#1565c0]">
+        {/* Back Button */}
+        <button 
+          onClick={handleLeave}
+          className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 transition-colors"
+        >
+          <ArrowLeft className="w-5 h-5 text-white" />
+        </button>
+
+        {/* Timer Pill */}
+        <div className="flex items-center gap-2 bg-white/20 rounded-full px-4 py-2">
+          <Clock className="w-4 h-4 text-white" />
+          <span className="text-white font-medium text-sm">{formatTime(timeRemaining)}</span>
+        </div>
+
+        {/* More Options */}
+        <button className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 transition-colors">
+          <MoreVertical className="w-5 h-5 text-white" />
+        </button>
+      </div>
+
       {/* Video Container */}
-      <div className="relative flex-1 bg-black rounded-xl overflow-hidden mb-3 min-h-[280px]">
+      <div className="relative flex-1 bg-black overflow-hidden">
         
-        {/* Remote Video (Big) */}
+        {/* Remote Video (Full Screen) */}
         <div 
           ref={remoteVideoRef}
           className="absolute inset-0 bg-slate-900"
@@ -192,10 +214,10 @@ export function AgoraVideoCall({ appId, channel, token, onLeave, callTimer }: Ag
           )}
         </div>
 
-        {/* Local Video (Small, Corner) */}
+        {/* Local Video (Picture in Picture - Bottom Left) */}
         <div 
           ref={localVideoRef}
-          className="absolute top-3 right-3 w-32 h-40 bg-slate-800 rounded-sm overflow-hidden border-2 border-slate-600 z-10"
+          className="absolute bottom-4 left-4 w-24 h-32 bg-slate-800 rounded-2xl overflow-hidden border-2 border-white/50 shadow-lg z-10"
         >
           {isCameraOff && (
             <div className="absolute inset-0 flex items-center justify-center bg-slate-800">
@@ -208,11 +230,10 @@ export function AgoraVideoCall({ appId, channel, token, onLeave, callTimer }: Ag
         {isConnecting && (
           <div className="absolute inset-0 flex items-center justify-center bg-slate-900/90 z-20">
             <div className="text-center">
-              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center mx-auto mb-4 shadow-lg animate-pulse">
+              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-[#1CB0F6] to-[#1899D6] flex items-center justify-center mx-auto mb-4 shadow-lg animate-pulse">
                 <User className="w-12 h-12 text-white" />
               </div>
               <p className="text-lg font-semibold text-white bengali-text mb-1">কানেক্ট হচ্ছে...</p>
-              <p className="text-sm text-slate-400">Agora Video Call</p>
             </div>
           </div>
         )}
@@ -234,57 +255,39 @@ export function AgoraVideoCall({ appId, channel, token, onLeave, callTimer }: Ag
             </div>
           </div>
         )}
-
-        {/* Timer - Shows countdown from 3 minutes */}
-        <div className={`absolute top-3 left-3 backdrop-blur-sm rounded-full px-3 py-1.5 flex items-center gap-1.5 z-10 ${
-          timeRemaining <= 30 ? 'bg-red-600/80 animate-pulse' : 'bg-black/70'
-        }`}>
-          <Clock className="w-3 h-3 text-white" />
-          <span className="text-white text-xs font-mono font-bold">{formatTime(timeRemaining)}</span>
-          {isConnected && (
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse ml-1" />
-          )}
-          <span className="text-white/70 text-[10px] ml-1">/ 3:00</span>
-        </div>
-
-        {/* Participant count */}
-        <div className="absolute bottom-16 left-3 bg-black/70 backdrop-blur-sm rounded-full px-3 py-1.5 z-10">
-          <span className="text-white text-xs">
-            👥 আপনি + {remoteUsers} জন
-          </span>
-        </div>
-
-        {/* Topic hint */}
-        <div className="absolute bottom-3 left-3 right-3 bg-black/70 backdrop-blur-sm rounded-xl p-3 z-10">
-          <p className="text-xs text-white/90 bengali-text">
-            💡 বিষয়: দৈনন্দিন জীবন - সকালের রুটিন সম্পর্কে কথা বলুন
-          </p>
-        </div>
       </div>
 
-      {/* Call controls */}
-      <div className="flex items-center justify-center gap-3 py-2">
+      {/* Call Controls - Bottom Bar */}
+      <div className="flex items-center justify-center gap-4 py-4 px-6 bg-gradient-to-t from-[#0d47a1] to-[#1565c0]">
+        {/* Camera Switch */}
+        <button className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 transition-colors">
+          <Camera className="w-5 h-5 text-white" />
+        </button>
+
+        {/* Flip Camera */}
+        <button className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 transition-colors">
+          <RefreshCw className="w-5 h-5 text-white" />
+        </button>
+
+        {/* Mute Mic */}
         <button
           onClick={toggleMute}
           className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${
-            isMuted ? 'bg-red-500 text-white' : 'bg-slate-700 text-white hover:bg-slate-600'
+            isMuted ? 'bg-red-500 text-white' : 'bg-white/20 text-white hover:bg-white/30'
           }`}
         >
           {isMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
         </button>
 
-        <button
-          onClick={toggleVideo}
-          className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${
-            isCameraOff ? 'bg-red-500 text-white' : 'bg-slate-700 text-white hover:bg-slate-600'
-          }`}
-        >
-          {isCameraOff ? <VideoOff className="w-5 h-5" /> : <Video className="w-5 h-5" />}
+        {/* Share Screen */}
+        <button className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 transition-colors">
+          <Share2 className="w-5 h-5 text-white" />
         </button>
 
+        {/* End Call - Red Button (Larger) */}
         <button
           onClick={handleLeave}
-          className="w-14 h-14 rounded-full bg-red-600 hover:bg-red-700 flex items-center justify-center shadow-lg transition-colors"
+          className="w-14 h-14 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center shadow-lg transition-colors"
         >
           <PhoneOff className="w-6 h-6 text-white" />
         </button>
