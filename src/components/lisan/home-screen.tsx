@@ -150,7 +150,7 @@ export function HomeScreen() {
               <span className={`text-sm font-bold ${studiedToday ? 'text-orange-600' : 'text-muted-foreground'}`}>{formatNumber(streak)}</span>
             </div>
           )}
-          <button className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-card border border-border flex items-center justify-center hover:bg-secondary transition-all shadow-sm">
+          <button className="w-10 h-10 rounded-xl bg-card border border-border flex items-center justify-center hover:bg-secondary transition-all shadow-sm">
             <Bell className="w-5 h-5 text-card-foreground" />
           </button>
           <div className="hidden md:flex flex-col items-end mr-1">
