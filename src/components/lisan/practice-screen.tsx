@@ -271,33 +271,7 @@ export function PracticeScreen() {
   return (
     <div className="flex flex-col h-full bg-background overflow-hidden">
       <>
-          {/* <div className="px-4 pt-6 md:pt-10 pb-4 max-w-4xl mx-auto w-full">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg">
-                <Video className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <h1 className={cn('text-xl md:text-3xl font-black', textClass)}>{t('practice.title')}</h1>
-                <p className={cn('text-xs md:text-sm text-muted-foreground', textClass)}>{t('practice.subtitle')}</p>
-              </div>
-            </div>
-
-            {matchingError && (
-              <div className="mt-3 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
-                <p className={cn('text-sm text-destructive flex items-center gap-2', textClass)}>
-                  <span>!</span>
-                  {matchingError}
-                </p>
-              </div>
-            )}
-
-            <div className="mt-2 flex items-center gap-2">
-              <div className={`w-2 h-2 rounded-full ${isPusherConnected ? 'bg-green-500' : 'bg-red-500'}`} />
-              <span className="text-[10px] text-muted-foreground">
-                {isPusherConnected ? t('practice.liveReady') : t('practice.liveOffline')}
-              </span>
-            </div>
-          </div> */}
+         
 
           <div className="flex-1 px-4 max-w-4xl mx-auto w-full overflow-y-auto custom-scrollbar pb-24 md:pb-10">
             <AnimatePresence mode="wait">
@@ -404,16 +378,7 @@ export function PracticeScreen() {
 
                     {/* Action Buttons */}
                     <div className="flex flex-col gap-3 w-full max-w-xs">
-                      {/* Secondary Button - Conversation Topics */}
-                      {/* <motion.button
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={() => router.push('/practice/topics')}
-                        className="flex items-center justify-center gap-2 w-full py-3 px-6 rounded-xl bg-[#37464F] text-white font-semibold shadow-lg hover:bg-[#2D3A42] transition-colors"
-                      >
-                        <Lightbulb className="w-5 h-5" />
-                        <span className={textClass}>{t('practice.tryConversationTopic')}</span>
-                      </motion.button> */}
+                      
 
                       {/* Primary Button - Find Partner */}
                       <motion.button
@@ -468,38 +433,70 @@ export function PracticeScreen() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="flex flex-col items-center justify-center h-full pb-20 px-4 mt-20"
+                  className="flex flex-col items-center justify-center h-full pb-20 px-4"
                 >
-                  <div className="relative mb-6">
-                    <div className="relative w-28 h-28">
-                      <div className="absolute inset-0 rounded-full bg-primary/20 animate-ping" style={{ animationDuration: '2s' }} />
-                      <div className="relative w-28 h-28 rounded-full gradient-islamic flex items-center justify-center z-10">
-                        <Users className="w-12 h-12 text-white" />
-                      </div>
-                    </div>
+                  {/* Globe with searching avatars */}
+                  <div className="relative w-48 h-48 md:w-56 md:h-56 mb-8">
+                    <motion.div
+                      initial={{ scale: 0.8, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ duration: 0.5 }}
+                      className="relative w-full h-full"
+                    >
+                      <EarthGlobe className="w-full h-full" />
+                      {/* Searching avatars - animated bouncing */}
+                      <motion.div
+                        animate={{ y: [0, -5, 0] }}
+                        transition={{ duration: 1.5, repeat: Infinity, delay: 0 }}
+                      >
+                        <GlobeAvatar position="top" />
+                      </motion.div>
+                      <motion.div
+                        animate={{ y: [0, -5, 0] }}
+                        transition={{ duration: 1.5, repeat: Infinity, delay: 0.3 }}
+                      >
+                        <GlobeAvatar position="right" />
+                      </motion.div>
+                      <motion.div
+                        animate={{ y: [0, -5, 0] }}
+                        transition={{ duration: 1.5, repeat: Infinity, delay: 0.6 }}
+                      >
+                        <GlobeAvatar position="bottom" />
+                      </motion.div>
+                    </motion.div>
                   </div>
 
-                  <motion.h2
-                    animate={{ opacity: [1, 0.5, 1] }}
-                    transition={{ repeat: Infinity, duration: 2 }}
-                    className={cn('text-lg font-semibold mb-2', textClass)}
-                  >
-                    {isWaiting ? t('practice.waiting') : t('practice.searching')}
-                  </motion.h2>
+                  {/* Searching Text */}
+                  <h2 className={cn('text-xl font-semibold mb-4 text-center', textClass)}>
+                    {t('practice.searching')}
+                  </h2>
 
-                  {isWaiting && (
-                    <p className={cn('text-sm text-muted-foreground text-center', textClass)}>
-                      {t('practice.queuePosition')}: {queuePosition}
-                    </p>
-                  )}
-
-                  <Button
-                    variant="ghost"
+                  {/* Cancel Search Button */}
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                     onClick={handleCancelMatching}
-                    className={cn('mt-8 text-muted-foreground border border-border rounded-xl', textClass)}
+                    className="text-[#1CB0F6] font-medium text-sm mb-8"
                   >
-                    {t('practice.cancel')}
-                  </Button>
+                    {t('practice.cancel')} {t('practice.search')}
+                  </motion.button>
+
+                  {/* Quote Section */}
+                  <div className="flex flex-col items-center max-w-xs">
+                    <div className="flex items-center gap-4 w-full mb-4">
+                      <div className="flex-1 h-px bg-border" />
+                      <span className="text-muted-foreground text-2xl">❝</span>
+                      <div className="flex-1 h-px bg-border" />
+                    </div>
+                    
+                    <p className={cn('text-center text-muted-foreground text-sm italic', textClass)}>
+                      {t('practice.quote')}
+                    </p>
+                    
+                    <p className={cn('text-center text-muted-foreground text-xs mt-2', textClass)}>
+                      — {t('practice.quoteAuthor')}
+                    </p>
+                  </div>
                 </motion.div>
               )}
 
@@ -508,20 +505,52 @@ export function PracticeScreen() {
                   key="matched"
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  className="flex flex-col items-center justify-center h-full pb-20 px-4 mt-20"
+                  className="flex flex-col items-center justify-center h-full pb-20 px-4"
                 >
-                  <div className="w-24 h-24 rounded-full bg-emerald-500 flex items-center justify-center mb-4 shadow-lg">
-                    <User className="w-12 h-12 text-white" />
+                  {/* Two Avatars Side by Side */}
+                  <div className="flex items-center justify-center gap-8 mb-8">
+                    {/* Current User Avatar */}
+                    <div className="flex flex-col items-center">
+                      <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary/20 to-primary/40 border-4 border-white shadow-lg overflow-hidden flex items-center justify-center">
+                        <User className="w-10 h-10 text-primary/60" />
+                      </div>
+                      <span className={cn('text-sm font-medium mt-2 text-foreground', textClass)}>
+                        {session?.user?.name || t('practice.you')}
+                      </span>
+                    </div>
+
+                    {/* Partner Avatar */}
+                    <div className="flex flex-col items-center">
+                      <div className="w-20 h-20 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 border-4 border-white shadow-lg overflow-hidden flex items-center justify-center">
+                        <User className="w-10 h-10 text-white" />
+                      </div>
+                      <span className={cn('text-sm font-medium mt-2 text-foreground', textClass)}>
+                        {matchData.partnerName}
+                      </span>
+                    </div>
                   </div>
 
-                  <h2 className={cn('text-xl font-bold text-emerald-500 mb-2', textClass)}>
-                    {t('practice.matched')}
-                  </h2>
-                  <p className={cn('text-sm text-muted-foreground text-center mb-8', textClass)}>
-                    {matchData.partnerName} {t('practice.connectingTo')}
-                  </p>
+                  {/* Progress Bar */}
+                  <div className="w-full max-w-xs mb-6">
+                    <div className="h-1 bg-border rounded-full overflow-hidden">
+                      <motion.div
+                        className="h-full bg-gradient-to-r from-[#1CB0F6] to-[#1899D6]"
+                        initial={{ width: '0%' }}
+                        animate={{ width: '100%' }}
+                        transition={{ duration: 2, ease: 'easeInOut' }}
+                      />
+                    </div>
+                  </div>
 
-                  <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                  {/* Connecting Text */}
+                  <h2 className={cn('text-xl font-semibold mb-2 text-center', textClass)}>
+                    {t('practice.connecting')}...
+                  </h2>
+                  
+                  {/* Warning Text */}
+                  <p className={cn('text-sm text-muted-foreground text-center', textClass)}>
+                    {t('practice.doNotSwitch')}
+                  </p>
                 </motion.div>
               )}
 

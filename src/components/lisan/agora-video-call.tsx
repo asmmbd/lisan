@@ -195,7 +195,7 @@ export function AgoraVideoCall({ appId, channel, token, onLeave, callTimer }: Ag
         {/* Local Video (Small, Corner) */}
         <div 
           ref={localVideoRef}
-          className="absolute top-3 right-3 w-32 h-40 bg-slate-800 rounded-none overflow-hidden border-2 border-slate-600 z-10"
+          className="absolute top-3 right-3 w-32 h-40 bg-slate-800 rounded-sm overflow-hidden border-2 border-slate-600 z-10"
         >
           {isCameraOff && (
             <div className="absolute inset-0 flex items-center justify-center bg-slate-800">
