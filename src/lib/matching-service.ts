@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client'
 import Pusher from 'pusher'
+import { sendMatchNotification } from './push-notifications'
 
 const prisma = new PrismaClient()
 
@@ -135,6 +136,23 @@ export async function tryMatch(userId: string): Promise<ActiveMatch | null> {
     channelName,
     roomName,
     message: 'পার্টনার পাওয়া গেছে!'
+  })
+
+  // Send push notifications to both users
+  await sendMatchNotification(currentUser.userId, {
+    matchId,
+    roomId: matchId,
+    partnerId: waitingUser.userId,
+    partnerName: waitingUser.userName,
+    channelName,
+  })
+
+  await sendMatchNotification(waitingUser.userId, {
+    matchId,
+    roomId: matchId,
+    partnerId: currentUser.userId,
+    partnerName: currentUser.userName,
+    channelName,
   })
 
   console.log(`🎉 MATCHED: ${currentUser.userId} <-> ${waitingUser.userId}`)

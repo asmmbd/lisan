@@ -22,9 +22,10 @@ model User {
   savedWords     SavedWord[]
   notes          Note[]
   searchHistory  SearchHistory[]
-  callerRooms    Room[]         @relation("CallerRooms")
-  receiverRooms  Room[]         @relation("ReceiverRooms")
-  callInvites    CallInvite[]
+  callerRooms       Room[]              @relation("CallerRooms")
+  receiverRooms     Room[]              @relation("ReceiverRooms")
+  callInvites       CallInvite[]
+  pushSubscriptions PushSubscription[]
   // Streak tracking
   streak         Int            @default(0)       // Current streak count
   lastStudyDate  DateTime?                       // Last day user studied
@@ -154,4 +155,18 @@ model CallInvite {
   status    String   @default("pending") // pending, accepted, rejected, expired
   createdAt DateTime @default(now())
   expiresAt DateTime
+}
+
+// Push notification subscriptions
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([userId])
 }

@@ -87,3 +87,117 @@ self.addEventListener('fetch', (event) => {
     })
   );
 });
+
+// ==================== PUSH NOTIFICATIONS ====================
+
+// Handle push notifications
+self.addEventListener('push', (event) => {
+  if (!event.data) return;
+
+  const data = event.data.json();
+  const title = data.title || 'লিসান';
+  const options = {
+    body: data.body || 'নতুন নোটিফিকেশন',
+    icon: '/logo.png',
+    badge: '/logo.png',
+    tag: data.tag || 'default',
+    requireInteraction: data.requireInteraction || false,
+    actions: data.actions || [],
+    data: data.data || {},
+  };
+
+  event.waitUntil(
+    self.registration.showNotification(title, options)
+  );
+});
+
+// Handle notification click
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+
+  const notificationData = event.notification.data;
+  
+  // Handle action buttons first
+  if (event.action) {
+    // Handle accept/join action
+    if ((event.action === 'accept' || event.action === 'join') && notificationData.roomId) {
+      const url = `/room/${notificationData.roomId}?autoJoin=true`;
+      event.waitUntil(
+        clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+          // If app is already open, focus and navigate
+          for (const client of clientList) {
+            if ('focus' in client) {
+              client.postMessage({ type: 'navigate', url });
+              return client.focus();
+            }
+          }
+          // Otherwise open new window
+          if (clients.openWindow) {
+            return clients.openWindow(url);
+          }
+        })
+      );
+      return;
+    }
+    
+    // Handle decline/dismiss action - just close notification (already closed above)
+    if (event.action === 'decline' || event.action === 'dismiss') {
+      // Notify server that call was declined
+      if (notificationData.roomId) {
+        event.waitUntil(
+          fetch('/api/calls/decline', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ roomId: notificationData.roomId }),
+          }).catch(() => {})
+        );
+      }
+      return;
+    }
+  }
+
+  // Default: navigate based on notification type (click on notification body)
+  let url = '/';
+  if (notificationData.type === 'call' || notificationData.type === 'incoming_call') {
+    url = `/room/${notificationData.roomId}?autoJoin=true`;
+  } else if (notificationData.type === 'match' || notificationData.type === 'match_found') {
+    url = `/room/${notificationData.roomId}?autoJoin=true`;
+  }
+
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      // If app is already open, focus it
+      for (const client of clientList) {
+        if (client.url.includes(url) && 'focus' in client) {
+          return client.focus();
+        }
+      }
+      // Otherwise open new window
+      if (clients.openWindow) {
+        return clients.openWindow(url);
+      }
+    })
+  );
+});
+
+// Background sync for offline actions
+self.addEventListener('sync', (event) => {
+  if (event.tag === 'sync-calls') {
+    event.waitUntil(syncPendingCalls());
+  }
+});
+
+async function syncPendingCalls() {
+  // Sync any pending call actions when back online
+  const cache = await caches.open('pending-calls');
+  const requests = await cache.keys();
+  
+  for (const request of requests) {
+    try {
+      await fetch(request);
+      await cache.delete(request);
+    } catch (error) {
+      console.error('Failed to sync call:', error);
+    }
+  }
+}

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
 import Pusher from 'pusher'
+import { sendMatchNotification } from '@/lib/push-notifications'
 
 const prisma = new PrismaClient()
 
@@ -114,7 +115,25 @@ export async function POST(req: NextRequest) {
         partnerName: userName,
         channelName: result.channelName,
         roomName: result.matchId,
-        message: 'পার্টনার পাওয়া গেছে!'
+        message: 'পার্টনার পাওয়া গেছে!'
+      })
+
+      // Send push notification to partner
+      await sendMatchNotification(result.partner.userId, {
+        matchId: result.matchId,
+        roomId: result.matchId,
+        partnerId: userId,
+        partnerName: userName,
+        channelName: result.channelName,
+      })
+
+      // Send push notification to current user too
+      await sendMatchNotification(userId, {
+        matchId: result.matchId,
+        roomId: result.matchId,
+        partnerId: result.partner.userId,
+        partnerName: result.partner.userName,
+        channelName: result.channelName,
       })
 
       console.log(`🎉 MATCHED: ${userId} <-> ${result.partner.userId}`)
@@ -128,7 +147,7 @@ export async function POST(req: NextRequest) {
         partnerName: result.partner.userName,
         channelName: result.channelName,
         roomName: result.matchId,
-        message: 'পার্টনার পাওয়া গেছে!'
+        message: 'পার্টনার পাওয়া গেছে!'
       })
     }
 

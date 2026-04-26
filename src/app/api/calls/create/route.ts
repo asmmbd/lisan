@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { pusherTrigger } from '@/lib/pusher'
+import { sendCallNotification } from '@/lib/push-notifications'
 
 export const dynamic = 'force-dynamic'
 
@@ -13,7 +14,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { channelName } = await req.json()
+    const { channelName, receiverId } = await req.json()
     
     // Generate unique room ID (numeric 1-10000 for URL, stored as string)
     const agoraUid = Math.floor(Math.random() * 10000);
@@ -26,6 +27,7 @@ export async function POST(req: NextRequest) {
         callerId: session.user.id,
         channelName: channelName || roomId,
         status: 'waiting',
+        receiverId: receiverId || null,
       },
       include: {
         caller: {
@@ -42,6 +44,43 @@ export async function POST(req: NextRequest) {
       channelName: room.channelName,
       createdAt: room.createdAt,
     })
+
+    // Send push notification to specific receiver if provided
+    if (receiverId && receiverId !== session.user.id) {
+      const pushResult = await sendCallNotification(receiverId, {
+        roomId: room.roomId,
+        callerId: session.user.id,
+        callerName: room.caller.name || 'Unknown',
+        channelName: room.channelName,
+      })
+      
+      console.log('📱 Push notification sent:', pushResult)
+    }
+
+    // Also send push to all users who have enabled notifications (broadcast for random matching)
+    if (!receiverId) {
+      // Get all users except caller who have push subscriptions
+      const subscriptions = await prisma.pushSubscription.findMany({
+        where: { userId: { not: session.user.id } },
+        select: { userId: true },
+        distinct: ['userId'],
+      })
+
+      // Send to all subscribed users (for random matching)
+      const pushPromises = subscriptions.map((sub) =>
+        sendCallNotification(sub.userId, {
+          roomId: room.roomId,
+          callerId: session.user.id,
+          callerName: room.caller.name || 'Unknown',
+          channelName: room.channelName,
+        })
+      )
+
+      const pushResults = await Promise.allSettled(pushPromises)
+      const successful = pushResults.filter((r) => r.status === 'fulfilled' && (r.value as any).success).length
+      
+      console.log(`📱 Broadcast push sent to ${successful} users`)
+    }
 
     return NextResponse.json({
       success: true,
