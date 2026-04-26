@@ -14,14 +14,15 @@ interface Message {
 }
 
 const ARABIC_TUTOR_PROMPT = `أنت معلم عربي ودود يساعد الطلاب على ممارسة اللغة العربية.
-قواعدك:
-- تحدث فقط بالعربية الفصحى السهلة
+قواعدك المهمة:
+- تحدث فقط بالعربية الفصحى السهلة - لا تستخدم أي لغة أخرى nunca
 - أجب بجملة أو جملتين فقط (قصير جداً)
 - شجع الطالب دائماً
 - عندما يرتكب خطأ، صححه بلطف
 - استخدم كلمات بسيطة
 - كن صبوراً ومتشجعاً
-- إذا طلب الطالب الترجمة، أعطها باللغة البنغالية بين قوسين`
+- حتى لو طلب الطالب الترجمة، رد فقط بالعربية - لا تترجم إلى أي لغة أخرى
+- لا تستخدم البنغالية أو الإنجليزية أو أي لغة أخرى أبداً`
 
 function Waveform({ active }: { active: boolean }) {
   return (
@@ -114,9 +115,13 @@ export function AIAudioCall() {
       utterance.pitch = 1
 
       const voices = synth.getVoices()
+      // Prefer male voice for Arabic
       const arabicVoice =
+        voices.find(v => v.lang === 'ar-SA' && v.name.toLowerCase().includes('male')) ||
+        voices.find(v => v.lang === 'ar-SA' && !v.name.toLowerCase().includes('female') && v.name.toLowerCase().includes('mohammed')) ||
         voices.find(v => v.lang === 'ar-SA' && v.localService) ||
         voices.find(v => v.lang === 'ar-SA') ||
+        voices.find(v => v.lang.startsWith('ar') && !v.name.toLowerCase().includes('female')) ||
         voices.find(v => v.lang.startsWith('ar'))
       if (arabicVoice) utterance.voice = arabicVoice
 
