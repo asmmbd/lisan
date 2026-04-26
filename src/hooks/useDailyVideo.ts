@@ -55,7 +55,7 @@ export function useDailyVideo(): UseDailyVideoReturn {
       const remoteEl = document.getElementById('remote-video') as HTMLVideoElement
       
       if (localEl) {
-        call.setLocalVideo(localEl)
+        call.setLocalVideo(true)
         setLocalVideoElement(localEl)
       }
       

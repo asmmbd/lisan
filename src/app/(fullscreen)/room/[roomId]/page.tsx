@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, Suspense, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState, Suspense } from 'react'
 import { useSession } from 'next-auth/react'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { motion } from 'framer-motion'
@@ -44,6 +44,56 @@ function RoomContent() {
   const [callEnded, setCallEnded] = useState(false)
   const joiningInProgress = useRef(false)
 
+  const fetchAgoraToken = useCallback(async (channelName: string) => {
+    try {
+      const res = await fetch('/api/agora-token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          channel: channelName,
+          role: 'publisher',
+        }),
+      })
+      const data = await res.json()
+      setAgoraToken(data.token || '')
+    } catch {
+      setAgoraToken('')
+    }
+  }, [])
+
+  const handleJoin = useCallback(async () => {
+    if (isJoining || hasJoined || joiningInProgress.current) return
+
+    joiningInProgress.current = true
+    setIsJoining(true)
+    try {
+      const res = await fetch('/api/calls/join', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ roomId }),
+      })
+
+      const data = await res.json()
+      if (!res.ok) {
+        setError(data.error || 'Failed to join')
+        setIsJoining(false)
+        joiningInProgress.current = false
+        return
+      }
+
+      setRoom(data.room)
+      setHasJoined(true)
+      setIsJoining(false)
+      joiningInProgress.current = false
+      setCallTimer(240)
+      fetchAgoraToken(data.room.channelName)
+    } catch {
+      setError('Failed to join call')
+      setIsJoining(false)
+      joiningInProgress.current = false
+    }
+  }, [fetchAgoraToken, hasJoined, isJoining, roomId, setCallTimer])
+
   useEffect(() => {
     sessionStorage.setItem('currentRoomId', roomId)
     return () => {
@@ -84,7 +134,7 @@ function RoomContent() {
     }
 
     fetchRoom()
-  }, [roomId, session?.user?.id, autoJoin])
+  }, [roomId, session?.user?.id, autoJoin, fetchAgoraToken, handleJoin])
 
   useEffect(() => {
     if (!roomId) return
@@ -110,56 +160,6 @@ function RoomContent() {
       pusherClient.unsubscribe(`room-${roomId}`)
     }
   }, [roomId, router])
-
-  const fetchAgoraToken = async (channelName: string) => {
-    try {
-      const res = await fetch('/api/agora-token', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          channel: channelName,
-          role: 'publisher',
-        }),
-      })
-      const data = await res.json()
-      setAgoraToken(data.token || '')
-    } catch {
-      setAgoraToken('')
-    }
-  }
-
-  const handleJoin = async () => {
-    if (isJoining || hasJoined || joiningInProgress.current) return
-
-    joiningInProgress.current = true
-    setIsJoining(true)
-    try {
-      const res = await fetch('/api/calls/join', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ roomId }),
-      })
-
-      const data = await res.json()
-      if (!res.ok) {
-        setError(data.error || 'Failed to join')
-        setIsJoining(false)
-        joiningInProgress.current = false
-        return
-      }
-
-      setRoom(data.room)
-      setHasJoined(true)
-      setIsJoining(false)
-      joiningInProgress.current = false
-      setCallTimer(240)
-      fetchAgoraToken(data.room.channelName)
-    } catch {
-      setError('Failed to join call')
-      setIsJoining(false)
-      joiningInProgress.current = false
-    }
-  }
 
   const handleEndCall = async () => {
     try {

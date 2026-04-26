@@ -22,7 +22,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const savedLanguage = window.localStorage.getItem(STORAGE_KEY) as Language | null
     if (savedLanguage === 'bn' || savedLanguage === 'ar') {
-      setLanguageState(savedLanguage)
+      setTimeout(() => setLanguageState(savedLanguage), 0)
     }
   }, [])
 
@@ -47,7 +47,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     setLanguage,
     t,
     textClass: getLocalizedTextClass(language),
-    dir: getLanguageDirection(language),
+    dir: getLanguageDirection(language) as 'ltr' | 'rtl',
     formatNumber: (value: number) => formatNumber(value, language),
   }), [language, setLanguage, t])
 

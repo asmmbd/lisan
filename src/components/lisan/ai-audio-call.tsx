@@ -23,6 +23,21 @@ const ARABIC_TUTOR_PROMPT = `أنت معلم عربي ودود يساعد الط
 - كن صبوراً ومتشجعاً
 - إذا طلب الطالب الترجمة، أعطها باللغة البنغالية بين قوسين`
 
+function Waveform({ active }: { active: boolean }) {
+  return (
+    <div className="flex items-end gap-[3px] h-6">
+      {[...Array(7)].map((_, i) => (
+        <motion.div
+          key={i}
+          className="w-[3px] rounded-full bg-current"
+          animate={active ? { height: ['4px', `${10 + (i % 3) * 8}px`, '4px'] } : { height: '4px' }}
+          transition={{ duration: 0.45 + i * 0.05, repeat: Infinity, delay: i * 0.06 }}
+        />
+      ))}
+    </div>
+  )
+}
+
 export function AIAudioCall() {
   const [phase, setPhase] = useState<Phase>('idle')
   const [messages, setMessages] = useState<Message[]>([])
@@ -266,7 +281,7 @@ export function AIAudioCall() {
     const hasSS = 'speechSynthesis' in window
 
     if (!hasSR || !hasSS) {
-      setBrowserSupported(false)
+      setTimeout(() => setBrowserSupported(false), 0)
       return
     }
 
@@ -299,7 +314,7 @@ export function AIAudioCall() {
       clearTimeout(t)
       if (restartTimerRef.current) clearTimeout(restartTimerRef.current)
     }
-  }, []) // eslint-disable-line
+  }, [])
 
   // ── End call ────────────────────────────────────────────────────────────────
   const endCall = useCallback(() => {
@@ -325,7 +340,7 @@ export function AIAudioCall() {
     return 'কথা বলুন'
   }
 
-  const Waveform = ({ active }: { active: boolean }) => (
+  const renderWaveform = (active: boolean) => (
     <div className="flex items-end gap-[3px] h-6">
       {[...Array(7)].map((_, i) => (
         <motion.div key={i} className="w-[3px] rounded-full bg-current"
@@ -443,7 +458,7 @@ export function AIAudioCall() {
           phase === 'listening' ? 'text-red-300' :
           phase === 'speaking'  ? 'text-yellow-300' : 'text-white/20'
         }`}>
-          <Waveform active={phase === 'listening' || phase === 'speaking'} />
+          {renderWaveform(phase === 'listening' || phase === 'speaking')}
         </div>
 
         <AnimatePresence mode="wait">

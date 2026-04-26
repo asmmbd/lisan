@@ -1,10 +1,10 @@
 'use client'
 
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { io, Socket } from 'socket.io-client'
+import io from 'socket.io-client'
 
 interface UseSocketReturn {
-  socket: Socket | null
+  socket: any | null
   isConnected: boolean
   onlineUsers: string[]
   currentUserId: string
@@ -16,12 +16,13 @@ export function useSocket(): UseSocketReturn {
   const [isConnected, setIsConnected] = useState(false)
   const [onlineUsers, setOnlineUsers] = useState<string[]>([])
   const [currentUserId, setCurrentUserId] = useState('')
-  const socketRef = useRef<Socket | null>(null)
+  const [socket, setSocket] = useState<any | null>(null)
+  const socketRef = useRef<any | null>(null)
 
   useEffect(() => {
     // Generate a random user ID for this session
     const userId = `user_${Math.random().toString(36).substr(2, 9)}`
-    setCurrentUserId(userId)
+    setTimeout(() => setCurrentUserId(userId), 0)
 
     // Initialize socket connection
     const socket = io(SOCKET_URL, {
@@ -30,6 +31,7 @@ export function useSocket(): UseSocketReturn {
     })
 
     socketRef.current = socket
+    setTimeout(() => setSocket(socket), 0)
 
     socket.on('connect', () => {
       setIsConnected(true)
@@ -47,11 +49,12 @@ export function useSocket(): UseSocketReturn {
 
     return () => {
       socket.disconnect()
+      setSocket(null)
     }
   }, [])
 
   return {
-    socket: socketRef.current,
+    socket,
     isConnected,
     onlineUsers,
     currentUserId,

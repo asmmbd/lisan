@@ -88,7 +88,10 @@ export function ProfileScreen() {
   const user = session?.user
 
   useEffect(() => {
-    if (user?.name) setNewName(user.name)
+    if (user?.name) {
+      const t = setTimeout(() => setNewName(user.name!), 0)
+      return () => clearTimeout(t)
+    }
   }, [user?.name])
 
   if (status === 'loading' || isLoading) {

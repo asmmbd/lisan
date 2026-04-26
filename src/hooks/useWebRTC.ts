@@ -42,6 +42,7 @@ export function useWebRTC(socket: any, currentUserId: string): UseWebRTCReturn {
 
   const peerConnectionRef = useRef<RTCPeerConnection | null>(null)
   const localStreamRef = useRef<MediaStream | null>(null)
+  const [peerConnection, setPeerConnection] = useState<RTCPeerConnection | null>(null)
 
   // Initialize local media stream
   const initializeMedia = useCallback(async (audioOnly = false) => {
@@ -101,10 +102,33 @@ export function useWebRTC(socket: any, currentUserId: string): UseWebRTCReturn {
     }
   }, [])
 
+  // End call
+  const endCall = useCallback(() => {
+    // Stop all tracks
+    localStreamRef.current?.getTracks().forEach(track => track.stop())
+
+    // Close peer connection
+    peerConnectionRef.current?.close()
+    peerConnectionRef.current = null
+    localStreamRef.current = null
+    setPeerConnection(null)
+
+    setState({
+      localStream: null,
+      remoteStream: null,
+      isConnected: false,
+      isConnecting: false,
+      error: null,
+    })
+
+    socket?.emit('call-ended', { callerId: currentUserId })
+  }, [socket, currentUserId])
+
   // Create peer connection
   const createPeerConnection = useCallback((targetUserId: string) => {
     const pc = new RTCPeerConnection(ICE_SERVERS)
     peerConnectionRef.current = pc
+    setPeerConnection(pc)
 
     // Add local stream tracks to peer connection
     if (localStreamRef.current) {
@@ -136,7 +160,7 @@ export function useWebRTC(socket: any, currentUserId: string): UseWebRTCReturn {
     }
 
     return pc
-  }, [socket])
+  }, [endCall, socket])
 
   // Start a call (Caller side)
   const startCall = useCallback(async (targetUserId: string) => {
@@ -211,27 +235,6 @@ export function useWebRTC(socket: any, currentUserId: string): UseWebRTCReturn {
     }
   }, [])
 
-  // End call
-  const endCall = useCallback(() => {
-    // Stop all tracks
-    localStreamRef.current?.getTracks().forEach(track => track.stop())
-    
-    // Close peer connection
-    peerConnectionRef.current?.close()
-    peerConnectionRef.current = null
-    localStreamRef.current = null
-
-    setState({
-      localStream: null,
-      remoteStream: null,
-      isConnected: false,
-      isConnecting: false,
-      error: null,
-    })
-
-    socket?.emit('call-ended', { callerId: currentUserId })
-  }, [socket, currentUserId])
-
   // Toggle mute
   const toggleMute = useCallback(() => {
     const audioTrack = localStreamRef.current?.getAudioTracks()[0]
@@ -272,7 +275,7 @@ export function useWebRTC(socket: any, currentUserId: string): UseWebRTCReturn {
     endCall,
     toggleMute,
     toggleVideo,
-    peerConnection: peerConnectionRef.current,
+    peerConnection,
     setRemoteStream: (stream: MediaStream) => setState(prev => ({ ...prev, remoteStream: stream })),
   }
 }

@@ -1,8 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useCallback, useState } from 'react'
-import { io } from 'socket.io-client'
-import type { Socket } from 'socket.io-client'
+import io from 'socket.io-client'
 
 interface MatchData {
   partnerId: string
@@ -27,7 +26,7 @@ interface UseMatchingReturn {
 }
 
 export function useMatching(): UseMatchingReturn {
-  const socketRef = useRef<Socket | null>(null)
+  const socketRef = useRef<any | null>(null)
   const [isConnected, setIsConnected] = useState(false)
   const [isWaiting, setIsWaiting] = useState(false)
   const [isMatched, setIsMatched] = useState(false)
@@ -39,15 +38,22 @@ export function useMatching(): UseMatchingReturn {
   const [partnerDisconnected, setPartnerDisconnected] = useState(false)
 
   // Generate unique user ID
-  const userId = useRef(`user_${Math.random().toString(36).substr(2, 9)}_${Date.now()}`)
+  const userIdRef = useRef<string | null>(null)
 
   useEffect(() => {
     const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3001'
     
     console.log('🔌 Connecting to matching server:', socketUrl)
     
+    if (!userIdRef.current) {
+      const uuid = globalThis.crypto?.randomUUID?.()
+      userIdRef.current = uuid
+        ? `user_${uuid}`
+        : `user_${Math.random().toString(36).substr(2, 9)}_${Date.now()}`
+    }
+
     const socket = io(socketUrl, {
-      query: { userId: userId.current },
+      query: { userId: userIdRef.current },
       transports: ['websocket', 'polling'],
     })
     

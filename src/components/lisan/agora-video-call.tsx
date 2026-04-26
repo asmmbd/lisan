@@ -34,6 +34,16 @@ export function AgoraVideoCall({ appId, channel, token, onLeave, callTimer }: Ag
     return `${m}:${s.toString().padStart(2, '0')}`
   }, [])
 
+  const handleLeave = useCallback(() => {
+    localAudioTrackRef.current?.stop()
+    localAudioTrackRef.current?.close()
+    localVideoTrackRef.current?.stop()
+    localVideoTrackRef.current?.close()
+
+    clientRef.current?.leave().catch(() => {})
+    onLeave()
+  }, [onLeave])
+
   // Countdown timer effect - 3 minutes
   useEffect(() => {
     if (!callStarted || timeRemaining <= 0) return
@@ -51,7 +61,7 @@ export function AgoraVideoCall({ appId, channel, token, onLeave, callTimer }: Ag
     }, 1000)
 
     return () => clearInterval(timer)
-  }, [callStarted, timeRemaining])
+  }, [callStarted, timeRemaining, handleLeave])
 
   useEffect(() => {
     // Wait for token to be ready before initializing
@@ -141,16 +151,6 @@ export function AgoraVideoCall({ appId, channel, token, onLeave, callTimer }: Ag
       clientRef.current?.leave().catch(() => {})
     }
   }, [appId, channel])
-
-  const handleLeave = () => {
-    localAudioTrackRef.current?.stop()
-    localAudioTrackRef.current?.close()
-    localVideoTrackRef.current?.stop()
-    localVideoTrackRef.current?.close()
-    
-    clientRef.current?.leave().catch(() => {})
-    onLeave()
-  }
 
   const toggleMute = () => {
     const audioTrack = localAudioTrackRef.current

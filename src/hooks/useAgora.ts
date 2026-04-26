@@ -32,6 +32,33 @@ export function useAgora(): UseAgoraReturn {
   const [isMuted, setIsMuted] = useState(false)
   const [isCameraOff, setIsCameraOff] = useState(false)
 
+  const leaveChannel = () => {
+    const client = clientRef.current
+
+    // Stop and close local tracks
+    localAudioTrackRef.current?.stop()
+    localAudioTrackRef.current?.close()
+    localVideoTrackRef.current?.stop()
+    localVideoTrackRef.current?.close()
+
+    localAudioTrackRef.current = null
+    localVideoTrackRef.current = null
+
+    // Leave channel
+    client?.leave()
+      .then(() => {
+        console.log('ðŸ‘‹ Left channel')
+      })
+      .catch((err) => {
+        console.log('Leave error:', err)
+      })
+
+    setIsConnected(false)
+    setRemoteUsers([])
+    setIsMuted(false)
+    setIsCameraOff(false)
+  }
+
   // Initialize Agora client
   useEffect(() => {
     const client = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' })
@@ -106,7 +133,7 @@ export function useAgora(): UseAgoraReturn {
     }
   }, [])
 
-  const leaveChannel = useCallback(() => {
+  const leaveChannelLegacy = () => {
     const client = clientRef.current
     
     // Stop and close local tracks
@@ -129,7 +156,7 @@ export function useAgora(): UseAgoraReturn {
     setRemoteUsers([])
     setIsMuted(false)
     setIsCameraOff(false)
-  }, [])
+  }
 
   const toggleMute = useCallback(() => {
     const audioTrack = localAudioTrackRef.current

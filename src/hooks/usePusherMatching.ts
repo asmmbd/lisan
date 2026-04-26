@@ -43,7 +43,7 @@ export function usePusherMatching(): UsePusherMatchingReturn {
     const pusherCluster = process.env.NEXT_PUBLIC_PUSHER_CLUSTER
 
     if (!pusherKey || !pusherCluster) {
-      setError('Pusher configuration missing')
+      setTimeout(() => setError('Pusher configuration missing'), 0)
       return
     }
 
