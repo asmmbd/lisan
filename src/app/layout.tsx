@@ -57,7 +57,7 @@ export default function RootLayout({
   return (
     <html lang="bn" suppressHydrationWarning>
       <body
-        className={`${notoNaskhArabic.variable} ${hindSiliguri.className} antialiased bg-background text-foreground`}
+        className={`${notoNaskhArabic.className} ${hindSiliguri.className} antialiased bg-background text-foreground`}
       >
         <AuthProvider>
           <LanguageProvider>
