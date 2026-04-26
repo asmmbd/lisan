@@ -1,11 +1,25 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
+import { Noto_Naskh_Arabic, Hind_Siliguri } from 'next/font/google';
 import { ThemeProvider } from '@/components/lisan/theme-provider';
 import { AuthProvider } from '@/components/auth/auth-provider';
 import { CallNotification } from '@/components/lisan/call-notification';
 import { LanguageProvider } from '@/components/lisan/language-provider';
 import { PwaRegister } from '@/components/lisan/pwa-register';
+
+const notoNaskhArabic = Noto_Naskh_Arabic({
+  subsets: ['arabic'],
+  variable: '--font-arabic',
+  display: 'swap',
+});
+
+const hindSiliguri = Hind_Siliguri({
+  subsets: ['bengali'],
+  variable: '--font-hind-siliguri',
+  weight: ['400', '500', '600', '700'],
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   title: "লিসান - আরবি শিখুন",
@@ -43,7 +57,7 @@ export default function RootLayout({
   return (
     <html lang="bn" suppressHydrationWarning>
       <body
-        className="antialiased bg-background text-foreground"
+        className={`${notoNaskhArabic.variable} ${hindSiliguri.className} antialiased bg-background text-foreground`}
       >
         <AuthProvider>
           <LanguageProvider>
