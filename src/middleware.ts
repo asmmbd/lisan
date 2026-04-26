@@ -14,8 +14,7 @@ export default withAuth(
       '/icon-192.png',
       '/icon-512.png',
       '/apple-icon.png',
-      '/logo.svg',
-      '/lisan-logo.png',
+      '/logo.png',
       '/robots.txt',
     ]
     const isPublicPath = publicPaths.some(path => 
@@ -47,8 +46,7 @@ export default withAuth(
           '/icon-192.png',
           '/icon-512.png',
           '/apple-icon.png',
-          '/logo.svg',
-          '/lisan-logo.png',
+          '/logo.png',
           '/robots.txt',
         ]
         const isPublicPath = publicPaths.some(path => 

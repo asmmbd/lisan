@@ -25,7 +25,7 @@ export function Sidebar() {
     <aside className="sidebar-shell hidden md:flex flex-col w-64 h-screen fixed top-0 z-50 bg-card/80 backdrop-blur-xl py-8 px-4 overflow-y-auto overflow-x-hidden">
       <div className="flex items-center gap-3 px-2 mb-10">
         <div className="w-10 h-10 rounded-xl overflow-hidden shadow-lg border border-primary/20">
-          <Image src="/lisan-logo.png" alt="Lisan Logo" width={40} height={40} className="object-cover" />
+          <Image src="/logo.png" alt="Lisan Logo" width={40} height={40} className="object-cover" />
         </div>
         <div>
           <h1 className={cn('text-xl font-bold tracking-tight text-foreground', textClass)}>{t('common.appName')}</h1>

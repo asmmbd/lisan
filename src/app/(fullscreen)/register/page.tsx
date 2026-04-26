@@ -3,8 +3,9 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { motion } from 'framer-motion'
-import { Eye, EyeOff, Mail, Lock, User, UserPlus } from 'lucide-react'
+import { Eye, EyeOff, Mail, Lock, User } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -70,8 +71,8 @@ export default function RegisterPage() {
       >
         <Card className="border-2 border-primary/10 shadow-xl">
           <CardHeader className="text-center space-y-2">
-            <div className="mx-auto w-16 h-16 rounded-full gradient-islamic flex items-center justify-center mb-4">
-              <UserPlus className="w-8 h-8 text-white" />
+            <div className="mx-auto w-16 h-16 rounded-full overflow-hidden shadow-lg border-2 border-primary/20 mb-4">
+              <Image src="/logo.png" alt="Lisan Logo" width={64} height={64} className="object-cover w-full h-full" />
             </div>
             <CardTitle className={`text-2xl font-bold ${textClass}`}>{t('auth.registerTitle')}</CardTitle>
             <CardDescription className={textClass}>

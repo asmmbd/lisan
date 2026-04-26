@@ -1,9 +1,11 @@
+import Image from 'next/image'
+
 export default function OfflinePage() {
   return (
     <main className="min-h-screen bg-background text-foreground flex items-center justify-center p-6">
       <div className="max-w-md w-full rounded-3xl border border-border bg-card p-8 text-center shadow-xl">
-        <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary text-primary-foreground text-3xl font-black">
-          ل
+        <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl overflow-hidden shadow-lg border-2 border-primary/20">
+          <Image src="/logo.png" alt="Lisan Logo" width={64} height={64} className="object-cover w-full h-full" />
         </div>
         <h1 className="text-2xl font-black mb-3 bengali-text">ইন্টারনেট সংযোগ নেই</h1>
         <p className="text-sm text-muted-foreground mb-6 bengali-text">
