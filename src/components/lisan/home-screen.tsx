@@ -13,6 +13,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { useLanguage } from './language-provider'
+import { Notification } from 'iconsax-reactjs'
 
 const container = {
   hidden: { opacity: 0 },
@@ -151,7 +152,7 @@ export function HomeScreen() {
             </div>
           )}
           <button className="w-10 h-10 rounded-xl bg-card border border-border flex items-center justify-center hover:bg-secondary transition-all shadow-sm">
-            <Bell className="w-5 h-5 text-card-foreground" />
+            <Notification className="w-5 h-5 text-card-foreground" />
           </button>
           <div className="hidden md:flex flex-col items-end mr-1">
             <p className={cn('text-xs font-bold text-foreground', textClass)}>{user?.name || t('common.unknownUser')}</p>

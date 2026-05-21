@@ -4,17 +4,16 @@
   "private": true,
   "scripts": {
     "dev": "next dev --webpack -p 3000",
-    "dev:server": "cd server && bun run dev",
     "build": "next build --webpack && bun run scripts/copy-assets.ts",
     "start": "NODE_ENV=production bun .next/standalone/server.js",
-    "start:server": "cd server && bun run start",
     "lint": "eslint .",
     "db:push": "prisma db push",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:reset": "prisma migrate reset",
-    "db:import-dictionary": "bun run scripts/import-dictionary.ts",
-    "install:server": "cd server && bun install"
+    "db:seed": "bun run scripts/seed.ts",
+    "db:studio": "prisma studio",
+    "db:import-dictionary": "bun run scripts/import-dictionary.ts"
   },
   "dependencies": {
     "@daily-co/daily-js": "^0.75.0",
