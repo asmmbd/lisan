@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { pusherTrigger } from '@/lib/pusher'
 import { sendCallNotification } from '@/lib/push-notifications'
+import { callCreateSchema, validateBody } from '@/lib/validation'
 
 export const dynamic = 'force-dynamic'
 
@@ -14,8 +15,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { channelName, receiverId } = await req.json()
-    
+    const validation = await validateBody(req, callCreateSchema)
+    if ('response' in validation) return validation.response
+    const { channelName, receiverId } = validation.data
+
     // Generate unique room ID (numeric 1-10000 for URL, stored as string)
     const agoraUid = Math.floor(Math.random() * 10000);
     const roomId = `room_${agoraUid}`; // clearly string

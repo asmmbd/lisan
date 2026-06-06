@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
 import Pusher from 'pusher'
 import { sendMatchNotification } from '@/lib/push-notifications'
+import { matchFindSchema, validateBody } from '@/lib/validation'
 
 const prisma = new PrismaClient()
 
@@ -15,11 +16,9 @@ const pusher = new Pusher({
 
 export async function POST(req: NextRequest) {
   try {
-    const { userId, userName = 'Guest' } = await req.json()
-
-    if (!userId) {
-      return NextResponse.json({ error: 'User ID required' }, { status: 400 })
-    }
+    const validation = await validateBody(req, matchFindSchema)
+    if ('response' in validation) return validation.response
+    const { userId, userName = 'Guest' } = validation.data
 
     // 1. Cleanup stale entries (older than 3 minutes)
     const threeMinutesAgo = new Date(Date.now() - 3 * 60 * 1000)

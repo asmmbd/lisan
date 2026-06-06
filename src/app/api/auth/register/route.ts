@@ -1,17 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/prisma'
+import { registerSchema, validateBody } from '@/lib/validation'
 
 export async function POST(req: NextRequest) {
   try {
-    const { name, email, password } = await req.json()
-
-    if (!name || !email || !password) {
-      return NextResponse.json(
-        { error: 'Name, email and password are required' },
-        { status: 400 }
-      )
-    }
+    const validation = await validateBody(req, registerSchema)
+    if ('response' in validation) return validation.response
+    const { name, email, password } = validation.data
 
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({

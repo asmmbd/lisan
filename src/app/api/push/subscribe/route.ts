@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { pushSubscribeSchema, validateBody } from '@/lib/validation'
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,14 +15,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { endpoint, keys } = await request.json()
-
-    if (!endpoint || !keys?.p256dh || !keys?.auth) {
-      return NextResponse.json(
-        { error: 'Invalid subscription data' },
-        { status: 400 }
-      )
-    }
+    const validation = await validateBody(request, pushSubscribeSchema)
+    if ('response' in validation) return validation.response
+    const { endpoint, keys } = validation.data
 
     // Upsert the push subscription
     await prisma.pushSubscription.upsert({

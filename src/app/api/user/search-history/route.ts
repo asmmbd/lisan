@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { searchHistoryAddSchema, validateBody } from '@/lib/validation'
 
 // GET - Fetch user's search history
 export async function GET() {
@@ -32,7 +33,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { term } = await req.json()
+    const validation = await validateBody(req, searchHistoryAddSchema)
+    if ('response' in validation) return validation.response
+    const { term } = validation.data
 
     // Delete duplicate if exists
     await prisma.searchHistory.deleteMany({

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { aiChatSchema, validateBody } from '@/lib/validation'
 
 const GROQ_API_KEY = process.env.GROQ_API_KEY
 
@@ -13,14 +14,9 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const { messages, system } = await req.json()
-
-    if (!messages || !Array.isArray(messages)) {
-      return NextResponse.json(
-        { error: 'Messages array required' },
-        { status: 400 }
-      )
-    }
+    const validation = await validateBody(req, aiChatSchema)
+    if ('response' in validation) return validation.response
+    const { messages, system } = validation.data
 
     // Convert messages to Groq format (OpenAI compatible)
     const groqMessages = system 

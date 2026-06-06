@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
 import Pusher from 'pusher'
+import { matchEndSchema, validateBody } from '@/lib/validation'
 
 const prisma = new PrismaClient()
 
@@ -14,11 +15,9 @@ const pusher = new Pusher({
 
 export async function POST(req: NextRequest) {
   try {
-    const { matchId, userId } = await req.json()
-
-    if (!matchId || !userId) {
-      return NextResponse.json({ error: 'Match ID and User ID required' }, { status: 400 })
-    }
+    const validation = await validateBody(req, matchEndSchema)
+    if ('response' in validation) return validation.response
+    const { matchId, userId } = validation.data
 
     // Get match details
     const match = await prisma.activeMatch.findUnique({

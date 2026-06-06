@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { pusherTrigger } from '@/lib/pusher'
+import { callRoomActionSchema, validateBody } from '@/lib/validation'
 
 // Force dynamic to avoid static generation issues
 export const dynamic = 'force-dynamic'
@@ -14,8 +15,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { roomId } = await req.json()
-    
+    const validation = await validateBody(req, callRoomActionSchema)
+    if ('response' in validation) return validation.response
+    const { roomId } = validation.data
+
     const room = await prisma.room.findUnique({
       where: { roomId }
     })

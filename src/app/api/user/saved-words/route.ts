@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { savedWordToggleSchema, validateBody } from '@/lib/validation'
 
 // GET - Fetch user's saved words
 export async function GET() {
@@ -31,7 +32,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { wordId } = await req.json()
+    const validation = await validateBody(req, savedWordToggleSchema)
+    if ('response' in validation) return validation.response
+    const { wordId } = validation.data
 
     // Check if already saved
     const existing = await prisma.savedWord.findUnique({

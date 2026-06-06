@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { streakUpdateSchema, validateBody } from '@/lib/validation'
 
 // Get user's streak data
 export async function GET() {
@@ -79,7 +80,9 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { xp = 10 } = await req.json()
+    const validation = await validateBody(req, streakUpdateSchema)
+    if ('response' in validation) return validation.response
+    const { xp } = validation.data
 
     const now = new Date()
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())

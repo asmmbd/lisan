@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { RtcTokenBuilder, RtcRole } from 'agora-token'
+import { agoraTokenSchema, validateBody } from '@/lib/validation'
 
 const APP_ID = process.env.AGORA_APP_ID || process.env.NEXT_PUBLIC_AGORA_APP_ID || ''
 const APP_CERTIFICATE = process.env.AGORA_APP_CERTIFICATE || ''
@@ -13,14 +14,9 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const { channel, uid = 0, role = 'publisher' } = await req.json()
-
-    if (!channel) {
-      return NextResponse.json(
-        { error: 'Channel required' },
-        { status: 400 }
-      )
-    }
+    const validation = await validateBody(req, agoraTokenSchema)
+    if ('response' in validation) return validation.response
+    const { channel, uid = 0, role = 'publisher' } = validation.data
 
     // Token expiration time (1 hour = 3600 seconds)
     const expirationTimeInSeconds = 3600
@@ -35,7 +31,7 @@ export async function POST(req: NextRequest) {
       APP_ID,
       APP_CERTIFICATE,
       channel,
-      parseInt(uid) || 0,
+      uid ?? 0,
       userRole,
       privilegeExpiredTs,
       privilegeExpiredTs // joinChannelPrivilegeExpireTime

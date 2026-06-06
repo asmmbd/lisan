@@ -3,18 +3,20 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { pusherTrigger } from '@/lib/pusher'
+import { callRoomActionSchema, validateBody } from '@/lib/validation'
 
 export const dynamic = 'force-dynamic'
 
 export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
-    const body = await req.json()
-    const { roomId } = body
-
-    if (!roomId) {
-      return NextResponse.json({ error: 'Room ID required' }, { status: 400 })
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+
+    const validation = await validateBody(req, callRoomActionSchema)
+    if ('response' in validation) return validation.response
+    const { roomId } = validation.data
 
     // Find the room
     const room = await prisma.room.findUnique({

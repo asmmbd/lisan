@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { profileUpdateSchema, validateBody } from '@/lib/validation'
 
 export async function PUT(req: NextRequest) {
   try {
@@ -10,7 +11,9 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { name, image } = await req.json()
+    const validation = await validateBody(req, profileUpdateSchema)
+    if ('response' in validation) return validation.response
+    const { name, image } = validation.data
 
     const updatedUser = await prisma.user.update({
       where: { id: session.user.id },

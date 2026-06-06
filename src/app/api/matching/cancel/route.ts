@@ -1,15 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
+import { matchCancelSchema, validateBody } from '@/lib/validation'
 
 const prisma = new PrismaClient()
 
 export async function POST(req: NextRequest) {
   try {
-    const { userId } = await req.json()
-
-    if (!userId) {
-      return NextResponse.json({ error: 'User ID required' }, { status: 400 })
-    }
+    const validation = await validateBody(req, matchCancelSchema)
+    if ('response' in validation) return validation.response
+    const { userId } = validation.data
 
     // Remove from queue
     await prisma.matchingQueue.deleteMany({

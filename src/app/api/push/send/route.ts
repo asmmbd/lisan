@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import webPush from 'web-push'
+import { pushSendSchema, validateBody } from '@/lib/validation'
 
 // Configure web-push with VAPID keys
 const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || ''
@@ -29,14 +30,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { userId, notification } = await request.json()
-
-    if (!userId || !notification) {
-      return NextResponse.json(
-        { error: 'Missing required fields' },
-        { status: 400 }
-      )
-    }
+    const validation = await validateBody(request, pushSendSchema)
+    if ('response' in validation) return validation.response
+    const { userId, notification } = validation.data
 
     // Get user's push subscriptions
     const subscriptions = await prisma.pushSubscription.findMany({
