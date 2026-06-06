@@ -7,6 +7,49 @@ import { PhoneOff, Volume2, VolumeX, Bot, Clock, AlertCircle } from 'lucide-reac
 
 type Phase = 'idle' | 'calling' | 'active' | 'listening' | 'processing' | 'speaking' | 'ended'
 
+// Minimal Web Speech API types (lib.dom in this TS version does not expose them).
+interface SpeechRecognitionResultItem {
+  transcript: string
+  confidence: number
+}
+interface SpeechRecognitionResult {
+  readonly length: number
+  readonly isFinal: boolean
+  readonly [index: number]: SpeechRecognitionResultItem
+  item(index: number): SpeechRecognitionResultItem
+}
+interface SpeechRecognitionResultList {
+  readonly length: number
+  readonly [index: number]: SpeechRecognitionResult
+  item(index: number): SpeechRecognitionResult
+}
+interface SpeechRecognitionEventLike {
+  resultIndex: number
+  results: SpeechRecognitionResultList
+}
+interface SpeechRecognitionErrorEventLike {
+  error: string
+  message?: string
+}
+interface SpeechRecognitionInstance {
+  lang: string
+  continuous: boolean
+  interimResults: boolean
+  onstart: (() => void) | null
+  onresult: ((event: SpeechRecognitionEventLike) => void) | null
+  onend: (() => void) | null
+  onerror: ((event: SpeechRecognitionErrorEventLike) => void) | null
+  start(): void
+  stop(): void
+}
+interface SpeechRecognitionConstructor {
+  new (): SpeechRecognitionInstance
+}
+type SpeechRecognitionWindow = Window & {
+  SpeechRecognition?: SpeechRecognitionConstructor
+  webkitSpeechRecognition?: SpeechRecognitionConstructor
+}
+
 interface Message {
   role: 'user' | 'assistant'
   content: string
@@ -143,7 +186,7 @@ export function AIAudioCall() {
 
       synth.speak(utterance)
     }
-  })
+  }, [])
 
   // ── submit ───────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -191,7 +234,7 @@ export function AIAudioCall() {
         restartTimerRef.current = setTimeout(() => startListeningRef.current(), 500)
       }
     }
-  })
+  }, [])
 
   // ── startListening ───────────────────────────────────────────────────────────
   useEffect(() => {
@@ -200,7 +243,8 @@ export function AIAudioCall() {
       if (phaseRef.current === 'ended' || phaseRef.current === 'processing') return
       if (typeof window === 'undefined') return
 
-      const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+      const w = window as SpeechRecognitionWindow
+      const SR = w.SpeechRecognition || w.webkitSpeechRecognition
       if (!SR) return
 
       const recognition = new SR()
@@ -216,7 +260,7 @@ export function AIAudioCall() {
         setLiveText('')
       }
 
-      recognition.onresult = (event: any) => {
+      recognition.onresult = (event: SpeechRecognitionEventLike) => {
         let finalText = ''
         let interimText = ''
 
@@ -251,7 +295,7 @@ export function AIAudioCall() {
         }
       }
 
-      recognition.onerror = (event: any) => {
+      recognition.onerror = (event: SpeechRecognitionErrorEventLike) => {
         console.error('SR error:', event.error)
         if (event.error === 'not-allowed') {
           setError('মাইক্রোফোন পারমিশন দিন।')
@@ -276,7 +320,7 @@ export function AIAudioCall() {
         restartTimerRef.current = setTimeout(() => startListeningRef.current(), 800)
       }
     }
-  })
+  }, [])
 
   // ── Browser init & greeting ──────────────────────────────────────────────────
   useEffect(() => {

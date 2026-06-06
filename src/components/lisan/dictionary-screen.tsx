@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useAppStore } from '@/lib/store'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { useInfiniteScroll } from '@/hooks/use-infinite-scroll'
 import { cn } from '@/lib/utils'
 import { useLanguage } from './language-provider'
 
@@ -21,6 +22,15 @@ interface VocabularyWord {
   exampleTranslation: string
   categorySlug: string
 }
+
+interface VocabularyApiResponse {
+  items: VocabularyWord[]
+  nextCursor: string | null
+  hasMore: boolean
+  total: number
+}
+
+const PAGE_LIMIT = 20
 
 function DictionarySkeleton() {
   return (
@@ -47,16 +57,21 @@ export function DictionaryScreen() {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedWord, setSelectedWord] = useState<VocabularyWord | null>(null)
 
-  // Search state
+  // Search state — paginated with cursor
   const [searchResults, setSearchResults] = useState<VocabularyWord[]>([])
   const [searchTotal, setSearchTotal] = useState(0)
   const [isSearching, setIsSearching] = useState(false)
+  const [isLoadingMore, setIsLoadingMore] = useState(false)
   const [hasSearched, setHasSearched] = useState(false)
+  const [nextCursor, setNextCursor] = useState<string | null>(null)
+  const [hasMore, setHasMore] = useState(false)
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
 
   const searchInputRef = useRef<HTMLInputElement>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const abortRef = useRef<AbortController | null>(null)
+  // Track the latest query/category so stale load-more responses are dropped
+  const queryIdRef = useRef(0)
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -65,57 +80,119 @@ export function DictionaryScreen() {
     return () => clearTimeout(timer)
   }, [])
 
-  // Server-side search function
-  const doSearch = useCallback(async (q: string, category: string | null) => {
-    // Cancel previous request
-    if (abortRef.current) abortRef.current.abort()
+  // Run a paginated search starting from the first page.
+  const runSearch = useCallback(
+    async (q: string, category: string | null) => {
+      if (abortRef.current) abortRef.current.abort()
 
-    if (!q.trim() && !category) {
-      setSearchResults([])
-      setSearchTotal(0)
-      setHasSearched(false)
-      setIsSearching(false)
-      return
-    }
+      if (!q.trim() && !category) {
+        setSearchResults([])
+        setSearchTotal(0)
+        setHasSearched(false)
+        setIsSearching(false)
+        setNextCursor(null)
+        setHasMore(false)
+        return
+      }
 
-    abortRef.current = new AbortController()
-    setIsSearching(true)
+      const myId = ++queryIdRef.current
+      abortRef.current = new AbortController()
+      setIsSearching(true)
 
+      try {
+        const params = new URLSearchParams()
+        if (q.trim()) params.set('q', q.trim())
+        if (category) params.set('category', category)
+        params.set('limit', String(PAGE_LIMIT))
+
+        const res = await fetch(`/api/vocabulary?${params.toString()}`, {
+          signal: abortRef.current.signal,
+          cache: 'no-store',
+        })
+        if (!res.ok) throw new Error('Search failed')
+        const data = (await res.json()) as VocabularyApiResponse
+
+        if (myId !== queryIdRef.current) return // a newer search superseded us
+
+        setSearchResults(data.items ?? [])
+        setSearchTotal(data.total ?? 0)
+        setNextCursor(data.nextCursor ?? null)
+        setHasMore(Boolean(data.hasMore))
+        setHasSearched(true)
+      } catch (err) {
+        const name = (err as { name?: string } | null)?.name
+        if (name !== 'AbortError') {
+          console.error('Search error:', err)
+        }
+      } finally {
+        if (myId === queryIdRef.current) {
+          setIsSearching(false)
+        }
+      }
+    },
+    []
+  )
+
+  // Load the next page of results using the saved cursor
+  const loadMore = useCallback(async () => {
+    if (!hasMore || isLoadingMore || isSearching) return
+    if (!searchQuery.trim() && !activeCategory) return
+    if (!nextCursor) return
+
+    const myId = queryIdRef.current
+    setIsLoadingMore(true)
     try {
       const params = new URLSearchParams()
-      if (q.trim()) params.set('q', q.trim())
-      if (category) params.set('category', category)
-      params.set('limit', '50')
+      if (searchQuery.trim()) params.set('q', searchQuery.trim())
+      if (activeCategory) params.set('category', activeCategory)
+      params.set('limit', String(PAGE_LIMIT))
+      params.set('cursor', nextCursor)
 
       const res = await fetch(`/api/vocabulary?${params.toString()}`, {
-        signal: abortRef.current.signal,
         cache: 'no-store',
       })
+      if (!res.ok) throw new Error('Load more failed')
+      const data = (await res.json()) as VocabularyApiResponse
 
-      if (!res.ok) throw new Error('Search failed')
-      const data = await res.json()
-      setSearchResults(data.vocabulary || [])
-      setSearchTotal(data.total ?? data.vocabulary?.length ?? 0)
-      setHasSearched(true)
-    } catch (err: any) {
-      if (err.name !== 'AbortError') {
-        console.error('Search error:', err)
-      }
+      if (myId !== queryIdRef.current) return
+
+      setSearchResults((prev) => {
+        const seen = new Set(prev.map((w) => w.id))
+        const merged = [...prev]
+        for (const item of data.items ?? []) {
+          if (!seen.has(item.id)) merged.push(item)
+        }
+        return merged
+      })
+      setNextCursor(data.nextCursor ?? null)
+      setHasMore(Boolean(data.hasMore))
+    } catch (err) {
+      console.error('Load more error:', err)
     } finally {
-      setIsSearching(false)
+      if (myId === queryIdRef.current) {
+        setIsLoadingMore(false)
+      }
     }
-  }, [])
+  }, [activeCategory, hasMore, isLoadingMore, isSearching, nextCursor, searchQuery])
 
-  // Debounced search on query change
+  // Sentinel for infinite scroll while results are visible
+  const sentinelRef = useInfiniteScroll<HTMLDivElement>({
+    hasMore: hasMore && !isSearching,
+    isLoading: isLoadingMore,
+    onLoadMore: loadMore,
+    rootMargin: '300px',
+  })
+
+  // Debounced search on query/category change
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current)
     debounceRef.current = setTimeout(() => {
-      doSearch(searchQuery, activeCategory)
+      runSearch(searchQuery, activeCategory)
     }, 400)
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current)
     }
-  }, [searchQuery, activeCategory, doSearch])
+  }, [searchQuery, activeCategory, runSearch])
 
   const handleSearch = (value: string) => {
     setSearchQuery(value)
@@ -132,6 +209,8 @@ export function DictionaryScreen() {
     setActiveCategory(null)
     setSearchResults([])
     setHasSearched(false)
+    setNextCursor(null)
+    setHasMore(false)
   }
 
   const handleHistoryClick = (term: string) => {
@@ -145,7 +224,6 @@ export function DictionaryScreen() {
   }
 
   const showBrowse = !searchQuery.trim() && !activeCategory && !hasSearched
-  const showResults = searchQuery.trim() || activeCategory || hasSearched
 
   if (isLoading && categories.length === 0) {
     return <DictionarySkeleton />
@@ -193,7 +271,7 @@ export function DictionaryScreen() {
 
       <ScrollArea className="flex-1 px-4">
         <AnimatePresence mode="wait">
-          {showResults ? (
+          {!showBrowse ? (
             <motion.div
               key="results"
               initial={{ opacity: 0 }}
@@ -202,7 +280,7 @@ export function DictionaryScreen() {
               className="py-2 pb-24"
             >
               {/* Loading indicator */}
-              {isSearching && (
+              {isSearching && searchResults.length === 0 && (
                 <div className="flex items-center gap-2 text-xs text-muted-foreground mb-3">
                   <Loader2 className="w-3 h-3 animate-spin" />
                   <span className={textClass}>খুঁজছি...</span>
@@ -217,8 +295,8 @@ export function DictionaryScreen() {
                 <div className="space-y-2">
                   {!isSearching && (
                     <p className={cn('text-xs text-muted-foreground mb-2', textClass)}>
-                      {searchTotal > 50
-                        ? `${formatNumber(50)}+ ${t('dictionary.resultsFound')}`
+                      {searchTotal > searchResults.length
+                        ? `${formatNumber(searchResults.length)} / ${formatNumber(searchTotal)} ${t('dictionary.resultsFound')}`
                         : `${formatNumber(searchResults.length)} ${t('dictionary.resultsFound')}`}
                     </p>
                   )}
@@ -232,6 +310,25 @@ export function DictionaryScreen() {
                       index={idx}
                     />
                   ))}
+
+                  {/* Infinite-scroll sentinel + status */}
+                  <div
+                    ref={sentinelRef}
+                    aria-hidden
+                    className="h-10 flex items-center justify-center"
+                  >
+                    {isLoadingMore && (
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                        <span className={textClass}>আরও লোড হচ্ছে...</span>
+                      </div>
+                    )}
+                    {!hasMore && !isLoadingMore && !isSearching && (
+                      <span className={cn('text-[10px] text-muted-foreground', textClass)}>
+                        — {t('dictionary.endOfResults') || 'end of results'} —
+                      </span>
+                    )}
+                  </div>
                 </div>
               )}
             </motion.div>
@@ -309,8 +406,12 @@ export function DictionaryScreen() {
         <div className="w-20 h-20 rounded-full bg-secondary/50 flex items-center justify-center mb-4">
           <Search className="w-8 h-8 text-muted-foreground" />
         </div>
-        <h3 className={cn('text-base font-semibold mb-1', textClass)}>{t('dictionary.noResults')}</h3>
-        <p className={cn('text-sm text-muted-foreground', textClass)}>{t('dictionary.noResultsDescription')}</p>
+        <h3 className={cn('text-base font-semibold mb-1', textClass)}>
+          {t('dictionary.noResults')}
+        </h3>
+        <p className={cn('text-sm text-muted-foreground', textClass)}>
+          {t('dictionary.noResultsDescription')}
+        </p>
       </div>
     )
   }

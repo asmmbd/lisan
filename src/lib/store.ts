@@ -1,31 +1,16 @@
 import { create } from 'zustand'
 import { getQuizQuestionCount, getVocabularyLevel, type QuizLevel } from './quiz'
+import type {
+  Category,
+  Note,
+  QuizDirection,
+  QuizQuestion,
+  UserProfile,
+  Vocabulary,
+  VocabularySet,
+} from './types'
 
 export type TabType = 'home' | 'dictionary' | 'practice' | 'saved' | 'profile'
-
-interface Note {
-  id: string
-  text: string
-  createdAt: string
-}
-
-type QuizDirection = 'ar_to_bn' | 'bn_to_ar'
-
-interface QuizQuestion {
-  id: string
-  arabic: string
-  bengali: string
-  pronunciation: string
-  example?: string
-  exampleTranslation?: string
-  categorySlug?: string
-  options: string[]
-  correctAnswer: string
-  direction: QuizDirection
-  promptText: string
-  questionText: string
-  helperText?: string
-}
 
 interface AppState {
   showOnboarding: boolean
@@ -50,14 +35,14 @@ interface AppState {
   error: string | null
   setError: (error: string | null) => void
   // Vocabulary & Categories (Dynamic)
-  vocabulary: any[]
-  categories: any[]
-  vocabularySets: any[]
-  setVocabulary: (vocabulary: any[]) => void
-  setCategories: (categories: any[]) => void
-  setVocabularySets: (sets: any[]) => void
+  vocabulary: Vocabulary[]
+  categories: Category[]
+  vocabularySets: VocabularySet[]
+  setVocabulary: (vocabulary: Vocabulary[]) => void
+  setCategories: (categories: Category[]) => void
+  setVocabularySets: (sets: VocabularySet[]) => void
   // User Actions
-  updateProfile: (data: { name?: string; image?: string }) => Promise<{ id: string; name: string | null; email: string; image: string | null }>
+  updateProfile: (data: { name?: string; image?: string }) => Promise<UserProfile>
   // Fetch all user data
   fetchUserData: () => Promise<void>
   fetchVocabularyForApp: (category?: string) => Promise<void>
@@ -250,7 +235,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       }
     }
 
-    const pickWrongOptions = (words: any[], currentWord: any, field: 'arabic' | 'bengali') => {
+    const pickWrongOptions = (words: Vocabulary[], currentWord: Vocabulary, field: 'arabic' | 'bengali') => {
       const uniqueValues = words
         .filter((candidate) => candidate.id !== currentWord.id && candidate[field] && candidate[field] !== currentWord[field])
         .sort(() => Math.random() - 0.5)
@@ -409,19 +394,47 @@ export const useAppStore = create<AppState>((set, get) => ({
     if (!category && vocabulary.length >= 100) return
 
     try {
-      const params = new URLSearchParams()
-      if (category) params.set('category', category)
-      else {
-        // Load a broad sample for quiz/home by using a high limit
-        params.set('limit', '500')
-        // Use a dummy query that matches all — pass a special param instead
-        params.set('all', '1')
+      const collected: Vocabulary[] = []
+      const PAGE_SIZE = 100
+      let cursor: string | null = null
+      let safety = 50 // hard cap on pages to avoid infinite loops
+
+      while (safety-- > 0) {
+        const params = new URLSearchParams()
+        params.set('limit', String(PAGE_SIZE))
+        if (category) params.set('category', category)
+        else params.set('all', '1')
+        if (cursor) params.set('cursor', cursor)
+
+        const res = await fetch(`/api/vocabulary/all?${params.toString()}`, {
+          cache: 'no-store',
+        })
+        if (!res.ok) break
+
+        const data: {
+          items?: Vocabulary[]
+          nextCursor?: string | null
+          hasMore?: boolean
+        } = await res.json()
+
+        const items = data.items ?? []
+        if (items.length === 0) break
+        collected.push(...items)
+
+        if (!data.hasMore || !data.nextCursor) break
+        cursor = data.nextCursor
       }
 
-      const res = await fetch(`/api/vocabulary/all?${params.toString()}`, { cache: 'no-store' })
-      if (!res.ok) return
-      const data = await res.json()
-      if (data.vocabulary) set({ vocabulary: data.vocabulary })
+      if (collected.length > 0) {
+        // If we filtered by category, replace; otherwise merge with
+        // what's already loaded to avoid clobbering per-category lists.
+        if (category) {
+          const others = get().vocabulary.filter((v) => v.categorySlug !== category)
+          set({ vocabulary: [...others, ...collected] })
+        } else {
+          set({ vocabulary: collected })
+        }
+      }
     } catch (err) {
       console.error('Error loading vocabulary for app:', err)
     }

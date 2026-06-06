@@ -22,7 +22,7 @@ export function QuizView() {
     studiedToday,
     updateStreak,
     startQuiz,
-  } = useAppStore() as any
+  } = useAppStore()
 
   const { t, textClass, formatNumber } = useLanguage()
   const [selectedOption, setSelectedOption] = useState<string | null>(null)

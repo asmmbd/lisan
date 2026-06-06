@@ -1,6 +1,12 @@
 'use client'
 
 import { useEffect, useRef, useCallback, useState } from 'react'
+import type {
+  IAgoraRTCClient,
+  ICameraVideoTrack,
+  IAgoraRTCRemoteUser,
+  IMicrophoneAudioTrack,
+} from 'agora-rtc-sdk-ng'
 import { PhoneOff, Mic, MicOff, Video, VideoOff, Clock, User, Users, ArrowLeft, MoreVertical, Phone } from 'lucide-react'
 
 interface AgoraVideoCallProps {
@@ -15,9 +21,9 @@ interface AgoraVideoCallProps {
 export function AgoraVideoCall({ appId, channel, token, onLeave, callTimer }: AgoraVideoCallProps) {
   const localVideoRef = useRef<HTMLDivElement>(null)
   const remoteVideoRef = useRef<HTMLDivElement>(null)
-  const clientRef = useRef<any>(null)
-  const localAudioTrackRef = useRef<any>(null)
-  const localVideoTrackRef = useRef<any>(null)
+  const clientRef = useRef<IAgoraRTCClient | null>(null)
+  const localAudioTrackRef = useRef<IMicrophoneAudioTrack | null>(null)
+  const localVideoTrackRef = useRef<ICameraVideoTrack | null>(null)
   
   const [isConnected, setIsConnected] = useState(false)
   const [isConnecting, setIsConnecting] = useState(true)
@@ -68,7 +74,7 @@ export function AgoraVideoCall({ appId, channel, token, onLeave, callTimer }: Ag
     if (!appId || !channel) return
 
     let cancelled = false
-    let AgoraRTC: any
+    let AgoraRTC: typeof import('agora-rtc-sdk-ng').default
 
     const initAgora = async () => {
       try {
@@ -78,7 +84,7 @@ export function AgoraVideoCall({ appId, channel, token, onLeave, callTimer }: Ag
         const client = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' })
         clientRef.current = client
 
-        client.on('user-published', async (user: any, mediaType: string) => {
+        client.on('user-published', async (user: IAgoraRTCRemoteUser, mediaType: 'video' | 'audio') => {
           await client.subscribe(user, mediaType)
           if (mediaType === 'video' && remoteVideoRef.current) {
             user.videoTrack?.play(remoteVideoRef.current)
@@ -89,7 +95,7 @@ export function AgoraVideoCall({ appId, channel, token, onLeave, callTimer }: Ag
           setRemoteUsers(prev => prev + 1)
         })
 
-        client.on('user-unpublished', (user: any, mediaType: string) => {
+        client.on('user-unpublished', (user: IAgoraRTCRemoteUser, mediaType: 'video' | 'audio') => {
           if (mediaType === 'video') user.videoTrack?.stop()
           if (mediaType === 'audio') user.audioTrack?.stop()
         })
@@ -132,10 +138,11 @@ export function AgoraVideoCall({ appId, channel, token, onLeave, callTimer }: Ag
         // Start countdown when connected
         setCallStarted(true)
 
-      } catch (err: any) {
+      } catch (err: unknown) {
         if (cancelled) return
         console.error('❌ Agora error:', err)
-        setError(err.message || 'ভিডিও কল শুরু করতে ব্যর্থ')
+        const message = err instanceof Error ? err.message : 'ভিডিও কল শুরু করতে ব্যর্থ'
+        setError(message)
         setIsConnecting(false)
       }
     }
